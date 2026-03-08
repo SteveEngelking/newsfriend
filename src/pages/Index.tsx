@@ -6,10 +6,11 @@ import { SearchBar } from '@/components/SearchBar';
 import { ReportView } from '@/components/ReportView';
 import { LoadingState } from '@/components/LoadingState';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Button } from '@/components/ui/button';
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield } from 'lucide-react';
+import { Shield, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Index = () => {
@@ -146,7 +147,21 @@ const Index = () => {
           <LoadingState stage={loadingStage} progress={loadingProgress} message={loadingMessage} />
         )}
 
-        {report && !isLoading && <ReportView report={report} />}
+        {report && !isLoading && (
+          <>
+            <ReportView report={report} />
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setReport(null)}
+                variant="outline"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                New Search
+              </Button>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
