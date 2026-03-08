@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, articles } = await req.json();
+    const { topic, articles, allSourceNames } = await req.json();
 
     if (!topic || !articles?.length) {
       return new Response(
@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
 
 You MUST respond with a valid JSON object using tool calling. Do NOT include any text outside the tool call.`;
 
-    const uniqueSourceNames = [...new Set(articles.map((a: any) => a.sourceName))];
+    const sourceNamesFromArticles = [...new Set(articles.map((a: any) => a.sourceName))];
+    const allNames = allSourceNames?.length ? [...new Set([...allSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
 
     const userPrompt = `Analyze the following articles about "${topic}" and produce a comprehensive fact-check report.
 
@@ -42,7 +43,8 @@ ${articlesSummary}
 
 Identify 3-8 key claims made across these articles. For each claim, determine if it is verified (reported consistently and factually accurate), disputed (conflicting reports between sources), or unverified (cannot be confirmed). Assign a confidence score 0-100.
 
-IMPORTANT: You MUST provide a cross-source comparison for ALL ${uniqueSourceNames.length} sources: ${uniqueSourceNames.join(', ')}. Do NOT skip any source. Every single source must have its own entry in the sourceComparison array.`;
+The user selected these ${allNames.length} sources for analysis: ${allNames.join(', ')}.
+IMPORTANT: You MUST provide a cross-source comparison entry for EVERY one of these ${allNames.length} sources. If a source had no articles found, note that in its perspective. Do NOT skip any source.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

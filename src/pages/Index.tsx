@@ -83,11 +83,12 @@ const Index = () => {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('fact-check', {
         body: {
           topic,
+          allSourceNames: enabledSources.map(s => s.name),
           articles: allArticles.map(a => ({
             sourceName: a.sourceName,
             title: a.title,
             url: a.url,
-            content: a.content.slice(0, 3000), // limit per article
+            content: a.content.slice(0, 3000),
           })),
         },
       });
