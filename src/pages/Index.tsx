@@ -48,7 +48,12 @@ const Index = () => {
         setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
 
         try {
-          const query = `${topic} site:${new URL(source.url).hostname}`;
+          let sourceUrl = source.url.trim();
+          if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
+            sourceUrl = `https://${sourceUrl}`;
+          }
+          const hostname = new URL(sourceUrl).hostname;
+          const query = `${topic} site:${hostname}`;
           const result = await firecrawlApi.search(query, {
             limit: 3,
             scrapeOptions: { formats: ['markdown'] },
