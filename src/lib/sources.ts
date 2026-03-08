@@ -8,9 +8,9 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   { id: 'bbc', name: 'BBC News', url: 'https://www.bbc.com/news', enabled: true },
   { id: 'cnn', name: 'CNN', url: 'https://www.cnn.com', enabled: true },
   { id: 'aljazeera', name: 'Al Jazeera', url: 'https://www.aljazeera.com', enabled: true },
-  { id: 'npr', name: 'NPR', url: 'https://www.npr.org', enabled: false },
-  { id: 'guardian', name: 'The Guardian', url: 'https://www.theguardian.com', enabled: false },
-  { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', enabled: false },
+  { id: 'npr', name: 'NPR', url: 'https://www.npr.org', enabled: true },
+  { id: 'guardian', name: 'The Guardian', url: 'https://www.theguardian.com', enabled: true },
+  { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', enabled: true },
 ];
 
 export function loadSources(): NewsSource[] {
