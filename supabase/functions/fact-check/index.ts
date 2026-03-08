@@ -40,12 +40,13 @@ CRITICAL RULES:
 
     const sourceNamesFromArticles = [...new Set(articles.map((a: any) => a.sourceName))];
     const allNames = allSourceNames?.length ? [...new Set([...allSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
+    const minClaims = Math.max(10, allNames.length);
 
     const userPrompt = `Analyze the following articles about "${topic}" and produce a comprehensive fact-check report.
 
 ${articlesSummary}
 
-Identify 3-8 key claims made across these articles. For each claim, determine if it is verified, disputed, or unverified. Be critical — not all claims should be verified. Look for inconsistencies and unsubstantiated statements. Assign a confidence score 0-100.
+Identify ${minClaims}-20 key claims made across these articles. For each claim, determine if it is verified, disputed, or unverified. Be critical — not all claims should be verified. Look for inconsistencies and unsubstantiated statements. Assign a confidence score 0-100.
 
 The user selected these ${allNames.length} sources for analysis: ${allNames.join(', ')}.
 
