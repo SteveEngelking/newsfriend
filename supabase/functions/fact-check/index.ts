@@ -32,7 +32,11 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `You are an expert fact-checker and news analyst. You analyze news articles from multiple sources to identify key claims, cross-reference them, and assess their veracity.
 
-You MUST respond with a valid JSON object using tool calling. Do NOT include any text outside the tool call.`;
+CRITICAL RULES:
+- You MUST include a sourceComparison entry for EVERY source the user selected. No exceptions.
+- Be critical and skeptical. Not everything is "verified". Look for contradictions, unsubstantiated claims, and differing narratives between sources.
+- Use all three statuses: verified, disputed, AND unverified. A good report typically has a mix.
+- You MUST respond with a valid JSON object using tool calling. Do NOT include any text outside the tool call.`;
 
     const sourceNamesFromArticles = [...new Set(articles.map((a: any) => a.sourceName))];
     const allNames = allSourceNames?.length ? [...new Set([...allSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
@@ -41,10 +45,11 @@ You MUST respond with a valid JSON object using tool calling. Do NOT include any
 
 ${articlesSummary}
 
-Identify 3-8 key claims made across these articles. For each claim, determine if it is verified (reported consistently and factually accurate), disputed (conflicting reports between sources), or unverified (cannot be confirmed). Assign a confidence score 0-100.
+Identify 3-8 key claims made across these articles. For each claim, determine if it is verified, disputed, or unverified. Be critical — not all claims should be verified. Look for inconsistencies and unsubstantiated statements. Assign a confidence score 0-100.
 
 The user selected these ${allNames.length} sources for analysis: ${allNames.join(', ')}.
-IMPORTANT: You MUST provide a cross-source comparison entry for EVERY one of these ${allNames.length} sources. If a source had no articles found, note that in its perspective. Do NOT skip any source.`;
+
+MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} entries — one for each of these sources: ${allNames.join(', ')}. If a source had no articles found, still include it and note the absence of coverage in its perspective. Do NOT return fewer than ${allNames.length} sourceComparison entries.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
