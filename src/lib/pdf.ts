@@ -1,15 +1,40 @@
 import type { FactCheckReport } from './types';
 
-export async function generatePDF(report: FactCheckReport, element: HTMLElement) {
-  const html2pdf = (await import('html2pdf.js')).default;
-  
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: `factcheck-${report.topic.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-  };
+export async function generatePDF(_report: FactCheckReport, element: HTMLElement) {
+  // Use browser print dialog for PDF generation (secure, no vulnerable dependencies)
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    throw new Error('Pop-up blocked. Please allow pop-ups to generate PDF.');
+  }
 
-  await html2pdf().set(opt).from(element).save();
+  const styles = Array.from(document.styleSheets)
+    .map(sheet => {
+      try {
+        return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Fact Check Report</title>
+      <style>
+        ${styles}
+        @media print {
+          body { margin: 0; padding: 20px; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+      </style>
+    </head>
+    <body>${element.innerHTML}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.onload = () => {
+    printWindow.print();
+  };
 }

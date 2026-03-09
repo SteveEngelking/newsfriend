@@ -36,12 +36,24 @@ export function SourceManager({ sources, onChange }: Props) {
   };
 
   const handleAdd = async () => {
-    if (!newName.trim() || !newUrl.trim()) return;
-    setAdding(true);
-    let url = newUrl.trim();
+    const trimmedName = newName.trim();
+    const trimmedUrl = newUrl.trim();
+    if (!trimmedName || !trimmedUrl) return;
+    if (trimmedName.length > 200) {
+      toast({ title: 'Error', description: 'Source name must be under 200 characters', variant: 'destructive' });
+      return;
+    }
+    let url = trimmedUrl;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}`;
     }
+    try {
+      new URL(url);
+    } catch {
+      toast({ title: 'Invalid URL', description: 'Please enter a valid URL', variant: 'destructive' });
+      return;
+    }
+    setAdding(true);
     const result = await addSource(newName.trim(), url);
     if (result) {
       onChange([...sources, { id: result.id, name: newName.trim(), url, enabled: false }]);
