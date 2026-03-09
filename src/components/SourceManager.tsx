@@ -29,7 +29,7 @@ export function SourceManager({ sources, onChange }: Props) {
   const add = () => {
     if (!newName.trim() || !newUrl.trim()) return;
     const id = `custom-${Date.now()}`;
-    onChange([...sources, { id, name: newName.trim(), url: newUrl.trim(), enabled: true }]);
+    onChange([...sources, { id, name: newName.trim(), url: newUrl.trim(), enabled: false }]);
     setNewName('');
     setNewUrl('');
   };
