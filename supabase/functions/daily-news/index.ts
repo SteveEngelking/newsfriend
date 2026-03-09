@@ -100,7 +100,7 @@ STYLE GUIDELINES:
 - ALWAYS include the direct article URL for each source analysis
 
 CRITICAL RULES:
-- Identify exactly 12 major themes from the articles provided
+- Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
 - For each theme, analyze coverage from ALL provided sources
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
@@ -113,7 +113,7 @@ ${articlesSummary}
 
 Sources to analyze: ${safeSourceNames.join(', ')}
 
-Create a comprehensive report with exactly 12 major themes/stories. For each theme:
+Create a comprehensive report with exactly ${themeCount} major themes/stories covering DIVERSE topics. For each theme:
 1. Write a compelling headline
 2. Summarize the story in 2-3 sentences
 3. Analyze how each source covered it (stance, quotes, bias indicators)
