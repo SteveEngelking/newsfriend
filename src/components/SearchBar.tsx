@@ -17,7 +17,7 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
   const clampArticlesPerSource = (raw: string) => {
     const parsed = Number.parseInt(raw, 10);
     const fallback = Number.isFinite(parsed) ? parsed : 8;
-    return Math.min(15, Math.max(3, fallback));
+    return Math.min(25, Math.max(3, fallback));
   };
 
   const commitArticlesPerSource = (raw: string) => {
@@ -82,7 +82,7 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
             aria-describedby="articles-count-help"
           />
           <span id="articles-count-help" className="sr-only">
-            Enter a number between 3 and 15.
+            Enter a number between 3 and 25.
           </span>
         </div>
       </div>
