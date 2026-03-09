@@ -195,7 +195,7 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
 
     if (!response || !response.ok) {
       const status = response?.status ?? 500;
-      if (response.status === 429) {
+      if (status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
