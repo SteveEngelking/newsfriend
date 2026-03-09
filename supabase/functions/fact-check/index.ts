@@ -201,7 +201,7 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (response.status === 402) {
+      if (status === 402) {
         return new Response(
           JSON.stringify({ error: 'AI credits exhausted. Please add funds in Settings → Workspace → Usage.' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
