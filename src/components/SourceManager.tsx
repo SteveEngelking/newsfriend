@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { NewsSource } from '@/lib/types';
+import { addSource, removeSource } from '@/lib/sources';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { X, Plus, ChevronDown, Newspaper } from 'lucide-react';
+import { X, Plus, ChevronDown, Newspaper, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   sources: NewsSource[];
@@ -17,21 +19,39 @@ export function SourceManager({ sources, onChange }: Props) {
   const [open, setOpen] = useState(true);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
+  const [adding, setAdding] = useState(false);
+  const { toast } = useToast();
 
   const toggle = (id: string) => {
     onChange(sources.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
   };
 
-  const remove = (id: string) => {
-    onChange(sources.filter(s => s.id !== id));
+  const handleRemove = async (id: string) => {
+    const ok = await removeSource(id);
+    if (ok) {
+      onChange(sources.filter(s => s.id !== id));
+    } else {
+      toast({ title: 'Error', description: 'Failed to remove source', variant: 'destructive' });
+    }
   };
 
-  const add = () => {
+  const handleAdd = async () => {
     if (!newName.trim() || !newUrl.trim()) return;
-    const id = `custom-${Date.now()}`;
-    onChange([...sources, { id, name: newName.trim(), url: newUrl.trim(), enabled: false }]);
-    setNewName('');
-    setNewUrl('');
+    setAdding(true);
+    let url = newUrl.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
+    }
+    const result = await addSource(newName.trim(), url);
+    if (result) {
+      onChange([...sources, { id: result.id, name: newName.trim(), url, enabled: false }]);
+      setNewName('');
+      setNewUrl('');
+      toast({ title: 'Source added', description: `${newName.trim()} is now available for all users.` });
+    } else {
+      toast({ title: 'Error', description: 'Failed to add source', variant: 'destructive' });
+    }
+    setAdding(false);
   };
 
   const enabledCount = sources.filter(s => s.enabled).length;
@@ -77,7 +97,7 @@ export function SourceManager({ sources, onChange }: Props) {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => remove(source.id)}
+                    onClick={() => handleRemove(source.id)}
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>
@@ -98,8 +118,8 @@ export function SourceManager({ sources, onChange }: Props) {
                 onChange={e => setNewUrl(e.target.value)}
                 className="text-sm"
               />
-              <Button size="sm" onClick={add} disabled={!newName.trim() || !newUrl.trim()}>
-                <Plus className="h-4 w-4" />
+              <Button size="sm" onClick={handleAdd} disabled={!newName.trim() || !newUrl.trim() || adding}>
+                {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               </Button>
             </div>
           </CardContent>

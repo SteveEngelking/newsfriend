@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { NewsSource, FactCheckReport, ScrapedArticle, DailyNewsReport } from '@/lib/types';
-import { loadSources, saveSources } from '@/lib/sources';
+import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
 import { SearchBar } from '@/components/SearchBar';
 import { ReportView } from '@/components/ReportView';
@@ -15,7 +15,7 @@ import { Shield, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Index = () => {
-  const [sources, setSources] = useState<NewsSource[]>(loadSources);
+  const [sources, setSources] = useState<NewsSource[]>([]);
   const [report, setReport] = useState<FactCheckReport | null>(null);
   const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,9 +24,13 @@ const Index = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetchSources().then(setSources);
+  }, []);
+
   const handleSourcesChange = useCallback((newSources: NewsSource[]) => {
     setSources(newSources);
-    saveSources(newSources);
+    saveEnabledState(newSources);
   }, []);
 
   const searchSources = useCallback(async (enabledSources: NewsSource[], query: string) => {
@@ -137,7 +141,6 @@ const Index = () => {
     setLoadingProgress(0);
 
     try {
-      // Search for recent news from each source
       const allArticles: ScrapedArticle[] = [];
       for (let i = 0; i < enabledSources.length; i++) {
         const source = enabledSources[i];
@@ -150,10 +153,9 @@ const Index = () => {
             sourceUrl = `https://${sourceUrl}`;
           }
           const hostname = new URL(sourceUrl).hostname;
-          // Search for latest news from this source
           const result = await firecrawlApi.search(`latest news today site:${hostname}`, {
             limit: 5,
-            tbs: 'qdr:d', // last 24 hours
+            tbs: 'qdr:d',
             scrapeOptions: { formats: ['markdown'] },
           });
 

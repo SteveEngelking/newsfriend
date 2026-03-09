@@ -1,6 +1,7 @@
+import { supabase } from '@/integrations/supabase/client';
 import { NewsSource } from './types';
 
-const STORAGE_KEY = 'news-factcheck-sources';
+const ENABLED_KEY = 'news-factcheck-enabled';
 
 export const DEFAULT_SOURCES: NewsSource[] = [
   { id: 'reuters', name: 'Reuters', url: 'https://www.reuters.com', enabled: true },
@@ -13,14 +14,75 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', enabled: true },
 ];
 
-export function loadSources(): NewsSource[] {
+/** Load which source IDs are enabled (stored per-browser) */
+function loadEnabledIds(): Set<string> | null {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    const stored = localStorage.getItem(ENABLED_KEY);
+    if (stored) return new Set(JSON.parse(stored));
   } catch {}
-  return DEFAULT_SOURCES;
+  return null;
 }
 
-export function saveSources(sources: NewsSource[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sources));
+function saveEnabledIds(sources: NewsSource[]) {
+  const enabledIds = sources.filter(s => s.enabled).map(s => s.id);
+  localStorage.setItem(ENABLED_KEY, JSON.stringify(enabledIds));
+}
+
+/** Fetch all shared sources from DB and merge with local enabled state */
+export async function fetchSources(): Promise<NewsSource[]> {
+  const { data, error } = await supabase
+    .from('news_sources')
+    .select('id, name, url')
+    .order('created_at', { ascending: true });
+
+  if (error || !data?.length) {
+    // Fallback to defaults
+    return DEFAULT_SOURCES;
+  }
+
+  const enabledIds = loadEnabledIds();
+  // If user has no local preference yet, default sources are enabled, custom ones disabled
+  const defaultIds = new Set(DEFAULT_SOURCES.map(s => s.id));
+
+  return data.map(row => ({
+    id: row.id,
+    name: row.name,
+    url: row.url,
+    enabled: enabledIds
+      ? enabledIds.has(row.id)
+      : defaultIds.has(row.id),
+  }));
+}
+
+/** Add a new source to the shared DB */
+export async function addSource(name: string, url: string): Promise<{ id: string } | null> {
+  const id = `custom-${Date.now()}`;
+  const { error } = await supabase
+    .from('news_sources')
+    .insert({ id, name, url });
+
+  if (error) {
+    console.error('Failed to add source:', error);
+    return null;
+  }
+  return { id };
+}
+
+/** Remove a source from the shared DB */
+export async function removeSource(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('news_sources')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to remove source:', error);
+    return false;
+  }
+  return true;
+}
+
+/** Save enabled/disabled state locally */
+export function saveEnabledState(sources: NewsSource[]) {
+  saveEnabledIds(sources);
 }
