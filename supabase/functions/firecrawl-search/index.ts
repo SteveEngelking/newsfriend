@@ -11,9 +11,9 @@ Deno.serve(async (req) => {
   try {
     const { query, options } = await req.json();
 
-    if (!query) {
+    if (!query || typeof query !== 'string' || query.length > 500) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Query is required' }),
+        JSON.stringify({ success: false, error: 'Query is required and must be under 500 characters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,6 +26,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Server-side validation: cap limit, whitelist scrapeOptions
+    const sanitizedLimit = Math.min(Math.max(Number(options?.limit) || 3, 1), 10);
+    const allowedFormats = ['markdown', 'html'];
+    const sanitizedScrapeOptions = options?.scrapeOptions?.formats
+      ? { formats: options.scrapeOptions.formats.filter((f: string) => allowedFormats.includes(f)) }
+      : undefined;
+
     console.log('Searching:', query);
 
     const response = await fetch('https://api.firecrawl.dev/v1/search', {
@@ -36,11 +43,11 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         query,
-        limit: options?.limit || 3,
-        lang: options?.lang,
-        country: options?.country,
-        tbs: options?.tbs,
-        scrapeOptions: options?.scrapeOptions,
+        limit: sanitizedLimit,
+        lang: typeof options?.lang === 'string' ? options.lang.slice(0, 10) : undefined,
+        country: typeof options?.country === 'string' ? options.country.slice(0, 10) : undefined,
+        tbs: typeof options?.tbs === 'string' ? options.tbs.slice(0, 20) : undefined,
+        scrapeOptions: sanitizedScrapeOptions,
       }),
     });
 
@@ -62,7 +69,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error searching:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Failed to search' }),
+      JSON.stringify({ success: false, error: 'Failed to search' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -3,6 +3,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function sanitizeArticles(articles: any[]): any[] {
+  return articles.slice(0, 20).map((a: any) => ({
+    sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
+    title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
+    url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
+    content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
+  }));
+}
+
+function sanitizeSourceNames(names: any): string[] {
+  if (!Array.isArray(names)) return [];
+  return names.slice(0, 20).filter((n: any) => typeof n === 'string').map((n: string) => n.slice(0, 100));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -11,9 +25,16 @@ Deno.serve(async (req) => {
   try {
     const { topic, articles, allSourceNames } = await req.json();
 
-    if (!topic || !articles?.length) {
+    if (!topic || typeof topic !== 'string' || topic.length > 500) {
       return new Response(
-        JSON.stringify({ error: 'Topic and articles are required' }),
+        JSON.stringify({ error: 'Topic is required and must be under 500 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!Array.isArray(articles) || !articles.length) {
+      return new Response(
+        JSON.stringify({ error: 'Articles array is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,7 +47,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    const articlesSummary = articles.map((a: any, i: number) =>
+    // Sanitize inputs server-side
+    const safeArticles = sanitizeArticles(articles);
+    const safeSourceNames = sanitizeSourceNames(allSourceNames);
+
+    const articlesSummary = safeArticles.map((a, i) =>
       `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
     ).join('\n\n---\n\n');
 
@@ -38,8 +63,8 @@ CRITICAL RULES:
 - Use all three statuses: verified, disputed, AND unverified. A good report typically has a mix.
 - You MUST respond with a valid JSON object using tool calling. Do NOT include any text outside the tool call.`;
 
-    const sourceNamesFromArticles = [...new Set(articles.map((a: any) => a.sourceName))];
-    const allNames = allSourceNames?.length ? [...new Set([...allSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
+    const sourceNamesFromArticles = [...new Set(safeArticles.map(a => a.sourceName))];
+    const allNames = safeSourceNames.length ? [...new Set([...safeSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
     const minClaims = Math.max(10, allNames.length);
 
     const userPrompt = `Analyze the following articles about "${topic}" and produce a comprehensive fact-check report.
@@ -180,7 +205,7 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
   } catch (error) {
     console.error('Fact-check error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred during fact-checking' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

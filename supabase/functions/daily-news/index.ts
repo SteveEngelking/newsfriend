@@ -3,6 +3,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function sanitizeArticles(articles: any[]): any[] {
+  return articles.slice(0, 20).map((a: any) => ({
+    sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
+    title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
+    url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
+    content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
+  }));
+}
+
+function sanitizeSourceNames(names: any): string[] {
+  if (!Array.isArray(names)) return [];
+  return names.slice(0, 20).filter((n: any) => typeof n === 'string').map((n: string) => n.slice(0, 100));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -11,7 +25,7 @@ Deno.serve(async (req) => {
   try {
     const { articles, allSourceNames } = await req.json();
 
-    if (!articles?.length) {
+    if (!Array.isArray(articles) || !articles.length) {
       return new Response(
         JSON.stringify({ error: 'Articles are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -26,13 +40,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const articlesSummary = articles.map((a: any, i: number) =>
+    // Sanitize inputs server-side
+    const safeArticles = sanitizeArticles(articles);
+    const safeSourceNames = sanitizeSourceNames(allSourceNames);
+
+    const articlesSummary = safeArticles.map((a, i) =>
       `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
     ).join('\n\n---\n\n');
 
     // Build a map of source to article URLs for reference
     const sourceUrlMap: Record<string, string> = {};
-    for (const a of articles) {
+    for (const a of safeArticles) {
       if (!sourceUrlMap[a.sourceName]) {
         sourceUrlMap[a.sourceName] = a.url;
       }
@@ -60,7 +78,7 @@ CRITICAL RULES:
 
 ${articlesSummary}
 
-Sources to analyze: ${allSourceNames.join(', ')}
+Sources to analyze: ${safeSourceNames.join(', ')}
 
 Create a comprehensive report with exactly 12 major themes/stories. For each theme:
 1. Write a compelling headline
@@ -196,7 +214,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         ...t,
       })),
       conclusion: parsed.conclusion,
-      sourcesAnalyzed: allSourceNames,
+      sourcesAnalyzed: safeSourceNames,
     };
 
     console.log('Daily news report generated successfully');
@@ -208,7 +226,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
   } catch (error) {
     console.error('Daily news error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred generating the daily news report' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
