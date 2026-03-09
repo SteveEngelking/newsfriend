@@ -193,7 +193,8 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
       if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
     }
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
+      const status = response?.status ?? 500;
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
