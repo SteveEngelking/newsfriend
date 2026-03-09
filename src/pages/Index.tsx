@@ -155,11 +155,13 @@ const Index = () => {
           const hostname = new URL(sourceUrl).hostname;
           // Use diverse queries to avoid clustering on one dominant story
           const queries = [
-            `site:${hostname}`,
-            `world news site:${hostname}`,
-            `politics economy site:${hostname}`,
+            `latest news today site:${hostname}`,
+            `technology science site:${hostname}`,
+            `economy business finance site:${hostname}`,
+            `health environment climate site:${hostname}`,
+            `sports culture entertainment site:${hostname}`,
           ];
-          const perQuery = Math.ceil(articlesPerSource / queries.length);
+          const perQuery = Math.max(1, Math.ceil(articlesPerSource / queries.length));
           const seenUrls = new Set<string>();
 
           for (const query of queries) {
