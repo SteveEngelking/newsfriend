@@ -163,22 +163,32 @@ const Index = () => {
           const seenUrls = new Set<string>();
 
           for (const query of queries) {
-            const result = await firecrawlApi.search(query, {
-              limit: perQuery,
-              tbs: 'qdr:d',
-              scrapeOptions: { formats: ['markdown'] },
-            });
+            try {
+              const result = await firecrawlApi.search(query, {
+                limit: perQuery,
+                tbs: 'qdr:d',
+                scrapeOptions: { formats: ['markdown'] },
+              });
 
-          if (result.success && result.data) {
-            const articles = (Array.isArray(result.data) ? result.data : []).map((item: any) => ({
-              sourceId: source.id,
-              sourceName: source.name,
-              title: item.title || 'Untitled',
-              url: item.url || '',
-              snippet: item.description || '',
-              content: item.markdown || item.description || '',
-            }));
-            allArticles.push(...articles);
+              if (result.success && result.data) {
+                const articles = (Array.isArray(result.data) ? result.data : [])
+                  .filter((item: any) => item.url && !seenUrls.has(item.url))
+                  .map((item: any) => {
+                    seenUrls.add(item.url);
+                    return {
+                      sourceId: source.id,
+                      sourceName: source.name,
+                      title: item.title || 'Untitled',
+                      url: item.url || '',
+                      snippet: item.description || '',
+                      content: item.markdown || item.description || '',
+                    };
+                  });
+                allArticles.push(...articles);
+              }
+            } catch (queryErr) {
+              console.error(`Error with query "${query}":`, queryErr);
+            }
           }
         } catch (err) {
           console.error(`Error fetching from ${source.name}:`, err);
