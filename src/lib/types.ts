@@ -44,6 +44,7 @@ export interface DailyTheme {
     stance: string;
     keyQuotes: string[];
     biasIndicators: string[];
+    articleUrl?: string;
   }[];
   criticalCommentary: string;
   significance: 'high' | 'medium' | 'low';

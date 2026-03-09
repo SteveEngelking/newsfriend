@@ -30,6 +30,14 @@ Deno.serve(async (req) => {
       `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
     ).join('\n\n---\n\n');
 
+    // Build a map of source to article URLs for reference
+    const sourceUrlMap: Record<string, string> = {};
+    for (const a of articles) {
+      if (!sourceUrlMap[a.sourceName]) {
+        sourceUrlMap[a.sourceName] = a.url;
+      }
+    }
+
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 STYLE GUIDELINES:
@@ -39,11 +47,13 @@ STYLE GUIDELINES:
 - Highlight what's NOT being reported as much as what is
 - Use direct quotes sparingly but effectively
 - Each theme section should read like a mini-editorial
+- ALWAYS include the direct article URL for each source analysis
 
 CRITICAL RULES:
 - Identify exactly 12 major themes from the articles provided
 - For each theme, analyze coverage from ALL provided sources
 - Be skeptical — note contradictions, sensationalism, and potential spin
+- Include the articleUrl from the provided articles for each source
 - You MUST respond with a valid JSON object using tool calling`;
 
     const userPrompt = `Analyze the following news articles from the last 24 hours and produce a critical daily news briefing.
@@ -95,24 +105,25 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                       sourceAnalysis: {
                         type: 'array',
                         items: {
-                          type: 'object',
-                          properties: {
-                            sourceName: { type: 'string' },
-                            stance: { type: 'string', description: 'How this source framed/covered the story (1-2 sentences)' },
-                            keyQuotes: {
-                              type: 'array',
-                              items: { type: 'string' },
-                              description: '1-2 notable quotes or phrases from this source',
-                            },
-                            biasIndicators: {
-                              type: 'array',
-                              items: { type: 'string' },
-                              description: 'Specific examples of bias, framing choices, or omissions',
-                            },
+                        type: 'object',
+                        properties: {
+                          sourceName: { type: 'string' },
+                          stance: { type: 'string', description: 'How this source framed/covered the story (1-2 sentences)' },
+                          keyQuotes: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            description: '1-2 notable quotes or phrases from this source',
                           },
-                          required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators'],
-                          additionalProperties: false,
+                          biasIndicators: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            description: 'Specific examples of bias, framing choices, or omissions',
+                          },
+                          articleUrl: { type: 'string', description: 'Direct URL to the article from this source' },
                         },
+                        required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
+                        additionalProperties: false,
+                      },
                       },
                       criticalCommentary: { 
                         type: 'string', 

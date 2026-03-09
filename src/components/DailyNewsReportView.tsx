@@ -75,7 +75,19 @@ export function DailyNewsReportView({ report, autoOpenPdf = true }: Props) {
             <div className="space-y-4">
               {theme.sourceAnalysis.map((sa, saIndex) => (
                 <div key={saIndex} className="border-l-2 border-primary/30 pl-4">
-                  <h4 className="font-semibold text-sm">{sa.sourceName}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-sm">{sa.sourceName}</h4>
+                    {sa.articleUrl && (
+                      <a
+                        href={sa.articleUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        [Read Article]
+                      </a>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">{sa.stance}</p>
                   {sa.keyQuotes.length > 0 && (
                     <div className="mt-2">
