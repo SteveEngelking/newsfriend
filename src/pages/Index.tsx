@@ -210,6 +210,7 @@ const Index = () => {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('daily-news', {
         body: {
           allSourceNames: enabledSources.map(s => s.name),
+          totalArticlesRequested: articlesPerSource * enabledSources.length,
           articles: allArticles.map(a => ({
             sourceName: a.sourceName,
             title: a.title,
