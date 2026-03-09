@@ -34,3 +34,26 @@ export interface FactCheckReport {
   }[];
   generatedAt: string;
 }
+
+export interface DailyTheme {
+  id: string;
+  headline: string;
+  summary: string;
+  sourceAnalysis: {
+    sourceName: string;
+    stance: string;
+    keyQuotes: string[];
+    biasIndicators: string[];
+  }[];
+  criticalCommentary: string;
+  significance: 'high' | 'medium' | 'low';
+}
+
+export interface DailyNewsReport {
+  title: string;
+  generatedAt: string;
+  introduction: string;
+  themes: DailyTheme[];
+  conclusion: string;
+  sourcesAnalyzed: string[];
+}
