@@ -11,12 +11,27 @@ export async function generateDailyNewsPDF(_report: DailyNewsReport, element: HT
 
   const imgData = canvas.toDataURL('image/png');
 
-  // Single long page to avoid cutting text across page breaks
-  const pageWidth = 210; // A4 width in mm
-  const imgHeight = (canvas.height * pageWidth) / canvas.width;
+  // Paginated A4 PDF to prevent long report truncation
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
 
-  const pdf = new jsPDF('p', 'mm', [pageWidth, imgHeight]);
-  pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, imgHeight);
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
   pdf.save('news-of-the-day.pdf');
 }
 
