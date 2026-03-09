@@ -207,8 +207,8 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
+      const errorText = response ? await response.text() : 'No response after retries';
+      console.error('AI gateway error:', status, errorText);
       return new Response(
         JSON.stringify({ error: 'AI analysis failed' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
