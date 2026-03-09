@@ -9,40 +9,14 @@ export async function generateDailyNewsPDF(_report: DailyNewsReport, element: HT
     logging: false,
   });
 
-  const pdf = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = 210;
-  const pageHeight = 297;
-  
-  const imgWidth = pageWidth;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
-  const totalPages = Math.ceil(imgHeight / pageHeight);
-  const pixelsPerPage = canvas.height / totalPages;
+  const imgData = canvas.toDataURL('image/png');
 
-  for (let page = 0; page < totalPages; page++) {
-    if (page > 0) pdf.addPage();
+  // Single long page to avoid cutting text across page breaks
+  const pageWidth = 210; // A4 width in mm
+  const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-    // Create a canvas slice for this page
-    const pageCanvas = document.createElement('canvas');
-    pageCanvas.width = canvas.width;
-    pageCanvas.height = pixelsPerPage;
-    
-    const ctx = pageCanvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      ctx.drawImage(
-        canvas,
-        0, page * pixelsPerPage,
-        canvas.width, pixelsPerPage,
-        0, 0,
-        canvas.width, pixelsPerPage
-      );
-    }
-
-    const pageImgData = pageCanvas.toDataURL('image/png');
-    pdf.addImage(pageImgData, 'PNG', 0, 0, pageWidth, pageHeight);
-  }
-
+  const pdf = new jsPDF('p', 'mm', [pageWidth, imgHeight]);
+  pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, imgHeight);
   pdf.save('news-of-the-day.pdf');
 }
+
