@@ -12,6 +12,20 @@ interface Props {
 export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
   const [topic, setTopic] = useState('');
   const [articlesPerSource, setArticlesPerSource] = useState(8);
+  const [articlesPerSourceInput, setArticlesPerSourceInput] = useState('8');
+
+  const clampArticlesPerSource = (raw: string) => {
+    const parsed = Number.parseInt(raw, 10);
+    const fallback = Number.isFinite(parsed) ? parsed : 8;
+    return Math.min(15, Math.max(3, fallback));
+  };
+
+  const commitArticlesPerSource = (raw: string) => {
+    const clamped = clampArticlesPerSource(raw);
+    setArticlesPerSource(clamped);
+    setArticlesPerSourceInput(String(clamped));
+    return clamped;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,30 +49,41 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Analyze'}
         </Button>
       </form>
+
       <div className="flex items-center justify-center gap-3">
-        <Button 
-          onClick={() => onDailyNews(articlesPerSource)} 
-          variant="outline" 
+        <Button
+          onClick={() => onDailyNews(commitArticlesPerSource(articlesPerSourceInput))}
+          variant="outline"
           disabled={isLoading}
           className="gap-2"
         >
           <Newspaper className="h-4 w-4" />
           News of the Day
         </Button>
+
         <div className="flex items-center gap-2">
           <label htmlFor="articles-count" className="text-sm text-muted-foreground whitespace-nowrap">
             Articles/source:
           </label>
           <Input
             id="articles-count"
-            type="number"
-            min={3}
-            max={15}
-            value={articlesPerSource}
-            onChange={e => setArticlesPerSource(Math.min(15, Math.max(3, parseInt(e.target.value) || 8)))}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={articlesPerSourceInput}
+            onChange={e => {
+              const next = e.target.value;
+              // Allow empty while typing; only accept digits.
+              if (next === '' || /^\d+$/.test(next)) setArticlesPerSourceInput(next);
+            }}
+            onBlur={() => commitArticlesPerSource(articlesPerSourceInput)}
             className="w-16 h-9 text-center"
             disabled={isLoading}
+            aria-describedby="articles-count-help"
           />
+          <span id="articles-count-help" className="sr-only">
+            Enter a number between 3 and 15.
+          </span>
         </div>
       </div>
     </div>
