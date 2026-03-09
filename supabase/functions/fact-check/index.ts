@@ -107,79 +107,91 @@ The user selected these ${allNames.length} sources for analysis: ${allNames.join
 
 MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} entries — one for each of these sources: ${allNames.join(', ')}. If a source had no articles found, still include it and note the absence of coverage in its perspective. Do NOT return fewer than ${allNames.length} sourceComparison entries.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'generate_factcheck_report',
-            description: 'Generate a structured fact-check report from analyzed news articles',
-            parameters: {
-              type: 'object',
-              properties: {
-                summary: { type: 'string', description: 'A comprehensive 2-4 sentence summary of the topic based on all sources' },
-                claims: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      text: { type: 'string', description: 'The claim text' },
-                      status: { type: 'string', enum: ['verified', 'disputed', 'unverified'] },
-                      confidence: { type: 'number', description: 'Confidence score 0-100' },
-                      explanation: { type: 'string', description: 'Why this claim has this status' },
-                      sources: {
-                        type: 'array',
-                        items: {
-                          type: 'object',
-                          properties: {
-                            sourceName: { type: 'string' },
-                            excerpt: { type: 'string', description: 'Relevant excerpt from the source' },
-                          },
-                          required: ['sourceName', 'excerpt'],
-                          additionalProperties: false,
+    const requestBody = JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'generate_factcheck_report',
+          description: 'Generate a structured fact-check report from analyzed news articles',
+          parameters: {
+            type: 'object',
+            properties: {
+              summary: { type: 'string', description: 'A comprehensive 2-4 sentence summary of the topic based on all sources' },
+              claims: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string', description: 'The claim text' },
+                    status: { type: 'string', enum: ['verified', 'disputed', 'unverified'] },
+                    confidence: { type: 'number', description: 'Confidence score 0-100' },
+                    explanation: { type: 'string', description: 'Why this claim has this status' },
+                    sources: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          sourceName: { type: 'string' },
+                          excerpt: { type: 'string', description: 'Relevant excerpt from the source' },
                         },
+                        required: ['sourceName', 'excerpt'],
+                        additionalProperties: false,
                       },
                     },
-                    required: ['text', 'status', 'confidence', 'explanation', 'sources'],
-                    additionalProperties: false,
                   },
-                },
-                sourceComparison: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      sourceName: { type: 'string' },
-                      perspective: { type: 'string', description: 'How this source framed the topic' },
-                      keyPoints: {
-                        type: 'array',
-                        items: { type: 'string' },
-                        description: '2-4 key points unique to this source',
-                      },
-                    },
-                    required: ['sourceName', 'perspective', 'keyPoints'],
-                    additionalProperties: false,
-                  },
+                  required: ['text', 'status', 'confidence', 'explanation', 'sources'],
+                  additionalProperties: false,
                 },
               },
-              required: ['summary', 'claims', 'sourceComparison'],
-              additionalProperties: false,
+              sourceComparison: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    sourceName: { type: 'string' },
+                    perspective: { type: 'string', description: 'How this source framed the topic' },
+                    keyPoints: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      description: '2-4 key points unique to this source',
+                    },
+                  },
+                  required: ['sourceName', 'perspective', 'keyPoints'],
+                  additionalProperties: false,
+                },
+              },
             },
+            required: ['summary', 'claims', 'sourceComparison'],
+            additionalProperties: false,
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'generate_factcheck_report' } },
-      }),
+        },
+      }],
+      tool_choice: { type: 'function', function: { name: 'generate_factcheck_report' } },
     });
+
+    // Retry up to 3 times on transient errors (503, 500)
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: requestBody,
+      });
+
+      if (response.status !== 503 && response.status !== 500) break;
+      console.warn(`AI gateway returned ${response.status}, attempt ${attempt + 1}/3`);
+      // Consume body before retry
+      await response.text();
+      if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+    }
 
     if (!response.ok) {
       if (response.status === 429) {
