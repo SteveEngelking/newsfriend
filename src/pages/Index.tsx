@@ -153,11 +153,21 @@ const Index = () => {
             sourceUrl = `https://${sourceUrl}`;
           }
           const hostname = new URL(sourceUrl).hostname;
-          const result = await firecrawlApi.search(`latest news today site:${hostname}`, {
-            limit: articlesPerSource,
-            tbs: 'qdr:d',
-            scrapeOptions: { formats: ['markdown'] },
-          });
+          // Use diverse queries to avoid clustering on one dominant story
+          const queries = [
+            `site:${hostname}`,
+            `world news site:${hostname}`,
+            `politics economy site:${hostname}`,
+          ];
+          const perQuery = Math.ceil(articlesPerSource / queries.length);
+          const seenUrls = new Set<string>();
+
+          for (const query of queries) {
+            const result = await firecrawlApi.search(query, {
+              limit: perQuery,
+              tbs: 'qdr:d',
+              scrapeOptions: { formats: ['markdown'] },
+            });
 
           if (result.success && result.data) {
             const articles = (Array.isArray(result.data) ? result.data : []).map((item: any) => ({
