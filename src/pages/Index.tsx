@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { NewsSource, FactCheckReport, ScrapedArticle } from '@/lib/types';
+import { NewsSource, FactCheckReport, ScrapedArticle, DailyNewsReport } from '@/lib/types';
 import { loadSources, saveSources } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
 import { SearchBar } from '@/components/SearchBar';
 import { ReportView } from '@/components/ReportView';
+import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { LoadingState } from '@/components/LoadingState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { motion } from 'framer-motion';
 const Index = () => {
   const [sources, setSources] = useState<NewsSource[]>(loadSources);
   const [report, setReport] = useState<FactCheckReport | null>(null);
+  const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'searching' | 'analyzing'>('searching');
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -27,6 +29,43 @@ const Index = () => {
     saveSources(newSources);
   }, []);
 
+  const searchSources = useCallback(async (enabledSources: NewsSource[], query: string) => {
+    const allArticles: ScrapedArticle[] = [];
+    for (let i = 0; i < enabledSources.length; i++) {
+      const source = enabledSources[i];
+      setLoadingMessage(`Searching ${source.name}...`);
+      setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
+
+      try {
+        let sourceUrl = source.url.trim();
+        if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
+          sourceUrl = `https://${sourceUrl}`;
+        }
+        const hostname = new URL(sourceUrl).hostname;
+        const searchQuery = `${query} site:${hostname}`;
+        const result = await firecrawlApi.search(searchQuery, {
+          limit: 3,
+          scrapeOptions: { formats: ['markdown'] },
+        });
+
+        if (result.success && result.data) {
+          const articles = (Array.isArray(result.data) ? result.data : []).map((item: any) => ({
+            sourceId: source.id,
+            sourceName: source.name,
+            title: item.title || 'Untitled',
+            url: item.url || '',
+            snippet: item.description || '',
+            content: item.markdown || item.description || '',
+          }));
+          allArticles.push(...articles);
+        }
+      } catch (err) {
+        console.error(`Error searching ${source.name}:`, err);
+      }
+    }
+    return allArticles;
+  }, []);
+
   const handleSearch = useCallback(async (topic: string) => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
@@ -36,44 +75,12 @@ const Index = () => {
 
     setIsLoading(true);
     setReport(null);
+    setDailyReport(null);
     setLoadingStage('searching');
     setLoadingProgress(0);
 
     try {
-      // Step 1: Search each source via Firecrawl
-      const allArticles: ScrapedArticle[] = [];
-      for (let i = 0; i < enabledSources.length; i++) {
-        const source = enabledSources[i];
-        setLoadingMessage(`Searching ${source.name}...`);
-        setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
-
-        try {
-          let sourceUrl = source.url.trim();
-          if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
-            sourceUrl = `https://${sourceUrl}`;
-          }
-          const hostname = new URL(sourceUrl).hostname;
-          const query = `${topic} site:${hostname}`;
-          const result = await firecrawlApi.search(query, {
-            limit: 3,
-            scrapeOptions: { formats: ['markdown'] },
-          });
-
-          if (result.success && result.data) {
-            const articles = (Array.isArray(result.data) ? result.data : []).map((item: any) => ({
-              sourceId: source.id,
-              sourceName: source.name,
-              title: item.title || 'Untitled',
-              url: item.url || '',
-              snippet: item.description || '',
-              content: item.markdown || item.description || '',
-            }));
-            allArticles.push(...articles);
-          }
-        } catch (err) {
-          console.error(`Error searching ${source.name}:`, err);
-        }
-      }
+      const allArticles = await searchSources(enabledSources, topic);
 
       if (allArticles.length === 0) {
         toast({ title: 'No articles found', description: 'Try a different topic or enable more sources.', variant: 'destructive' });
@@ -81,7 +88,6 @@ const Index = () => {
         return;
       }
 
-      // Step 2: Send to AI for analysis
       setLoadingStage('analyzing');
       setLoadingProgress(60);
       setLoadingMessage(`Analyzing ${allArticles.length} articles with AI...`);
@@ -115,7 +121,102 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
+  }, [sources, toast, searchSources]);
+
+  const handleDailyNews = useCallback(async () => {
+    const enabledSources = sources.filter(s => s.enabled);
+    if (enabledSources.length === 0) {
+      toast({ title: 'No sources selected', description: 'Enable at least one news source.', variant: 'destructive' });
+      return;
+    }
+
+    setIsLoading(true);
+    setReport(null);
+    setDailyReport(null);
+    setLoadingStage('searching');
+    setLoadingProgress(0);
+
+    try {
+      // Search for recent news from each source
+      const allArticles: ScrapedArticle[] = [];
+      for (let i = 0; i < enabledSources.length; i++) {
+        const source = enabledSources[i];
+        setLoadingMessage(`Fetching latest from ${source.name}...`);
+        setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
+
+        try {
+          let sourceUrl = source.url.trim();
+          if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
+            sourceUrl = `https://${sourceUrl}`;
+          }
+          const hostname = new URL(sourceUrl).hostname;
+          // Search for latest news from this source
+          const result = await firecrawlApi.search(`latest news today site:${hostname}`, {
+            limit: 5,
+            tbs: 'qdr:d', // last 24 hours
+            scrapeOptions: { formats: ['markdown'] },
+          });
+
+          if (result.success && result.data) {
+            const articles = (Array.isArray(result.data) ? result.data : []).map((item: any) => ({
+              sourceId: source.id,
+              sourceName: source.name,
+              title: item.title || 'Untitled',
+              url: item.url || '',
+              snippet: item.description || '',
+              content: item.markdown || item.description || '',
+            }));
+            allArticles.push(...articles);
+          }
+        } catch (err) {
+          console.error(`Error fetching from ${source.name}:`, err);
+        }
+      }
+
+      if (allArticles.length === 0) {
+        toast({ title: 'No articles found', description: 'Could not find recent articles. Try again later.', variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+
+      setLoadingStage('analyzing');
+      setLoadingProgress(60);
+      setLoadingMessage(`Analyzing ${allArticles.length} articles for daily themes...`);
+
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('daily-news', {
+        body: {
+          allSourceNames: enabledSources.map(s => s.name),
+          articles: allArticles.map(a => ({
+            sourceName: a.sourceName,
+            title: a.title,
+            url: a.url,
+            content: a.content.slice(0, 3000),
+          })),
+        },
+      });
+
+      if (analysisError) throw new Error(analysisError.message);
+
+      setLoadingProgress(100);
+      setLoadingMessage('Generating PDF...');
+
+      if (analysisData?.report) {
+        setDailyReport(analysisData.report);
+      } else {
+        throw new Error('Invalid response from analysis');
+      }
+    } catch (err: any) {
+      console.error('Daily news error:', err);
+      toast({ title: 'Error', description: err.message || 'Something went wrong', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
   }, [sources, toast]);
+
+  const handleReset = useCallback(() => {
+    setReport(null);
+    setDailyReport(null);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,7 +245,7 @@ const Index = () => {
           </p>
         </motion.div>
 
-        <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        <SearchBar onSearch={handleSearch} onDailyNews={handleDailyNews} isLoading={isLoading} />
 
         <SourceManager sources={sources} onChange={handleSourcesChange} />
 
@@ -156,11 +257,19 @@ const Index = () => {
           <>
             <ReportView report={report} />
             <div className="flex justify-center">
-              <Button
-                onClick={() => setReport(null)}
-                variant="outline"
-                className="gap-2"
-              >
+              <Button onClick={handleReset} variant="outline" className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                New Search
+              </Button>
+            </div>
+          </>
+        )}
+
+        {dailyReport && !isLoading && (
+          <>
+            <DailyNewsReportView report={dailyReport} autoOpenPdf={true} />
+            <div className="flex justify-center">
+              <Button onClick={handleReset} variant="outline" className="gap-2">
                 <RotateCcw className="h-4 w-4" />
                 New Search
               </Button>
