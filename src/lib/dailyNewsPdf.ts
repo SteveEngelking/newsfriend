@@ -1,20 +1,40 @@
 import type { DailyNewsReport } from './types';
 
-export async function generateDailyNewsPDF(report: DailyNewsReport, element: HTMLElement) {
-  const html2pdf = (await import('html2pdf.js')).default;
-  
-  const filename = `news-of-the-day-${new Date().toISOString().slice(0, 10)}.pdf`;
-  
-  const opt = {
-    margin: [15, 15, 15, 15],
-    filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-  };
+export async function generateDailyNewsPDF(_report: DailyNewsReport, element: HTMLElement) {
+  // Use browser print dialog for PDF generation (secure, no vulnerable dependencies)
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    throw new Error('Pop-up blocked. Please allow pop-ups to generate PDF.');
+  }
 
-  // Generate PDF and open in new window
-  const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  window.open(pdfUrl, '_blank');
+  const styles = Array.from(document.styleSheets)
+    .map(sheet => {
+      try {
+        return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>News of the Day</title>
+      <style>
+        ${styles}
+        @media print {
+          body { margin: 0; padding: 20px; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+      </style>
+    </head>
+    <body>${element.innerHTML}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.onload = () => {
+    printWindow.print();
+  };
 }
