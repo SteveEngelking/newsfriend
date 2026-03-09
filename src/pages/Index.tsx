@@ -127,7 +127,7 @@ const Index = () => {
     }
   }, [sources, toast, searchSources]);
 
-  const handleDailyNews = useCallback(async () => {
+  const handleDailyNews = useCallback(async (articlesPerSource: number) => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
       toast({ title: 'No sources selected', description: 'Enable at least one news source.', variant: 'destructive' });
@@ -154,7 +154,7 @@ const Index = () => {
           }
           const hostname = new URL(sourceUrl).hostname;
           const result = await firecrawlApi.search(`latest news today site:${hostname}`, {
-            limit: 5,
+            limit: articlesPerSource,
             tbs: 'qdr:d',
             scrapeOptions: { formats: ['markdown'] },
           });
@@ -200,7 +200,7 @@ const Index = () => {
       if (analysisError) throw new Error(analysisError.message);
 
       setLoadingProgress(100);
-      setLoadingMessage('Generating PDF...');
+      setLoadingMessage('Done!');
 
       if (analysisData?.report) {
         setDailyReport(analysisData.report);
@@ -269,7 +269,7 @@ const Index = () => {
 
         {dailyReport && !isLoading && (
           <>
-            <DailyNewsReportView report={dailyReport} autoOpenPdf={true} />
+            <DailyNewsReportView report={dailyReport} />
             <div className="flex justify-center">
               <Button onClick={handleReset} variant="outline" className="gap-2">
                 <RotateCcw className="h-4 w-4" />
