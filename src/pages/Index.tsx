@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { NewsSource, FactCheckReport, ScrapedArticle, DailyNewsReport } from '@/lib/types';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
