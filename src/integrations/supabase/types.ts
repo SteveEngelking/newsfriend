@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      generated_reports: {
+        Row: {
+          created_at: string
+          id: string
+          report_data: Json
+          schedule_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_data: Json
+          schedule_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_data?: Json
+          schedule_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "report_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news_sources: {
         Row: {
           created_at: string
@@ -32,6 +64,36 @@ export type Database = {
           id?: string
           name?: string
           url?: string
+        }
+        Relationships: []
+      }
+      report_schedules: {
+        Row: {
+          articles_per_source: number
+          created_at: string
+          enabled: boolean
+          frequency: string
+          id: string
+          last_run_at: string | null
+          source_ids: string[]
+        }
+        Insert: {
+          articles_per_source?: number
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          source_ids?: string[]
+        }
+        Update: {
+          articles_per_source?: number
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          source_ids?: string[]
         }
         Relationships: []
       }

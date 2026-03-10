@@ -7,6 +7,7 @@ import { ReportView } from '@/components/ReportView';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { LoadingState } from '@/components/LoadingState';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ScheduleManager } from '@/components/ScheduleManager';
 import { Button } from '@/components/ui/button';
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { supabase } from '@/integrations/supabase/client';
@@ -278,6 +279,8 @@ const Index = () => {
         <SearchBar onSearch={handleSearch} onDailyNews={handleDailyNews} isLoading={isLoading} />
 
         <SourceManager sources={sources} onChange={handleSourcesChange} />
+
+        <ScheduleManager sources={sources} />
 
         {isLoading && (
           <LoadingState stage={loadingStage} progress={loadingProgress} message={loadingMessage} />
