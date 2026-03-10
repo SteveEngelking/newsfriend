@@ -141,9 +141,11 @@ const Index = () => {
     setLoadingProgress(0);
 
     try {
+      // Shuffle sources to avoid always favoring the same ones
+      const shuffled = [...enabledSources].sort(() => Math.random() - 0.5);
       const allArticles: ScrapedArticle[] = [];
-      for (let i = 0; i < enabledSources.length; i++) {
-        const source = enabledSources[i];
+      for (let i = 0; i < shuffled.length; i++) {
+        const source = shuffled[i];
         setLoadingMessage(`Fetching latest from ${source.name}...`);
         setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
 
