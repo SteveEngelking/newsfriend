@@ -48,7 +48,7 @@ export function ScheduleManager({ sources }: Props) {
     ]);
 
     if (schedRes.data) setSchedule(schedRes.data as Schedule);
-    if (repRes.data) setReports(repRes.data as GeneratedReport[]);
+    if (repRes.data) setReports(repRes.data as unknown as GeneratedReport[]);
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
