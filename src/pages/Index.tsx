@@ -231,6 +231,7 @@ const Index = () => {
 
       if (analysisData?.report) {
         setDailyReport(analysisData.report);
+        setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
       }
