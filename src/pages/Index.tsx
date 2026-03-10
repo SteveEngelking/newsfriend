@@ -280,6 +280,8 @@ const Index = () => {
           <LoadingState stage={loadingStage} progress={loadingProgress} message={loadingMessage} />
         )}
 
+        <div ref={resultsRef} />
+
         {report && !isLoading && (
           <>
             <ReportView report={report} />
