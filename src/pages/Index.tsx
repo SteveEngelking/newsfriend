@@ -23,6 +23,7 @@ const Index = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
   const { toast } = useToast();
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchSources().then(setSources);
