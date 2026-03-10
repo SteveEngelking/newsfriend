@@ -25,8 +25,37 @@ function getClientIP(req: Request): string {
     || 'unknown';
 }
 
-function sanitizeArticles(articles: any[]): any[] {
-  return articles.slice(0, 80).map((a: any) => ({
+function sanitizeArticles(articles: any[], maxTotal = 80): any[] {
+  // Round-robin across sources to ensure fair representation
+  const bySource: Record<string, any[]> = {};
+  for (const a of articles) {
+    const src = typeof a.sourceName === 'string' ? a.sourceName : 'Unknown';
+    if (!bySource[src]) bySource[src] = [];
+    bySource[src].push(a);
+  }
+
+  const sourceNames = Object.keys(bySource);
+  const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
+  const balanced: any[] = [];
+
+  // First pass: take up to perSource from each
+  for (const src of sourceNames) {
+    balanced.push(...bySource[src].slice(0, perSource));
+  }
+
+  // Second pass: fill remaining slots from sources that have more
+  if (balanced.length < maxTotal) {
+    for (const src of sourceNames) {
+      const remaining = bySource[src].slice(perSource);
+      for (const a of remaining) {
+        if (balanced.length >= maxTotal) break;
+        balanced.push(a);
+      }
+      if (balanced.length >= maxTotal) break;
+    }
+  }
+
+  return balanced.map((a: any) => ({
     sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
     title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
     url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',

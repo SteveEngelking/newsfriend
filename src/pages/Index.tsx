@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { NewsSource, FactCheckReport, ScrapedArticle, DailyNewsReport } from '@/lib/types';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
@@ -23,6 +23,7 @@ const Index = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
   const { toast } = useToast();
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchSources().then(setSources);
@@ -116,6 +117,7 @@ const Index = () => {
 
       if (analysisData?.report) {
         setReport(analysisData.report);
+        setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
       }
@@ -141,9 +143,11 @@ const Index = () => {
     setLoadingProgress(0);
 
     try {
+      // Shuffle sources to avoid always favoring the same ones
+      const shuffled = [...enabledSources].sort(() => Math.random() - 0.5);
       const allArticles: ScrapedArticle[] = [];
-      for (let i = 0; i < enabledSources.length; i++) {
-        const source = enabledSources[i];
+      for (let i = 0; i < shuffled.length; i++) {
+        const source = shuffled[i];
         setLoadingMessage(`Fetching latest from ${source.name}...`);
         setLoadingProgress(Math.round(((i) / enabledSources.length) * 50));
 
@@ -227,6 +231,7 @@ const Index = () => {
 
       if (analysisData?.report) {
         setDailyReport(analysisData.report);
+        setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
       }
@@ -277,6 +282,8 @@ const Index = () => {
         {isLoading && (
           <LoadingState stage={loadingStage} progress={loadingProgress} message={loadingMessage} />
         )}
+
+        <div ref={resultsRef} />
 
         {report && !isLoading && (
           <>
