@@ -280,6 +280,8 @@ const Index = () => {
 
         <SourceManager sources={sources} onChange={handleSourcesChange} />
 
+        <ScheduleManager sources={sources} />
+
         {isLoading && (
           <LoadingState stage={loadingStage} progress={loadingProgress} message={loadingMessage} />
         )}
