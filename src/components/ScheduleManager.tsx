@@ -61,7 +61,7 @@ export function ScheduleManager({ sources }: Props) {
     }
 
     setIsLoading(true);
-    const sourceIds = sources.map(s => s.id);
+    const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
       const { error } = await supabase
