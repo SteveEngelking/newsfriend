@@ -17,8 +17,18 @@ import { motion } from 'framer-motion';
 
 const Index = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
-  const [report, setReport] = useState<FactCheckReport | null>(null);
-  const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(null);
+  const [report, setReport] = useState<FactCheckReport | null>(() => {
+    try {
+      const stored = localStorage.getItem('verifynews-report');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+  const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(() => {
+    try {
+      const stored = localStorage.getItem('verifynews-daily-report');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'searching' | 'analyzing'>('searching');
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -118,6 +128,8 @@ const Index = () => {
 
       if (analysisData?.report) {
         setReport(analysisData.report);
+        localStorage.setItem('verifynews-report', JSON.stringify(analysisData.report));
+        localStorage.removeItem('verifynews-daily-report');
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
@@ -232,6 +244,8 @@ const Index = () => {
 
       if (analysisData?.report) {
         setDailyReport(analysisData.report);
+        localStorage.setItem('verifynews-daily-report', JSON.stringify(analysisData.report));
+        localStorage.removeItem('verifynews-report');
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
@@ -247,6 +261,8 @@ const Index = () => {
   const handleReset = useCallback(() => {
     setReport(null);
     setDailyReport(null);
+    localStorage.removeItem('verifynews-report');
+    localStorage.removeItem('verifynews-daily-report');
   }, []);
 
   return (

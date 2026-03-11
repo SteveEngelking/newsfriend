@@ -53,6 +53,16 @@ export function ScheduleManager({ sources }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Auto-update schedule source_ids when enabled sources change
+  useEffect(() => {
+    if (!schedule) return;
+    const enabledIds = sources.filter(s => s.enabled).map(s => s.id);
+    const same = enabledIds.length === schedule.source_ids.length && enabledIds.every(id => schedule.source_ids.includes(id));
+    if (!same && enabledIds.length > 0) {
+      supabase.from('report_schedules').update({ source_ids: enabledIds }).eq('id', schedule.id).then(() => loadData());
+    }
+  }, [sources, schedule, loadData]);
+
   const handleSaveSchedule = async () => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
