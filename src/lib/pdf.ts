@@ -7,6 +7,9 @@ export async function generatePDF(_report: FactCheckReport, element: HTMLElement
     scale: 2,
     useCORS: true,
     logging: false,
+    height: element.scrollHeight,
+    windowHeight: element.scrollHeight,
+    scrollY: -window.scrollY,
   });
 
   const imgData = canvas.toDataURL('image/png');
