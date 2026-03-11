@@ -97,9 +97,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error searching:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error searching:', msg);
     return new Response(
-      JSON.stringify({ success: false, error: 'Failed to search' }),
+      JSON.stringify({ success: false, error: `Search failed: ${msg}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
