@@ -17,8 +17,18 @@ import { motion } from 'framer-motion';
 
 const Index = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
-  const [report, setReport] = useState<FactCheckReport | null>(null);
-  const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(null);
+  const [report, setReport] = useState<FactCheckReport | null>(() => {
+    try {
+      const stored = localStorage.getItem('verifynews-report');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+  const [dailyReport, setDailyReport] = useState<DailyNewsReport | null>(() => {
+    try {
+      const stored = localStorage.getItem('verifynews-daily-report');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'searching' | 'analyzing'>('searching');
   const [loadingProgress, setLoadingProgress] = useState(0);
