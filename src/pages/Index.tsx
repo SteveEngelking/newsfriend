@@ -128,6 +128,8 @@ const Index = () => {
 
       if (analysisData?.report) {
         setReport(analysisData.report);
+        localStorage.setItem('verifynews-report', JSON.stringify(analysisData.report));
+        localStorage.removeItem('verifynews-daily-report');
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         throw new Error('Invalid response from analysis');
