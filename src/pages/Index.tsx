@@ -261,6 +261,8 @@ const Index = () => {
   const handleReset = useCallback(() => {
     setReport(null);
     setDailyReport(null);
+    localStorage.removeItem('verifynews-report');
+    localStorage.removeItem('verifynews-daily-report');
   }, []);
 
   return (
