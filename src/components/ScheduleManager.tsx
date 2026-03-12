@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, Download, Trash2, CalendarClock } from 'lucide-react';
-import { generateDailyNewsPDF } from '@/lib/dailyNewsPdf';
+import { downloadAsHtml } from '@/lib/downloadHtml';
 import { DailyNewsReportView } from './DailyNewsReportView';
 
 interface Props {
