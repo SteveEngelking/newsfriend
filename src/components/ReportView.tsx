@@ -16,9 +16,9 @@ interface Props {
 export function ReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!reportRef.current) return;
-    await generatePDF(report, reportRef.current);
+    downloadAsHtml(reportRef.current, 'fact-check-report');
   };
 
   const verified = report.claims.filter(c => c.status === 'verified').length;
