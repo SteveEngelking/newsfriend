@@ -31,9 +31,9 @@ export function DailyNewsReportView({ report }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center">
-        <Button onClick={handleDownloadPdf} className="gap-2">
+        <Button onClick={handleDownload} className="gap-2">
           <Download className="h-4 w-4" />
-          Download as PDF
+          Download as HTML
         </Button>
       </div>
       
