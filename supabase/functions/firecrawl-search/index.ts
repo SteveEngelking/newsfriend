@@ -65,36 +65,63 @@ Deno.serve(async (req) => {
 
     console.log('Searching:', query);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        limit: sanitizedLimit,
-        lang: typeof options?.lang === 'string' ? options.lang.slice(0, 10) : undefined,
-        country: typeof options?.country === 'string' ? options.country.slice(0, 10) : undefined,
-        tbs: typeof options?.tbs === 'string' ? options.tbs.slice(0, 20) : undefined,
-        scrapeOptions: sanitizedScrapeOptions,
-      }),
+    const requestBody = JSON.stringify({
+      query,
+      limit: sanitizedLimit,
+      lang: typeof options?.lang === 'string' ? options.lang.slice(0, 10) : undefined,
+      country: typeof options?.country === 'string' ? options.country.slice(0, 10) : undefined,
+      tbs: typeof options?.tbs === 'string' ? options.tbs.slice(0, 20) : undefined,
+      scrapeOptions: sanitizedScrapeOptions,
     });
 
-    const data = await response.json();
+    const maxRetries = 2;
+    let lastError: string | null = null;
 
-    if (!response.ok) {
-      console.error('Firecrawl API error:', data);
-      return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: requestBody,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error(`Firecrawl API error (attempt ${attempt + 1}):`, data);
+          lastError = data.error || `Request failed with status ${response.status}`;
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            continue;
+          }
+          return new Response(
+            JSON.stringify({ success: false, error: lastError }),
+            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log('Search successful');
+        return new Response(
+          JSON.stringify(data),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (fetchErr) {
+        const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        console.warn(`Fetch error (attempt ${attempt + 1}/${maxRetries + 1}): ${msg}`);
+        lastError = msg;
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+      }
     }
 
-    console.log('Search successful');
     return new Response(
-      JSON.stringify(data),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: false, error: `Search failed after retries: ${lastError}` }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
