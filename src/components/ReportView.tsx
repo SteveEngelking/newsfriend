@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, FileText, BarChart3 } from 'lucide-react';
-import { generatePDF } from '@/lib/pdf';
+import { downloadAsHtml } from '@/lib/downloadHtml';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -16,9 +16,9 @@ interface Props {
 export function ReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!reportRef.current) return;
-    await generatePDF(report, reportRef.current);
+    downloadAsHtml(reportRef.current, 'fact-check-report');
   };
 
   const verified = report.claims.filter(c => c.status === 'verified').length;
@@ -36,7 +36,7 @@ export function ReportView({ report }: Props) {
         </div>
         <Button onClick={handleDownload} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
-          Download PDF
+          Download HTML
         </Button>
       </div>
 

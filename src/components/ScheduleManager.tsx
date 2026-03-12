@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, Download, Trash2, CalendarClock } from 'lucide-react';
-import { generateDailyNewsPDF } from '@/lib/dailyNewsPdf';
+import { downloadAsHtml } from '@/lib/downloadHtml';
 import { DailyNewsReportView } from './DailyNewsReportView';
 
 interface Props {
@@ -114,14 +114,13 @@ export function ScheduleManager({ sources }: Props) {
 
   const handleDownloadReport = (report: GeneratedReport) => {
     setPreviewReport(report.report_data);
-    // We need to render first, then generate PDF. Use a timeout to let React render.
-    setTimeout(async () => {
+    setTimeout(() => {
       const el = document.getElementById('schedule-report-preview');
       if (el) {
-        await generateDailyNewsPDF(report.report_data, el);
+        downloadAsHtml(el, report.title || 'scheduled-report');
         setPreviewReport(null);
       }
-    }, 500);
+    }, 300);
   };
 
   const frequencyLabel: Record<string, string> = {

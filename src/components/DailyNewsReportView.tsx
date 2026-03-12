@@ -3,7 +3,7 @@ import { DailyNewsReport } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { generateDailyNewsPDF } from '@/lib/dailyNewsPdf';
+import { downloadAsHtml } from '@/lib/downloadHtml';
 import { Download } from 'lucide-react';
 
 interface Props {
@@ -13,9 +13,9 @@ interface Props {
 export function DailyNewsReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPdf = () => {
+  const handleDownload = () => {
     if (reportRef.current) {
-      generateDailyNewsPDF(report, reportRef.current);
+      downloadAsHtml(reportRef.current, 'news-of-the-day');
     }
   };
 
@@ -31,9 +31,9 @@ export function DailyNewsReportView({ report }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center">
-        <Button onClick={handleDownloadPdf} className="gap-2">
+        <Button onClick={handleDownload} className="gap-2">
           <Download className="h-4 w-4" />
-          Download as PDF
+          Download as HTML
         </Button>
       </div>
       
