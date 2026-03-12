@@ -1,0 +1,2 @@
+ALTER TABLE public.report_schedules DROP CONSTRAINT report_schedules_frequency_check;
+ALTER TABLE public.report_schedules ADD CONSTRAINT report_schedules_frequency_check CHECK (frequency IN ('hourly', 'daily', 'every_other_day', 'weekly'));
