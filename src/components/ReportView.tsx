@@ -36,7 +36,7 @@ export function ReportView({ report }: Props) {
         </div>
         <Button onClick={handleDownload} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
-          Download PDF
+          Download HTML
         </Button>
       </div>
 
