@@ -124,6 +124,7 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const frequencyLabel: Record<string, string> = {
+    hourly: 'Hourly',
     daily: 'Daily',
     every_other_day: 'Every Other Day',
     weekly: 'Weekly',
@@ -145,6 +146,7 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="hourly">Hourly</SelectItem>
                 <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="every_other_day">Every Other Day</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
