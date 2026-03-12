@@ -3,7 +3,7 @@ import { DailyNewsReport } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { generateDailyNewsPDF } from '@/lib/dailyNewsPdf';
+import { downloadAsHtml } from '@/lib/downloadHtml';
 import { Download } from 'lucide-react';
 
 interface Props {
