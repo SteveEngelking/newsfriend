@@ -13,9 +13,9 @@ interface Props {
 export function DailyNewsReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPdf = () => {
+  const handleDownload = () => {
     if (reportRef.current) {
-      generateDailyNewsPDF(report, reportRef.current);
+      downloadAsHtml(reportRef.current, 'news-of-the-day');
     }
   };
 
