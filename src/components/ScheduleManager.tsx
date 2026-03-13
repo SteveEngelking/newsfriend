@@ -38,7 +38,6 @@ export function ScheduleManager({ sources }: Props) {
   const [reports, setReports] = useState<GeneratedReport[]>([]);
   const [frequency, setFrequency] = useState('daily');
   const [isLoading, setIsLoading] = useState(false);
-  const [previewReport, setPreviewReport] = useState<DailyNewsReport | null>(null);
   const { toast } = useToast();
 
   const loadData = useCallback(async () => {
