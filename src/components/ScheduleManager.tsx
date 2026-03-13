@@ -192,10 +192,13 @@ export function ScheduleManager({ sources }: Props) {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewReport(report)} title="Open in new tab">
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)} title="Download HTML">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)} title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
