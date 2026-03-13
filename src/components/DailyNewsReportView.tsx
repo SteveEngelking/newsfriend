@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { downloadAsHtml } from '@/lib/downloadHtml';
-import { Download } from 'lucide-react';
+import { generateDailyNewsHtml, openReportInNewTab } from '@/lib/generateReportHtml';
+import { Download, ExternalLink } from 'lucide-react';
 
 interface Props {
   report: DailyNewsReport;
