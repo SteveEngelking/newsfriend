@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock } from 'lucide-react';
-import { downloadAsHtml } from '@/lib/downloadHtml';
-import { DailyNewsReportView } from './DailyNewsReportView';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink } from 'lucide-react';
+import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
+import { DailyNewsReport } from '@/lib/types';
 
 interface Props {
   sources: NewsSource[];
