@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { NewsSource, DailyNewsReport } from '@/lib/types';
+import { NewsSource } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock } from 'lucide-react';
-import { downloadAsHtml } from '@/lib/downloadHtml';
-import { DailyNewsReportView } from './DailyNewsReportView';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink } from 'lucide-react';
+import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
+import { DailyNewsReport } from '@/lib/types';
 
 interface Props {
   sources: NewsSource[];
@@ -38,7 +38,6 @@ export function ScheduleManager({ sources }: Props) {
   const [reports, setReports] = useState<GeneratedReport[]>([]);
   const [frequency, setFrequency] = useState('daily');
   const [isLoading, setIsLoading] = useState(false);
-  const [previewReport, setPreviewReport] = useState<DailyNewsReport | null>(null);
   const { toast } = useToast();
 
   const loadData = useCallback(async () => {
@@ -112,15 +111,16 @@ export function ScheduleManager({ sources }: Props) {
     setReports(prev => prev.filter(r => r.id !== id));
   };
 
+  const getReportHtml = (report: GeneratedReport) => {
+    return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport);
+  };
+
   const handleDownloadReport = (report: GeneratedReport) => {
-    setPreviewReport(report.report_data);
-    setTimeout(() => {
-      const el = document.getElementById('schedule-report-preview');
-      if (el) {
-        downloadAsHtml(el, report.title || 'scheduled-report');
-        setPreviewReport(null);
-      }
-    }, 300);
+    downloadReportHtml(getReportHtml(report), report.title || 'scheduled-report');
+  };
+
+  const handleViewReport = (report: GeneratedReport) => {
+    openReportInNewTab(getReportHtml(report));
   };
 
   const frequencyLabel: Record<string, string> = {
@@ -192,10 +192,13 @@ export function ScheduleManager({ sources }: Props) {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewReport(report)} title="Open in new tab">
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)} title="Download HTML">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)} title="Delete">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -206,12 +209,6 @@ export function ScheduleManager({ sources }: Props) {
         </Card>
       )}
 
-      {/* Hidden render target for PDF generation */}
-      {previewReport && (
-        <div className="fixed left-[-9999px] top-0" id="schedule-report-preview">
-          <DailyNewsReportView report={previewReport} />
-        </div>
-      )}
     </div>
   );
 }

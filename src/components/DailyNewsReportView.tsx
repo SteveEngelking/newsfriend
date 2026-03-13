@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { downloadAsHtml } from '@/lib/downloadHtml';
-import { Download } from 'lucide-react';
+import { generateDailyNewsHtml, openReportInNewTab } from '@/lib/generateReportHtml';
+import { Download, ExternalLink } from 'lucide-react';
 
 interface Props {
   report: DailyNewsReport;
@@ -30,10 +31,14 @@ export function DailyNewsReportView({ report }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-2">
+        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report))} variant="outline" className="gap-2">
+          <ExternalLink className="h-4 w-4" />
+          Open in New Tab
+        </Button>
         <Button onClick={handleDownload} className="gap-2">
           <Download className="h-4 w-4" />
-          Download as HTML
+          Download HTML
         </Button>
       </div>
       
