@@ -1,0 +1,131 @@
+import { DailyNewsReport } from '@/lib/types';
+
+/**
+ * Generates a fully self-contained HTML string from a DailyNewsReport.
+ * No DOM dependency — works for scheduled reports loaded from DB.
+ */
+export function generateDailyNewsHtml(report: DailyNewsReport): string {
+  const significanceColor: Record<string, string> = {
+    high: '#ef4444',
+    medium: '#f59e0b',
+    low: '#6b7280',
+  };
+
+  const themesHtml = report.themes
+    .map((theme, index) => {
+      const sourceAnalysisHtml = (theme.sourceAnalysis || [])
+        .map((sa) => {
+          const quotesHtml = (sa.keyQuotes || [])
+            .map((q) => `<blockquote style="margin:4px 0;padding-left:10px;border-left:2px solid #d1d5db;font-style:italic;color:#6b7280;font-size:14px;">"${escapeHtml(q)}"</blockquote>`)
+            .join('');
+          const biasHtml = (sa.biasIndicators || [])
+            .map((b) => `<span style="display:inline-block;padding:2px 8px;margin:2px;border:1px solid #d1d5db;border-radius:12px;font-size:12px;color:#6b7280;">${escapeHtml(b)}</span>`)
+            .join('');
+          const linkHtml = sa.articleUrl
+            ? ` <a href="${escapeHtml(sa.articleUrl)}" target="_blank" style="font-size:12px;color:#3b82f6;">[Read Article]</a>`
+            : '';
+          return `
+            <div style="padding-left:16px;border-left:2px solid rgba(59,130,246,0.3);margin-bottom:12px;">
+              <div><strong style="font-size:14px;">${escapeHtml(sa.sourceName)}</strong>${linkHtml}</div>
+              <p style="font-size:14px;color:#6b7280;margin:4px 0;">${escapeHtml(sa.stance)}</p>
+              ${quotesHtml}
+              ${biasHtml ? `<div style="margin-top:6px;">${biasHtml}</div>` : ''}
+            </div>`;
+        })
+        .join('');
+
+      return `
+        <article style="margin-bottom:40px;">
+          <header style="margin-bottom:16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+              <h2 style="font-size:20px;font-weight:700;margin:0;line-height:1.3;">
+                <span style="color:#3b82f6;margin-right:8px;">${index + 1}.</span>${escapeHtml(theme.headline)}
+              </h2>
+              <span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;color:white;background:${significanceColor[theme.significance] || '#6b7280'};white-space:nowrap;">
+                ${escapeHtml(theme.significance)}
+              </span>
+            </div>
+            <p style="margin-top:8px;color:#6b7280;line-height:1.6;">${escapeHtml(theme.summary)}</p>
+          </header>
+          <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-bottom:16px;">
+            <h3 style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;margin:0 0 12px 0;">Source Comparison</h3>
+            ${sourceAnalysisHtml}
+          </div>
+          <div style="background:#eff6ff;border-radius:8px;padding:16px;">
+            <h3 style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#3b82f6;margin:0 0 8px 0;">Critical Commentary</h3>
+            <p style="font-size:14px;line-height:1.6;margin:0;">${escapeHtml(theme.criticalCommentary)}</p>
+          </div>
+          ${index < report.themes.length - 1 ? '<hr style="margin-top:32px;border:none;border-top:1px solid #e5e7eb;">' : ''}
+        </article>`;
+    })
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(report.title)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 32px; background: #fff; color: #111; max-width: 900px; margin: 0 auto; line-height: 1.5; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+  <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #3b82f6;">
+    <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
+    <p style="font-size:14px;color:#6b7280;margin:0;">
+      Generated ${new Date(report.generatedAt).toLocaleString()} • Sources: ${escapeHtml(report.sourcesAnalyzed.join(', '))}
+    </p>
+  </header>
+
+  <section style="margin-bottom:32px;">
+    <p style="line-height:1.7;white-space:pre-line;">${escapeHtml(report.introduction)}</p>
+  </section>
+
+  <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;">
+
+  ${themesHtml}
+
+  <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;">
+
+  <section style="background:#f3f4f6;border-radius:8px;padding:24px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;">Conclusion</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;">${escapeHtml(report.conclusion)}</p>
+  </section>
+
+  <footer style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;text-align:center;font-size:14px;color:#9ca3af;">
+    <p>This report was generated by VerifyNews AI analysis.</p>
+    <p>Always verify critical information from primary sources.</p>
+  </footer>
+</body>
+</html>`;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export function openReportInNewTab(html: string) {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export function downloadReportHtml(html: string, filename: string) {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filename}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
