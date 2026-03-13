@@ -111,15 +111,16 @@ export function ScheduleManager({ sources }: Props) {
     setReports(prev => prev.filter(r => r.id !== id));
   };
 
+  const getReportHtml = (report: GeneratedReport) => {
+    return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport);
+  };
+
   const handleDownloadReport = (report: GeneratedReport) => {
-    setPreviewReport(report.report_data);
-    setTimeout(() => {
-      const el = document.getElementById('schedule-report-preview');
-      if (el) {
-        downloadAsHtml(el, report.title || 'scheduled-report');
-        setPreviewReport(null);
-      }
-    }, 300);
+    downloadReportHtml(getReportHtml(report), report.title || 'scheduled-report');
+  };
+
+  const handleViewReport = (report: GeneratedReport) => {
+    openReportInNewTab(getReportHtml(report));
   };
 
   const frequencyLabel: Record<string, string> = {
