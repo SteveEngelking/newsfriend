@@ -34,10 +34,26 @@ export function ReportView({ report }: Props) {
             Generated {new Date(report.generatedAt).toLocaleString()}
           </p>
         </div>
-        <Button onClick={handleDownload} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Download HTML
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => {
+            if (!reportRef.current) return;
+            const clone = reportRef.current.cloneNode(true) as HTMLElement;
+            const styles: string[] = [];
+            for (const sheet of Array.from(document.styleSheets)) {
+              try { for (const rule of Array.from(sheet.cssRules)) styles.push(rule.cssText); } catch {}
+            }
+            const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${styles.join('\n')}body{margin:0;padding:2rem;background:white;color:black;}</style></head><body>${clone.outerHTML}</body></html>`;
+            const blob = new Blob([html], { type: 'text/html' });
+            window.open(URL.createObjectURL(blob), '_blank');
+          }} variant="outline" className="gap-2">
+            <ExternalLink className="h-4 w-4" />
+            New Tab
+          </Button>
+          <Button onClick={handleDownload} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
+        </div>
       </div>
 
       <div ref={reportRef} className="space-y-6">

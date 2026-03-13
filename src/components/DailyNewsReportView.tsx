@@ -31,10 +31,14 @@ export function DailyNewsReportView({ report }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-2">
+        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report))} variant="outline" className="gap-2">
+          <ExternalLink className="h-4 w-4" />
+          Open in New Tab
+        </Button>
         <Button onClick={handleDownload} className="gap-2">
           <Download className="h-4 w-4" />
-          Download as HTML
+          Download HTML
         </Button>
       </div>
       

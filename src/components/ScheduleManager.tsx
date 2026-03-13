@@ -209,12 +209,6 @@ export function ScheduleManager({ sources }: Props) {
         </Card>
       )}
 
-      {/* Hidden render target for PDF generation */}
-      {previewReport && (
-        <div className="fixed left-[-9999px] top-0" id="schedule-report-preview">
-          <DailyNewsReportView report={previewReport} />
-        </div>
-      )}
     </div>
   );
 }
