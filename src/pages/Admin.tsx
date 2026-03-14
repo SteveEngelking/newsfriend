@@ -43,15 +43,23 @@ const Admin = () => {
     saveEnabledState(newSources);
   }, []);
 
+  const [isSignup, setIsSignup] = useState(false);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      toast({ title: 'Welcome back!' });
+      if (isSignup) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        toast({ title: 'Account created! You are now signed in.' });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast({ title: 'Welcome back!' });
+      }
     } catch (err: any) {
-      toast({ title: 'Login failed', description: err.message, variant: 'destructive' });
+      toast({ title: isSignup ? 'Signup failed' : 'Login failed', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
