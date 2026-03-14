@@ -99,7 +99,15 @@ const Admin = () => {
                   required
                 />
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? 'Please wait...' : isSignup ? 'Create Account' : 'Sign In'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-sm"
+                  onClick={() => setIsSignup(!isSignup)}
+                >
+                  {isSignup ? 'Already have an account? Sign in' : 'Create admin account'}
                 </Button>
               </form>
             </CardContent>
