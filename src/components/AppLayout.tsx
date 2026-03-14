@@ -3,10 +3,13 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Shield } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function AppLayout() {
+  const isMobile = useIsMobile();
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
