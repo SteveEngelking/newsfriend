@@ -46,7 +46,11 @@ export function ScheduleManager({ sources }: Props) {
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
     ]);
 
-    if (schedRes.data) setSchedule(schedRes.data as Schedule);
+    if (schedRes.data) {
+      const sched = schedRes.data as Schedule;
+      setSchedule(sched);
+      setFrequency(sched.frequency);
+    }
     if (repRes.data) setReports(repRes.data as unknown as GeneratedReport[]);
   }, []);
 
