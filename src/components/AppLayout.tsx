@@ -23,7 +23,7 @@ export function AppLayout() {
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
+          <main className="flex-1 container max-w-4xl mx-auto px-2 sm:px-4 py-6 sm:py-8">
             <Outlet />
           </main>
         </div>
