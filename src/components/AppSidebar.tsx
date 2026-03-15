@@ -14,7 +14,6 @@ import {
 
 const items = [
   { title: 'Latest News', url: '/', icon: Home },
-  { title: 'Fact Checker', url: '/search', icon: Search },
   { title: 'Admin', url: '/admin', icon: Settings },
 ];
 
