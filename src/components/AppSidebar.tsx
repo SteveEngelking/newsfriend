@@ -1,4 +1,4 @@
-import { Home, Search, Settings } from 'lucide-react';
+import { Home, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
