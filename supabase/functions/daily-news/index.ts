@@ -25,7 +25,7 @@ function getClientIP(req: Request): string {
     || 'unknown';
 }
 
-function sanitizeArticles(articles: any[], maxTotal = 80): any[] {
+function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
   // Round-robin across sources to ensure fair representation
   const bySource: Record<string, any[]> = {};
   for (const a of articles) {
@@ -130,7 +130,8 @@ STYLE GUIDELINES:
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
-- For each theme, analyze coverage from ALL provided sources
+- For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available. Never limit yourself to just 1-2 sources per theme.
+- Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
