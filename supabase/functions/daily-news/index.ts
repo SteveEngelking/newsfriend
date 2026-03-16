@@ -25,7 +25,7 @@ function getClientIP(req: Request): string {
     || 'unknown';
 }
 
-function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
+function sanitizeArticles(articles: any[], maxTotal = 250): any[] {
   // Round-robin across sources to ensure fair representation
   const bySource: Record<string, any[]> = {};
   for (const a of articles) {
