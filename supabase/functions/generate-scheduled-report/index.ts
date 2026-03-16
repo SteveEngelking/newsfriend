@@ -69,69 +69,62 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl (parallelized)
       const allArticles: any[] = [];
+      // Use 2 broad queries with higher limits to reduce API calls
       const queries = [
-        'latest news today',
-        'technology science',
-        'economy business finance',
-        'health environment climate',
-        'sports culture entertainment',
+        'latest news today breaking',
+        'world politics economy technology health science',
       ];
 
       // Build all fetch tasks upfront
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
-        const perQuery = Math.max(1, Math.ceil(schedule.articles_per_source / queries.length));
+        const perQuery = Math.max(3, Math.ceil(schedule.articles_per_source / queries.length));
         for (const q of queries) {
           fetchTasks.push({ source, query: q, perQuery });
         }
       }
 
-      // Run in parallel batches of 10 to avoid overwhelming API
-      const BATCH_SIZE = 10;
-      for (let i = 0; i < fetchTasks.length; i += BATCH_SIZE) {
-        const batch = fetchTasks.slice(i, i + BATCH_SIZE);
-        const results = await Promise.allSettled(batch.map(async (task) => {
-          let sourceUrl = task.source.url.trim();
-          if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
-            sourceUrl = `https://${sourceUrl}`;
-          }
-          let hostname: string;
-          try {
-            hostname = new URL(sourceUrl).hostname;
-          } catch {
-            return [];
-          }
+      // Run ALL fetch tasks in parallel (no batching - search without scrape is fast)
+      const results = await Promise.allSettled(fetchTasks.map(async (task) => {
+        let sourceUrl = task.source.url.trim();
+        if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
+          sourceUrl = `https://${sourceUrl}`;
+        }
+        let hostname: string;
+        try {
+          hostname = new URL(sourceUrl).hostname;
+        } catch {
+          return [];
+        }
 
-          const searchQuery = `${task.query} site:${hostname}`;
-          const resp = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: searchQuery,
-              limit: task.perQuery,
-              tbs: 'qdr:d',
-              scrapeOptions: { formats: ['markdown'] },
-            }),
-          });
+        const searchQuery = `${task.query} site:${hostname}`;
+        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: task.perQuery,
+            tbs: 'qdr:d',
+          }),
+        });
 
-          if (!resp.ok) return [];
-          const data = await resp.json();
-          if (!data.success || !Array.isArray(data.data)) return [];
-          return data.data.map((item: any) => ({
-            sourceName: task.source.name,
-            title: item.title || 'Untitled',
-            url: item.url,
-            content: (item.markdown || item.description || '').slice(0, 3000),
-          }));
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        if (!data.success || !Array.isArray(data.data)) return [];
+        return data.data.map((item: any) => ({
+          sourceName: task.source.name,
+          title: item.title || 'Untitled',
+          url: item.url,
+          content: (item.markdown || item.description || '').slice(0, 3000),
         }));
+      }));
 
-        for (const result of results) {
-          if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-            allArticles.push(...result.value);
-          }
+      for (const result of results) {
+        if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+          allArticles.push(...result.value);
         }
       }
 
@@ -157,7 +150,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = 250;
+      const maxTotal = 150;
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
