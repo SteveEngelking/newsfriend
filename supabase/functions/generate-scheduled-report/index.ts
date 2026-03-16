@@ -69,18 +69,16 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl (parallelized)
       const allArticles: any[] = [];
+      // Use 2 broad queries with higher limits to reduce API calls
       const queries = [
-        'latest news today',
-        'technology science',
-        'economy business finance',
-        'health environment climate',
-        'sports culture entertainment',
+        'latest news today breaking',
+        'world politics economy technology health science',
       ];
 
       // Build all fetch tasks upfront
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
-        const perQuery = Math.max(1, Math.ceil(schedule.articles_per_source / queries.length));
+        const perQuery = Math.max(3, Math.ceil(schedule.articles_per_source / queries.length));
         for (const q of queries) {
           fetchTasks.push({ source, query: q, perQuery });
         }
