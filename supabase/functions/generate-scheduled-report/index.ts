@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = 150;
+      const maxTotal = 250;
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       }
 
       const totalRequested = schedule.articles_per_source * sources.length;
-      const themeCount = Math.min(12, Math.max(5, Math.round(totalRequested / 4)));
+      const themeCount = Math.min(20, Math.max(5, Math.round(totalRequested / 4)));
 
       // Call daily-news analysis via AI
       const articlesSummary = balanced.map((a: any, i: number) =>
