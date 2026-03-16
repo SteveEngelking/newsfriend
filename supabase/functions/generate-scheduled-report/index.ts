@@ -143,14 +143,16 @@ Deno.serve(async (req) => {
         return true;
       });
 
-      if (allArticles.length === 0) {
+      if (dedupedArticles.length === 0) {
         results.push(`Schedule ${schedule.id}: no articles found`);
         continue;
       }
 
+      console.log(`Schedule ${schedule.id}: ${dedupedArticles.length} unique articles from ${sources.length} sources`);
+
       // Round-robin balance articles across sources
       const bySource: Record<string, any[]> = {};
-      for (const a of allArticles) {
+      for (const a of dedupedArticles) {
         if (!bySource[a.sourceName]) bySource[a.sourceName] = [];
         bySource[a.sourceName].push(a);
       }
