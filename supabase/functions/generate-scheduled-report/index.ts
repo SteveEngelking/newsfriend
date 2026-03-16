@@ -84,52 +84,47 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Run in parallel batches of 10 to avoid overwhelming API
-      const BATCH_SIZE = 10;
-      for (let i = 0; i < fetchTasks.length; i += BATCH_SIZE) {
-        const batch = fetchTasks.slice(i, i + BATCH_SIZE);
-        const results = await Promise.allSettled(batch.map(async (task) => {
-          let sourceUrl = task.source.url.trim();
-          if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
-            sourceUrl = `https://${sourceUrl}`;
-          }
-          let hostname: string;
-          try {
-            hostname = new URL(sourceUrl).hostname;
-          } catch {
-            return [];
-          }
+      // Run ALL fetch tasks in parallel (no batching - search without scrape is fast)
+      const results = await Promise.allSettled(fetchTasks.map(async (task) => {
+        let sourceUrl = task.source.url.trim();
+        if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
+          sourceUrl = `https://${sourceUrl}`;
+        }
+        let hostname: string;
+        try {
+          hostname = new URL(sourceUrl).hostname;
+        } catch {
+          return [];
+        }
 
-          const searchQuery = `${task.query} site:${hostname}`;
-          const resp = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: searchQuery,
-              limit: task.perQuery,
-              tbs: 'qdr:d',
-              scrapeOptions: { formats: ['markdown'] },
-            }),
-          });
+        const searchQuery = `${task.query} site:${hostname}`;
+        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: task.perQuery,
+            tbs: 'qdr:d',
+          }),
+        });
 
-          if (!resp.ok) return [];
-          const data = await resp.json();
-          if (!data.success || !Array.isArray(data.data)) return [];
-          return data.data.map((item: any) => ({
-            sourceName: task.source.name,
-            title: item.title || 'Untitled',
-            url: item.url,
-            content: (item.markdown || item.description || '').slice(0, 3000),
-          }));
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        if (!data.success || !Array.isArray(data.data)) return [];
+        return data.data.map((item: any) => ({
+          sourceName: task.source.name,
+          title: item.title || 'Untitled',
+          url: item.url,
+          content: (item.markdown || item.description || '').slice(0, 3000),
         }));
+      }));
 
-        for (const result of results) {
-          if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-            allArticles.push(...result.value);
-          }
+      for (const result of results) {
+        if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+          allArticles.push(...result.value);
         }
       }
 
