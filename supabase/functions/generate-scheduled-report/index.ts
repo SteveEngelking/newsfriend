@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       }
 
       const totalRequested = schedule.articles_per_source * sources.length;
-      const themeCount = Math.min(12, Math.max(5, Math.round(totalRequested / 4)));
+      const themeCount = Math.min(20, Math.max(5, Math.round(totalRequested / 4)));
 
       // Call daily-news analysis via AI
       const articlesSummary = balanced.map((a: any, i: number) =>

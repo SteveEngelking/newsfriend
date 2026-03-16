@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
   try {
     const { articles, allSourceNames, totalArticlesRequested } = await req.json();
     // Scale themes based on article pool: roughly 1 theme per 2-3 articles, min 5, max 20
-    const themeCount = Math.min(12, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
+    const themeCount = Math.min(20, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
 
     if (!Array.isArray(articles) || !articles.length) {
       return new Response(
