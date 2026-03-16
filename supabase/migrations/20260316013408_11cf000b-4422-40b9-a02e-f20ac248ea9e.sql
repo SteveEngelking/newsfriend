@@ -1,0 +1,1 @@
+UPDATE report_schedules SET articles_per_source = 15 WHERE id = '4ee46c34-fc1d-4ae5-bfcf-83dd6830d741';
