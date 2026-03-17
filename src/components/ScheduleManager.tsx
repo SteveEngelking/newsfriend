@@ -129,6 +129,8 @@ export function ScheduleManager({ sources }: Props) {
 
   const frequencyLabel: Record<string, string> = {
     hourly: 'Hourly',
+    every_6_hours: 'Every 6 Hours',
+    every_12_hours: 'Every 12 Hours',
     daily: 'Daily',
     every_other_day: 'Every Other Day',
     weekly: 'Weekly',
