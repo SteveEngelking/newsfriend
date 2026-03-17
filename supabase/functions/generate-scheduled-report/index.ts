@@ -138,6 +138,12 @@ Deno.serve(async (req) => {
         return true;
       });
 
+      // Shuffle for better source mix each run
+      for (let i = dedupedArticles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [dedupedArticles[i], dedupedArticles[j]] = [dedupedArticles[j], dedupedArticles[i]];
+      }
+
       if (dedupedArticles.length === 0) {
         results.push(`Schedule ${schedule.id}: no articles found`);
         continue;

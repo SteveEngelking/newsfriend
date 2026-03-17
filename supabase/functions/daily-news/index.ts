@@ -26,9 +26,16 @@ function getClientIP(req: Request): string {
 }
 
 function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
+  // Shuffle input for variety each run
+  const shuffled = [...articles];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
   // Round-robin across sources to ensure fair representation
   const bySource: Record<string, any[]> = {};
-  for (const a of articles) {
+  for (const a of shuffled) {
     const src = typeof a.sourceName === 'string' ? a.sourceName : 'Unknown';
     if (!bySource[src]) bySource[src] = [];
     bySource[src].push(a);
