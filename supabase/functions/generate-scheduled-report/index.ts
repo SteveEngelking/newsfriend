@@ -47,6 +47,8 @@ Deno.serve(async (req) => {
         const lastRun = new Date(schedule.last_run_at);
         const hoursSince = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
         const requiredHours = schedule.frequency === 'hourly' ? 0.9
+          : schedule.frequency === 'every_6_hours' ? 5.5
+          : schedule.frequency === 'every_12_hours' ? 11.5
           : schedule.frequency === 'daily' ? 23
           : schedule.frequency === 'every_other_day' ? 47
           : 167; // weekly
@@ -135,6 +137,12 @@ Deno.serve(async (req) => {
         seenUrls.add(a.url);
         return true;
       });
+
+      // Shuffle for better source mix each run
+      for (let i = dedupedArticles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [dedupedArticles[i], dedupedArticles[j]] = [dedupedArticles[j], dedupedArticles[i]];
+      }
 
       if (dedupedArticles.length === 0) {
         results.push(`Schedule ${schedule.id}: no articles found`);
