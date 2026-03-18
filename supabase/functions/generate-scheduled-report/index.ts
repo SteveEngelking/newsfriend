@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       }
 
       // Run ALL fetch tasks in parallel (no batching - search without scrape is fast)
-      const results = await Promise.allSettled(fetchTasks.map(async (task) => {
+      const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
