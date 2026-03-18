@@ -47,7 +47,7 @@ export function DailyNewsReportView({ report }: Props) {
         <header className="text-center mb-8 pb-6 border-b-2 border-primary">
           <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
           <p className="text-sm text-muted-foreground">
-            Generated {new Date(report.generatedAt).toLocaleString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' })} • Sources: {report.sourcesAnalyzed.join(', ')}
+            Generated {new Date(report.generatedAt).toLocaleString('en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • Sources: {report.sourcesAnalyzed.join(', ')}
           </p>
         </header>
 

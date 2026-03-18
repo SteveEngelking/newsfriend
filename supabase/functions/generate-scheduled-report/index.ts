@@ -265,7 +265,7 @@ CRITICAL RULES:
 
       const parsed = JSON.parse(toolCall.function.arguments);
       const report = {
-        title: `News of the Day — ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })} (ET)`,
+        title: `News of the Day — ${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
         generatedAt: now.toISOString(),
         introduction: parsed.introduction,
         themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),

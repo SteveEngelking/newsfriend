@@ -276,7 +276,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
     const parsed = JSON.parse(toolCall.function.arguments);
 
     const report = {
-      title: `News of the Day — ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })} (ET)`,
+      title: `News of the Day — ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
       generatedAt: new Date().toISOString(),
       introduction: parsed.introduction,
       themes: parsed.themes.map((t: any, i: number) => ({
