@@ -124,9 +124,9 @@ Deno.serve(async (req) => {
         }));
       }));
 
-      for (const result of results) {
-        if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-          allArticles.push(...result.value);
+      for (const fetchResult of fetchResults) {
+        if (fetchResult.status === 'fulfilled' && Array.isArray(fetchResult.value)) {
+          allArticles.push(...fetchResult.value);
         }
       }
 
