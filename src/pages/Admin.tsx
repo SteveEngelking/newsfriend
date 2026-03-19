@@ -138,6 +138,7 @@ const Admin = () => {
 
       <SourceManager sources={sources} onChange={handleSourcesChange} />
       <ScheduleManager sources={sources} />
+      <ImpressumEditor />
     </div>
   );
 };

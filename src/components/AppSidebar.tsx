@@ -17,6 +17,7 @@ const items = [
   { title: 'Admin', url: '/admin', icon: Settings },
   { title: 'Privacy Policy', url: '/privacy-policy', icon: Shield },
   { title: 'Cookie Policy', url: '/cookie-policy', icon: Cookie },
+  { title: 'Impressum', url: '/impressum', icon: Building2 },
 ];
 
 export function AppSidebar() {
