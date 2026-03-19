@@ -1,4 +1,4 @@
-import { Home, Settings, Shield, Cookie } from 'lucide-react';
+import { Home, Settings, Shield, Cookie, Building2 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -17,6 +17,7 @@ const items = [
   { title: 'Admin', url: '/admin', icon: Settings },
   { title: 'Privacy Policy', url: '/privacy-policy', icon: Shield },
   { title: 'Cookie Policy', url: '/cookie-policy', icon: Cookie },
+  { title: 'Impressum', url: '/impressum', icon: Building2 },
 ];
 
 export function AppSidebar() {

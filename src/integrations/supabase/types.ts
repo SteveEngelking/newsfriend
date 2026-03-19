@@ -46,6 +46,48 @@ export type Database = {
           },
         ]
       }
+      impressum: {
+        Row: {
+          additional_info: string
+          address: string
+          company_name: string
+          contact_email: string
+          contact_phone: string
+          id: string
+          managing_director: string
+          register_court: string
+          register_number: string
+          updated_at: string
+          vat_id: string
+        }
+        Insert: {
+          additional_info?: string
+          address?: string
+          company_name?: string
+          contact_email?: string
+          contact_phone?: string
+          id?: string
+          managing_director?: string
+          register_court?: string
+          register_number?: string
+          updated_at?: string
+          vat_id?: string
+        }
+        Update: {
+          additional_info?: string
+          address?: string
+          company_name?: string
+          contact_email?: string
+          contact_phone?: string
+          id?: string
+          managing_director?: string
+          register_court?: string
+          register_number?: string
+          updated_at?: string
+          vat_id?: string
+        }
+        Relationships: []
+      }
       news_sources: {
         Row: {
           created_at: string
