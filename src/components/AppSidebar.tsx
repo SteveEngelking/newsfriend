@@ -1,4 +1,4 @@
-import { Home, Settings, Shield, Cookie } from 'lucide-react';
+import { Home, Settings, Shield, Cookie, Building2 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
