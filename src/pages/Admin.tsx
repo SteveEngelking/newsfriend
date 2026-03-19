@@ -3,6 +3,7 @@ import { NewsSource } from '@/lib/types';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
 import { ScheduleManager } from '@/components/ScheduleManager';
+import { ImpressumEditor } from '@/components/ImpressumEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
