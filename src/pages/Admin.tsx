@@ -176,17 +176,16 @@ const Admin = () => {
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
               <Shield className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>Initial Admin Setup</CardTitle>
-              <CardDescription>No admin account exists yet. Create one to get started.</CardDescription>
+              <CardTitle>Claim Admin Access</CardTitle>
+              <CardDescription>No admin account exists yet. Click below to become the first admin.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSignupAndClaimAdmin} className="space-y-4">
-                <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Password (min 6 chars)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Setting up...' : 'Create Admin Account'}
-                </Button>
-              </form>
+            <CardContent className="space-y-4">
+              <Button onClick={handleClaimAdmin} className="w-full" disabled={isLoading}>
+                {isLoading ? 'Setting up...' : 'Become First Admin'}
+              </Button>
+              <Button variant="ghost" onClick={handleLogout} className="w-full gap-2">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
