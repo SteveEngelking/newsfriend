@@ -89,18 +89,12 @@ const Admin = () => {
     }
   };
 
-  const handleSignupAndClaimAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleClaimAdmin = async () => {
     setIsLoading(true);
     try {
-      const { error: signupError } = await supabase.auth.signUp({ email, password });
-      if (signupError) throw signupError;
-
-      // Wait for session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Account created!', description: 'Please check your email to verify, then sign in.' });
-        setAdminState('login');
+        toast({ title: 'Error', description: 'You must be logged in to claim admin.', variant: 'destructive' });
         return;
       }
 
