@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Download, FileText, BarChart3, ExternalLink } from 'lucide-react';
 import { downloadAsHtml } from '@/lib/downloadHtml';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
   report: FactCheckReport;
@@ -15,6 +16,7 @@ interface Props {
 
 export function ReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   const handleDownload = () => {
     if (!reportRef.current) return;
@@ -29,9 +31,9 @@ export function ReportView({ report }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Fact-Check Report</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('reportTitle')}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Generated {new Date(report.generatedAt).toLocaleString()}
+            {t('reportGenerated')} {new Date(report.generatedAt).toLocaleString()}
           </p>
         </div>
         <div className="flex gap-2">
@@ -47,17 +49,16 @@ export function ReportView({ report }: Props) {
             window.open(URL.createObjectURL(blob), '_blank');
           }} variant="outline" className="gap-2">
             <ExternalLink className="h-4 w-4" />
-            New Tab
+            {t('reportNewTab')}
           </Button>
           <Button onClick={handleDownload} variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
-            Download
+            {t('reportDownload')}
           </Button>
         </div>
       </div>
 
       <div ref={reportRef} className="space-y-6">
-        {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,29 +67,28 @@ export function ReportView({ report }: Props) {
           <Card className="border-verified/30 bg-verified/5">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-verified">{verified}</p>
-              <p className="text-xs text-muted-foreground">Verified</p>
+              <p className="text-xs text-muted-foreground">{t('reportVerified')}</p>
             </CardContent>
           </Card>
           <Card className="border-disputed/30 bg-disputed/5">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-disputed">{disputed}</p>
-              <p className="text-xs text-muted-foreground">Disputed</p>
+              <p className="text-xs text-muted-foreground">{t('reportDisputed')}</p>
             </CardContent>
           </Card>
           <Card className="border-unverified/30 bg-unverified/5">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-unverified">{unverified}</p>
-              <p className="text-xs text-muted-foreground">Unverified</p>
+              <p className="text-xs text-muted-foreground">{t('reportUnverified')}</p>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Summary */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-primary" />
-              Summary
+              {t('reportSummary')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -96,10 +96,9 @@ export function ReportView({ report }: Props) {
           </CardContent>
         </Card>
 
-        {/* Claims */}
         <div className="space-y-3">
           <h3 className="text-base font-semibold flex items-center gap-2">
-            Key Claims
+            {t('reportKeyClaims')}
             <Badge variant="secondary">{report.claims.length}</Badge>
           </h3>
           {report.claims.map((claim, i) => (
@@ -107,22 +106,21 @@ export function ReportView({ report }: Props) {
           ))}
         </div>
 
-        {/* Source Comparison */}
         {report.sourceComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <BarChart3 className="h-4 w-4 text-primary" />
-                Source Comparison
+                {t('reportSourceComparison')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[150px]">Source</TableHead>
-                    <TableHead>Perspective</TableHead>
-                    <TableHead>Key Points</TableHead>
+                    <TableHead className="w-[150px]">{t('reportSource')}</TableHead>
+                    <TableHead>{t('reportPerspective')}</TableHead>
+                    <TableHead>{t('reportKeyPoints')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

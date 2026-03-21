@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { X, Plus, ChevronDown, Newspaper, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
   sources: NewsSource[];
@@ -21,6 +22,7 @@ export function SourceManager({ sources, onChange }: Props) {
   const [newUrl, setNewUrl] = useState('');
   const [adding, setAdding] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const toggle = (id: string) => {
     onChange(sources.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
@@ -31,7 +33,7 @@ export function SourceManager({ sources, onChange }: Props) {
     if (ok) {
       onChange(sources.filter(s => s.id !== id));
     } else {
-      toast({ title: 'Error', description: 'Failed to remove source', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: t('sourceRemoveFailed'), variant: 'destructive' });
     }
   };
 
@@ -40,7 +42,7 @@ export function SourceManager({ sources, onChange }: Props) {
     const trimmedUrl = newUrl.trim();
     if (!trimmedName || !trimmedUrl) return;
     if (trimmedName.length > 200) {
-      toast({ title: 'Error', description: 'Source name must be under 200 characters', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: t('sourceNameTooLong'), variant: 'destructive' });
       return;
     }
     let url = trimmedUrl;
@@ -50,7 +52,7 @@ export function SourceManager({ sources, onChange }: Props) {
     try {
       new URL(url);
     } catch {
-      toast({ title: 'Invalid URL', description: 'Please enter a valid URL', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: t('sourceInvalidUrl'), variant: 'destructive' });
       return;
     }
     setAdding(true);
@@ -59,9 +61,9 @@ export function SourceManager({ sources, onChange }: Props) {
       onChange([...sources, { id: result.id, name: newName.trim(), url, enabled: false }]);
       setNewName('');
       setNewUrl('');
-      toast({ title: 'Source added', description: `${newName.trim()} is now available for all users.` });
+      toast({ title: t('sourceAdded'), description: `${newName.trim()} ${t('sourceAddedDesc')}` });
     } else {
-      toast({ title: 'Error', description: 'Failed to add source', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: t('sourceAddFailed'), variant: 'destructive' });
     }
     setAdding(false);
   };
@@ -76,9 +78,9 @@ export function SourceManager({ sources, onChange }: Props) {
             <CardTitle className="flex items-center justify-between text-base">
               <span className="flex items-center gap-2">
                 <Newspaper className="h-4 w-4 text-primary" />
-                News Sources
+                {t('sourceTitle')}
                 <span className="text-xs font-normal text-muted-foreground">
-                  {enabledCount} active
+                  {enabledCount} {t('sourceActive')}
                 </span>
               </span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -119,13 +121,13 @@ export function SourceManager({ sources, onChange }: Props) {
 
             <div className="flex gap-2 pt-2">
               <Input
-                placeholder="Source name"
+                placeholder={t('sourceNamePlaceholder')}
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 className="text-sm"
               />
               <Input
-                placeholder="https://..."
+                placeholder={t('sourceUrlPlaceholder')}
                 value={newUrl}
                 onChange={e => setNewUrl(e.target.value)}
                 className="text-sm"
