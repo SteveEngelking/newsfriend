@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Clock, Download, Trash2, CalendarClock, ExternalLink } from 'lucide-react';
 import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
 import { DailyNewsReport } from '@/lib/types';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
   sources: NewsSource[];
@@ -39,6 +40,7 @@ export function ScheduleManager({ sources }: Props) {
   const [frequency, setFrequency] = useState('daily');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const loadData = useCallback(async () => {
     const [schedRes, repRes] = await Promise.all([
@@ -56,7 +58,6 @@ export function ScheduleManager({ sources }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Auto-update schedule source_ids when enabled sources change
   useEffect(() => {
     if (!schedule) return;
     const enabledIds = sources.filter(s => s.enabled).map(s => s.id);
@@ -69,7 +70,7 @@ export function ScheduleManager({ sources }: Props) {
   const handleSaveSchedule = async () => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
-      toast({ title: 'No sources selected', description: 'Enable at least one source first.', variant: 'destructive' });
+      toast({ title: t('scheduleNoSources'), description: t('scheduleNoSourcesDesc'), variant: 'destructive' });
       return;
     }
 
@@ -82,9 +83,9 @@ export function ScheduleManager({ sources }: Props) {
         .update({ frequency, source_ids: sourceIds, enabled: true })
         .eq('id', schedule.id);
       if (error) {
-        toast({ title: 'Error', description: 'Failed to update schedule', variant: 'destructive' });
+        toast({ title: t('sourceError'), description: t('scheduleUpdateFailed'), variant: 'destructive' });
       } else {
-        toast({ title: 'Schedule updated' });
+        toast({ title: t('scheduleUpdated') });
         loadData();
       }
     } else {
@@ -92,9 +93,9 @@ export function ScheduleManager({ sources }: Props) {
         .from('report_schedules')
         .insert({ frequency, source_ids: sourceIds, articles_per_source: 8, enabled: true });
       if (error) {
-        toast({ title: 'Error', description: 'Failed to create schedule', variant: 'destructive' });
+        toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
-        toast({ title: 'Schedule created' });
+        toast({ title: t('scheduleCreated') });
         loadData();
       }
     }
@@ -127,13 +128,13 @@ export function ScheduleManager({ sources }: Props) {
     openReportInNewTab(getReportHtml(report));
   };
 
-  const frequencyLabel: Record<string, string> = {
-    hourly: 'Hourly',
-    every_6_hours: 'Every 6 Hours',
-    every_12_hours: 'Every 12 Hours',
-    daily: 'Daily',
-    every_other_day: 'Every Other Day',
-    weekly: 'Weekly',
+  const frequencyLabelKey: Record<string, string> = {
+    hourly: 'scheduleHourly',
+    every_6_hours: 'scheduleEvery6h',
+    every_12_hours: 'scheduleEvery12h',
+    daily: 'scheduleDaily',
+    every_other_day: 'scheduleEveryOtherDay',
+    weekly: 'scheduleWeekly',
   };
 
   return (
@@ -142,7 +143,7 @@ export function ScheduleManager({ sources }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
-            Scheduled Reports
+            {t('scheduleTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -152,22 +153,22 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hourly">Hourly</SelectItem>
-                <SelectItem value="every_6_hours">Every 6 Hours</SelectItem>
-                <SelectItem value="every_12_hours">Every 12 Hours</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="every_other_day">Every Other Day</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="hourly">{t('scheduleHourly')}</SelectItem>
+                <SelectItem value="every_6_hours">{t('scheduleEvery6h')}</SelectItem>
+                <SelectItem value="every_12_hours">{t('scheduleEvery12h')}</SelectItem>
+                <SelectItem value="daily">{t('scheduleDaily')}</SelectItem>
+                <SelectItem value="every_other_day">{t('scheduleEveryOtherDay')}</SelectItem>
+                <SelectItem value="weekly">{t('scheduleWeekly')}</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={handleSaveSchedule} disabled={isLoading} size="sm">
-              {schedule ? 'Update Schedule' : 'Create Schedule'}
+              {schedule ? t('scheduleUpdate') : t('scheduleCreate')}
             </Button>
             {schedule && (
               <div className="flex items-center gap-2">
                 <Switch checked={schedule.enabled} onCheckedChange={handleToggleSchedule} />
                 <span className="text-sm text-muted-foreground">
-                  {schedule.enabled ? 'Active' : 'Paused'}
+                  {schedule.enabled ? t('scheduleActive') : t('schedulePaused')}
                 </span>
               </div>
             )}
@@ -175,8 +176,8 @@ export function ScheduleManager({ sources }: Props) {
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
-              {frequencyLabel[schedule.frequency]} • Using {schedule.source_ids.length} sources
-              {schedule.last_run_at && ` • Last run: ${new Date(schedule.last_run_at).toLocaleString()}`}
+              {t((frequencyLabelKey[schedule.frequency] || 'scheduleDaily') as any)} • {t('scheduleUsingSources')} {schedule.source_ids.length} {t('scheduleSources')}
+              {schedule.last_run_at && ` • ${t('scheduleLastRun')} ${new Date(schedule.last_run_at).toLocaleString()}`}
             </p>
           )}
         </CardContent>
@@ -185,7 +186,7 @@ export function ScheduleManager({ sources }: Props) {
       {reports.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Past Reports</CardTitle>
+            <CardTitle className="text-base">{t('schedulePastReports')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -196,17 +197,17 @@ export function ScheduleManager({ sources }: Props) {
                     <p className="text-xs text-muted-foreground">
                       {new Date(report.created_at).toLocaleString()}
                       {' • '}
-                      {(report.report_data as any)?.themes?.length || 0} themes
+                      {(report.report_data as any)?.themes?.length || 0} {t('scheduleThemes')}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewReport(report)} title="Open in new tab">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewReport(report)}>
                       <ExternalLink className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)} title="Download HTML">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)}>
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)} title="Delete">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -216,7 +217,6 @@ export function ScheduleManager({ sources }: Props) {
           </CardContent>
         </Card>
       )}
-
     </div>
   );
 }

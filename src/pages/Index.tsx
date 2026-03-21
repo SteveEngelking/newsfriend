@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const Index = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
@@ -34,6 +35,7 @@ const Index = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
   const { toast } = useToast();
+  const { t } = useLanguage();
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ const Index = () => {
   const handleSearch = useCallback(async (topic: string) => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
-      toast({ title: 'No sources selected', description: 'Enable at least one news source.', variant: 'destructive' });
+      toast({ title: t('indexNoSources'), description: t('indexNoSourcesDesc'), variant: 'destructive' });
       return;
     }
 
@@ -99,7 +101,7 @@ const Index = () => {
       const allArticles = await searchSources(enabledSources, topic);
 
       if (allArticles.length === 0) {
-        toast({ title: 'No articles found', description: 'Try a different topic or enable more sources.', variant: 'destructive' });
+        toast({ title: t('indexNoArticles'), description: t('indexNoArticlesDesc'), variant: 'destructive' });
         setIsLoading(false);
         return;
       }
@@ -136,16 +138,16 @@ const Index = () => {
       }
     } catch (err: any) {
       console.error('Search error:', err);
-      toast({ title: 'Error', description: err.message || 'Something went wrong', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: err.message || 'Something went wrong', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
-  }, [sources, toast, searchSources]);
+  }, [sources, toast, searchSources, t]);
 
   const handleDailyNews = useCallback(async (articlesPerSource: number) => {
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
-      toast({ title: 'No sources selected', description: 'Enable at least one news source.', variant: 'destructive' });
+      toast({ title: t('indexNoSources'), description: t('indexNoSourcesDesc'), variant: 'destructive' });
       return;
     }
 
@@ -156,7 +158,6 @@ const Index = () => {
     setLoadingProgress(0);
 
     try {
-      // Shuffle sources to avoid always favoring the same ones
       const shuffled = [...enabledSources].sort(() => Math.random() - 0.5);
       const allArticles: ScrapedArticle[] = [];
       for (let i = 0; i < shuffled.length; i++) {
@@ -170,7 +171,6 @@ const Index = () => {
             sourceUrl = `https://${sourceUrl}`;
           }
           const hostname = new URL(sourceUrl).hostname;
-          // Use diverse queries to avoid clustering on one dominant story
           const queries = [
             `latest news today site:${hostname}`,
             `technology science site:${hostname}`,
@@ -215,7 +215,7 @@ const Index = () => {
       }
 
       if (allArticles.length === 0) {
-        toast({ title: 'No articles found', description: 'Could not find recent articles. Try again later.', variant: 'destructive' });
+        toast({ title: t('indexNoArticles'), description: t('indexNoArticlesDaily'), variant: 'destructive' });
         setIsLoading(false);
         return;
       }
@@ -252,11 +252,11 @@ const Index = () => {
       }
     } catch (err: any) {
       console.error('Daily news error:', err);
-      toast({ title: 'Error', description: err.message || 'Something went wrong', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: err.message || 'Something went wrong', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
-  }, [sources, toast]);
+  }, [sources, toast, t]);
 
   const handleReset = useCallback(() => {
     setReport(null);
@@ -267,7 +267,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-lg">
         <div className="container max-w-4xl mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2.5">
@@ -285,17 +284,15 @@ const Index = () => {
           className="text-center space-y-2 mb-8"
         >
           <h2 className="text-3xl font-bold tracking-tight">
-            AI-Powered News Fact Checker
+            {t('indexTitle')}
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Search across multiple news sources, cross-reference claims, and get an AI-powered fact-check report.
+            {t('indexDesc')}
           </p>
         </motion.div>
 
         <SearchBar onSearch={handleSearch} onDailyNews={handleDailyNews} isLoading={isLoading} />
-
         <SourceManager sources={sources} onChange={handleSourcesChange} />
-
         <ScheduleManager sources={sources} />
 
         {isLoading && (
@@ -310,7 +307,7 @@ const Index = () => {
             <div className="flex justify-center">
               <Button onClick={handleReset} variant="outline" className="gap-2">
                 <RotateCcw className="h-4 w-4" />
-                New Search
+                {t('indexNewSearch')}
               </Button>
             </div>
           </>
@@ -322,7 +319,7 @@ const Index = () => {
             <div className="flex justify-center">
               <Button onClick={handleReset} variant="outline" className="gap-2">
                 <RotateCcw className="h-4 w-4" />
-                New Search
+                {t('indexNewSearch')}
               </Button>
             </div>
           </>

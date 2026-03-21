@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Loader2, Newspaper } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
   onSearch: (topic: string) => void;
@@ -13,6 +14,7 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
   const [topic, setTopic] = useState('');
   const [articlesPerSource, setArticlesPerSource] = useState(8);
   const [articlesPerSourceInput, setArticlesPerSourceInput] = useState('8');
+  const { t } = useLanguage();
 
   const clampArticlesPerSource = (raw: string) => {
     const parsed = Number.parseInt(raw, 10);
@@ -40,13 +42,13 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
           <Input
             value={topic}
             onChange={e => setTopic(e.target.value)}
-            placeholder="Enter a news topic to fact-check..."
+            placeholder={t('searchPlaceholder')}
             className="pl-10 h-12 text-base"
             disabled={isLoading}
           />
         </div>
         <Button type="submit" disabled={!topic.trim() || isLoading} className="h-12 px-6">
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Analyze'}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('searchAnalyze')}
         </Button>
       </form>
 
@@ -58,12 +60,12 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
           className="gap-2"
         >
           <Newspaper className="h-4 w-4" />
-          News of the Day
+          {t('searchNewsOfDay')}
         </Button>
 
         <div className="flex items-center gap-2">
           <label htmlFor="articles-count" className="text-sm text-muted-foreground whitespace-nowrap">
-            Articles/source:
+            {t('searchArticlesPerSource')}
           </label>
           <Input
             id="articles-count"
@@ -73,7 +75,6 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
             value={articlesPerSourceInput}
             onChange={e => {
               const next = e.target.value;
-              // Allow empty while typing; only accept digits.
               if (next === '' || /^\d+$/.test(next)) setArticlesPerSourceInput(next);
             }}
             onBlur={() => commitArticlesPerSource(articlesPerSourceInput)}
@@ -82,7 +83,7 @@ export function SearchBar({ onSearch, onDailyNews, isLoading }: Props) {
             aria-describedby="articles-count-help"
           />
           <span id="articles-count-help" className="sr-only">
-            Enter a number between 3 and 25.
+            {t('searchArticlesHelp')}
           </span>
         </div>
       </div>

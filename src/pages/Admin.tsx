@@ -11,6 +11,7 @@ import { Lock, LogOut, UserPlus, Shield, Loader2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 type AdminState = 'loading' | 'login' | 'no-admin-exists' | 'not-admin' | 'admin';
 
@@ -23,16 +24,15 @@ const Admin = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [invites, setInvites] = useState<{ id: string; email: string; created_at: string; used_at: string | null }[]>([]);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const checkAdminStatus = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      // Check if any admin exists to decide if we show first-admin setup
       setAdminState('login');
       return;
     }
 
-    // User is logged in — check if they're an admin via edge function
     try {
       const { data, error } = await supabase.functions.invoke('check-admin-status', {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -83,7 +83,7 @@ const Admin = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (err: any) {
-      toast({ title: 'Login failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('adminLoginFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +94,7 @@ const Admin = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Error', description: 'You must be logged in to claim admin.', variant: 'destructive' });
+        toast({ title: t('adminError'), description: t('adminMustBeLoggedIn'), variant: 'destructive' });
         return;
       }
 
@@ -102,10 +102,10 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
-      toast({ title: data.message || 'You are now the first admin!' });
+      toast({ title: data.message || t('adminClaimBtn') });
       checkAdminStatus();
     } catch (err: any) {
-      toast({ title: 'Setup failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('adminError'), description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -122,11 +122,11 @@ const Admin = () => {
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      toast({ title: 'Invite sent', description: `${inviteEmail} can now sign up as admin.` });
+      toast({ title: t('adminInviteSent'), description: `${inviteEmail} ${t('adminInviteSentDesc')}` });
       setInviteEmail('');
       loadInvites();
     } catch (err: any) {
-      toast({ title: 'Invite failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('adminInviteFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -156,12 +156,12 @@ const Admin = () => {
         <Card className="w-full max-w-sm text-center">
           <CardHeader>
             <Shield className="h-8 w-8 text-destructive mx-auto mb-2" />
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>Your account does not have admin privileges. Contact an existing admin to receive an invitation.</CardDescription>
+            <CardTitle>{t('adminAccessDenied')}</CardTitle>
+            <CardDescription>{t('adminAccessDeniedDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="ghost" onClick={handleLogout} className="gap-2">
-              <LogOut className="h-4 w-4" /> Sign Out
+              <LogOut className="h-4 w-4" /> {t('adminSignOut')}
             </Button>
           </CardContent>
         </Card>
@@ -176,15 +176,15 @@ const Admin = () => {
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
               <Shield className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>Claim Admin Access</CardTitle>
-              <CardDescription>No admin account exists yet. Click below to become the first admin.</CardDescription>
+              <CardTitle>{t('adminClaimTitle')}</CardTitle>
+              <CardDescription>{t('adminClaimDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button onClick={handleClaimAdmin} className="w-full" disabled={isLoading}>
-                {isLoading ? 'Setting up...' : 'Become First Admin'}
+                {isLoading ? t('adminClaimingBtn') : t('adminClaimBtn')}
               </Button>
               <Button variant="ghost" onClick={handleLogout} className="w-full gap-2">
-                <LogOut className="h-4 w-4" /> Sign Out
+                <LogOut className="h-4 w-4" /> {t('adminSignOut')}
               </Button>
             </CardContent>
           </Card>
@@ -200,14 +200,14 @@ const Admin = () => {
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
               <Lock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>Admin Login</CardTitle>
+              <CardTitle>{t('adminLogin')}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? t('adminSigningIn') : t('adminSignIn')}
                 </Button>
               </form>
             </CardContent>
@@ -217,28 +217,24 @@ const Admin = () => {
     );
   }
 
-  // Admin dashboard
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-          <h2 className="text-2xl font-bold tracking-tight">Admin Settings</h2>
-          <p className="text-muted-foreground text-sm">
-            Manage news sources, schedules, and admin access.
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('adminSettings')}</h2>
+          <p className="text-muted-foreground text-sm">{t('adminSettingsDesc')}</p>
         </motion.div>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
-          <LogOut className="h-4 w-4" /> Sign Out
+          <LogOut className="h-4 w-4" /> {t('adminSignOut')}
         </Button>
       </div>
 
-      {/* Admin Invites Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <UserPlus className="h-5 w-5" /> Invite Admin
+            <UserPlus className="h-5 w-5" /> {t('adminInviteTitle')}
           </CardTitle>
-          <CardDescription>Invite new administrators by email. They will receive admin access when they sign up.</CardDescription>
+          <CardDescription>{t('adminInviteDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -250,20 +246,20 @@ const Admin = () => {
               className="flex-1"
             />
             <Button onClick={handleInvite} disabled={isLoading || !inviteEmail.trim()}>
-              <UserPlus className="h-4 w-4 mr-2" /> Invite
+              <UserPlus className="h-4 w-4 mr-2" /> {t('adminInviteBtn')}
             </Button>
           </div>
           {invites.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Pending & Used Invites</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('adminPendingInvites')}</p>
               {invites.map(inv => (
                 <div key={inv.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50 text-sm">
                   <div>
                     <span className="font-medium">{inv.email}</span>
                     {inv.used_at ? (
-                      <span className="ml-2 text-xs text-green-600 dark:text-green-400">✓ Accepted</span>
+                      <span className="ml-2 text-xs text-green-600 dark:text-green-400">{t('adminAccepted')}</span>
                     ) : (
-                      <span className="ml-2 text-xs text-muted-foreground">Pending</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{t('adminPending')}</span>
                     )}
                   </div>
                   {!inv.used_at && (

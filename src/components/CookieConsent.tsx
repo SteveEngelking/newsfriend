@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Cookie } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const CONSENT_KEY = 'cookie-consent';
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const consent = localStorage.getItem(CONSENT_KEY);
@@ -42,22 +44,21 @@ export function CookieConsent() {
               <Cookie className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div className="flex-1 space-y-3">
                 <p className="text-sm text-foreground leading-relaxed">
-                  We use cookies and local storage to remember your preferences and provide essential functionality.
-                  By continuing, you agree to our{' '}
+                  {t('cookieMessage')}{' '}
                   <Link to="/cookie-policy" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                    Cookie Policy
+                    {t('cookiePolicyLink')}
                   </Link>{' '}
-                  and{' '}
+                  {t('cookieAnd')}{' '}
                   <Link to="/privacy-policy" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                    Privacy Policy
+                    {t('cookiePrivacyLink')}
                   </Link>.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button size="sm" onClick={accept}>
-                    Accept All
+                    {t('cookieAcceptAll')}
                   </Button>
                   <Button size="sm" variant="outline" onClick={decline}>
-                    Essential Only
+                    {t('cookieEssentialOnly')}
                   </Button>
                 </div>
               </div>

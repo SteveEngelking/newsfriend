@@ -5,6 +5,7 @@ import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { Shield, Newspaper, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface GeneratedReport {
   id: string;
@@ -17,6 +18,7 @@ const Home = () => {
   const [report, setReport] = useState<GeneratedReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+  const { t } = useLanguage();
 
   const fetchLatest = async () => {
     setIsLoading(true);
@@ -52,7 +54,7 @@ const Home = () => {
             <h1 className="text-4xl font-bold tracking-tight">NewsFriend</h1>
           </div>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            AI-powered news analysis and fact-checking at your fingertips.
+            {t('homeTagline')}
           </p>
           <Button
             size="lg"
@@ -65,7 +67,7 @@ const Home = () => {
             ) : (
               <Newspaper className="h-5 w-5" />
             )}
-            Latest News
+            {t('homeLatestNews')}
           </Button>
         </motion.div>
       )}
@@ -77,7 +79,7 @@ const Home = () => {
           className="flex flex-col items-center gap-3"
         >
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading latest report...</p>
+          <p className="text-muted-foreground">{t('homeLoadingReport')}</p>
         </motion.div>
       )}
 
@@ -88,12 +90,10 @@ const Home = () => {
           className="text-center space-y-4"
         >
           <Newspaper className="h-12 w-12 text-muted-foreground mx-auto" />
-          <h2 className="text-xl font-semibold">No reports yet</h2>
-          <p className="text-muted-foreground">
-            No automated news reports have been generated. Check back later or ask an admin to set up scheduled reports.
-          </p>
+          <h2 className="text-xl font-semibold">{t('homeNoReports')}</h2>
+          <p className="text-muted-foreground">{t('homeNoReportsDesc')}</p>
           <Button variant="outline" onClick={fetchLatest}>
-            Try Again
+            {t('homeTryAgain')}
           </Button>
         </motion.div>
       )}
@@ -106,14 +106,14 @@ const Home = () => {
         >
           <div className="text-center mb-4">
             <p className="text-xs text-muted-foreground">
-              Generated {new Date(report.created_at).toLocaleString()}
+              {t('homeGenerated')} {new Date(report.created_at).toLocaleString()}
             </p>
           </div>
           <DailyNewsReportView report={report.report_data} />
           <div className="flex justify-center">
             <Button variant="outline" onClick={fetchLatest} className="gap-2">
               <Newspaper className="h-4 w-4" />
-              Refresh
+              {t('homeRefresh')}
             </Button>
           </div>
         </motion.div>

@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Shield } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,7 +21,10 @@ export function AppLayout() {
                 <Shield className="h-5 w-5 text-primary" />
                 <h1 className="text-lg font-bold tracking-tight">NewsFriend</h1>
               </div>
-              <ThemeToggle />
+              <div className="flex items-center gap-1">
+                <LanguageSwitcher />
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           <main className="flex-1 container max-w-4xl mx-auto px-2 sm:px-4 py-6 sm:py-8">
