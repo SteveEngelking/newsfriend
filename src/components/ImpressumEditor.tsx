@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Building2, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface ImpressumData {
   id: string;
@@ -26,6 +27,7 @@ export function ImpressumEditor() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     supabase
@@ -59,7 +61,7 @@ export function ImpressumEditor() {
       .eq('id', data.id);
 
     if (error) {
-      toast({ title: 'Error', description: 'Failed to save Impressum', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: 'Failed to save Impressum', variant: 'destructive' });
     } else {
       toast({ title: 'Saved', description: 'Impressum updated successfully.' });
     }
@@ -77,41 +79,41 @@ export function ImpressumEditor() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Building2 className="h-4 w-4 text-primary" />
-          Impressum / Legal Notice
+          {t('impressumTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label className="text-xs">Company Name</Label>
+            <Label className="text-xs">{t('impressumLegalNotice')}</Label>
             <Input value={data?.company_name ?? ''} onChange={e => update('company_name', e.target.value)} placeholder="Company GmbH" className="text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Managing Director</Label>
+            <Label className="text-xs">{t('impressumDirector')}</Label>
             <Input value={data?.managing_director ?? ''} onChange={e => update('managing_director', e.target.value)} placeholder="Max Mustermann" className="text-sm" />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label className="text-xs">Address</Label>
+            <Label className="text-xs">{t('impressumAddress')}</Label>
             <Textarea value={data?.address ?? ''} onChange={e => update('address', e.target.value)} placeholder="Musterstraße 1&#10;12345 Berlin&#10;Germany" className="text-sm" rows={3} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Email</Label>
+            <Label className="text-xs">{t('impressumEmail')}</Label>
             <Input type="email" value={data?.contact_email ?? ''} onChange={e => update('contact_email', e.target.value)} placeholder="info@example.com" className="text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Phone</Label>
+            <Label className="text-xs">{t('impressumPhone')}</Label>
             <Input value={data?.contact_phone ?? ''} onChange={e => update('contact_phone', e.target.value)} placeholder="+49 30 123456" className="text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Register Court</Label>
+            <Label className="text-xs">{t('impressumCourt')}</Label>
             <Input value={data?.register_court ?? ''} onChange={e => update('register_court', e.target.value)} placeholder="Amtsgericht Berlin" className="text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Register Number</Label>
+            <Label className="text-xs">{t('impressumRegNumber')}</Label>
             <Input value={data?.register_number ?? ''} onChange={e => update('register_number', e.target.value)} placeholder="HRB 12345" className="text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">VAT ID</Label>
+            <Label className="text-xs">{t('impressumVatId')}</Label>
             <Input value={data?.vat_id ?? ''} onChange={e => update('vat_id', e.target.value)} placeholder="DE123456789" className="text-sm" />
           </div>
         </div>
@@ -121,7 +123,7 @@ export function ImpressumEditor() {
         </div>
         <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save Impressum
+          Save {t('impressumTitle')}
         </Button>
       </CardContent>
     </Card>
