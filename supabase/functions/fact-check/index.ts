@@ -3,10 +3,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Simple in-memory rate limiter per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5; // max requests per window
-const RATE_WINDOW = 60_000; // 60 seconds
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 60_000;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -53,7 +52,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, articles, allSourceNames } = await req.json();
+    const { topic, articles, allSourceNames, language } = await req.json();
+    const outputLang = language === 'de' ? 'German' : 'English';
 
     if (!topic || typeof topic !== 'string' || topic.length > 500) {
       return new Response(
@@ -77,7 +77,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Sanitize inputs server-side
     const safeArticles = sanitizeArticles(articles);
     const safeSourceNames = sanitizeSourceNames(allSourceNames);
 
@@ -86,6 +85,8 @@ Deno.serve(async (req) => {
     ).join('\n\n---\n\n');
 
     const systemPrompt = `You are an expert fact-checker and news analyst. You analyze news articles from multiple sources to identify key claims, cross-reference them, and assess their veracity.
+
+LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All summaries, claim texts, explanations, perspectives, and key points must be in ${outputLang}. Source names and URLs remain as-is.
 
 CRITICAL RULES:
 - You MUST include a sourceComparison entry for EVERY source the user selected. No exceptions.
@@ -97,7 +98,7 @@ CRITICAL RULES:
     const allNames = safeSourceNames.length ? [...new Set([...safeSourceNames, ...sourceNamesFromArticles])] : sourceNamesFromArticles;
     const minClaims = Math.max(10, allNames.length);
 
-    const userPrompt = `Analyze the following articles about "${topic}" and produce a comprehensive fact-check report.
+    const userPrompt = `Analyze the following articles about "${topic}" and produce a comprehensive fact-check report in ${outputLang}.
 
 ${articlesSummary}
 
@@ -105,7 +106,9 @@ Identify ${minClaims}-20 key claims made across these articles. For each claim, 
 
 The user selected these ${allNames.length} sources for analysis: ${allNames.join(', ')}.
 
-MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} entries — one for each of these sources: ${allNames.join(', ')}. If a source had no articles found, still include it and note the absence of coverage in its perspective. Do NOT return fewer than ${allNames.length} sourceComparison entries.`;
+MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} entries — one for each of these sources: ${allNames.join(', ')}. If a source had no articles found, still include it and note the absence of coverage in its perspective. Do NOT return fewer than ${allNames.length} sourceComparison entries.
+
+Write everything in ${outputLang}.`;
 
     const requestBody = JSON.stringify({
       model: 'google/gemini-3-flash-preview',
@@ -174,7 +177,6 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
       tool_choice: { type: 'function', function: { name: 'generate_factcheck_report' } },
     });
 
-    // Retry up to 3 times on transient errors (503, 500)
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -188,7 +190,6 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
 
       if (response.status !== 503 && response.status !== 500) break;
       console.warn(`AI gateway returned ${response.status}, attempt ${attempt + 1}/3`);
-      // Consume body before retry
       await response.text();
       if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
     }

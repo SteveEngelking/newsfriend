@@ -5,8 +5,8 @@ const corsHeaders = {
 
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5; // max requests per window
-const RATE_WINDOW = 60_000; // 60 seconds
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 60_000;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -26,14 +26,12 @@ function getClientIP(req: Request): string {
 }
 
 function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
-  // Shuffle input for variety each run
   const shuffled = [...articles];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  // Round-robin across sources to ensure fair representation
   const bySource: Record<string, any[]> = {};
   for (const a of shuffled) {
     const src = typeof a.sourceName === 'string' ? a.sourceName : 'Unknown';
@@ -45,12 +43,10 @@ function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
   const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
   const balanced: any[] = [];
 
-  // First pass: take up to perSource from each
   for (const src of sourceNames) {
     balanced.push(...bySource[src].slice(0, perSource));
   }
 
-  // Second pass: fill remaining slots from sources that have more
   if (balanced.length < maxTotal) {
     for (const src of sourceNames) {
       const remaining = bySource[src].slice(perSource);
@@ -89,9 +85,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { articles, allSourceNames, totalArticlesRequested } = await req.json();
-    // Scale themes based on article pool: roughly 1 theme per 2-3 articles, min 5, max 20
+    const { articles, allSourceNames, totalArticlesRequested, language } = await req.json();
     const themeCount = Math.min(20, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
+    const outputLang = language === 'de' ? 'German' : 'English';
 
     if (!Array.isArray(articles) || !articles.length) {
       return new Response(
@@ -108,7 +104,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Sanitize inputs server-side
     const safeArticles = sanitizeArticles(articles);
     const safeSourceNames = sanitizeSourceNames(allSourceNames);
 
@@ -116,15 +111,9 @@ Deno.serve(async (req) => {
       `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
     ).join('\n\n---\n\n');
 
-    // Build a map of source to article URLs for reference
-    const sourceUrlMap: Record<string, string> = {};
-    for (const a of safeArticles) {
-      if (!sourceUrlMap[a.sourceName]) {
-        sourceUrlMap[a.sourceName] = a.url;
-      }
-    }
-
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
+
+LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All headlines, summaries, commentary, and analysis must be in ${outputLang}. Source names and URLs remain as-is.
 
 STYLE GUIDELINES:
 - Write in authoritative, journalistic prose — not bullet points
@@ -144,17 +133,17 @@ CRITICAL RULES:
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
 - You MUST respond with a valid JSON object using tool calling`;
 
-    const userPrompt = `Analyze the following news articles from the last 24 hours and produce a critical daily news briefing.
+    const userPrompt = `Analyze the following news articles from the last 24 hours and produce a critical daily news briefing in ${outputLang}.
 
 ${articlesSummary}
 
 Sources to analyze: ${safeSourceNames.join(', ')}
 
 Create a comprehensive report with exactly ${themeCount} major themes/stories covering DIVERSE topics. For each theme:
-1. Write a compelling headline
-2. Summarize the story in 2-3 sentences
-3. Analyze how each source covered it (stance, quotes, bias indicators)
-4. Provide critical commentary on the overall media coverage
+1. Write a compelling headline in ${outputLang}
+2. Summarize the story in 2-3 sentences in ${outputLang}
+3. Analyze how each source covered it (stance, quotes, bias indicators) in ${outputLang}
+4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 
 Be critical and insightful. This is investigative journalism, not stenography.`;
@@ -181,7 +170,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
               properties: {
                 introduction: { 
                   type: 'string', 
-                  description: 'A 2-3 paragraph introduction setting the stage for today\'s news landscape. Journalistic, engaging prose.' 
+                  description: 'A 2-3 paragraph introduction setting the stage for today\'s news landscape.' 
                 },
                 themes: {
                   type: 'array',
@@ -275,8 +264,9 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
 
     const parsed = JSON.parse(toolCall.function.arguments);
 
+    const dateLocale = language === 'de' ? 'de-DE' : 'en-GB';
     const report = {
-      title: `News of the Day — ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
+      title: `News of the Day — ${new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
       generatedAt: new Date().toISOString(),
       introduction: parsed.introduction,
       themes: parsed.themes.map((t: any, i: number) => ({
