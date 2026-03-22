@@ -34,7 +34,7 @@ async function invokeWithRetry(
 }
 
 export const firecrawlApi = {
-  async search(query: string, options?: { limit?: number; tbs?: string; scrapeOptions?: { formats?: string[] } }): Promise<FirecrawlResponse> {
+  async search(query: string, options?: { limit?: number; lang?: string; country?: string; tbs?: string; scrapeOptions?: { formats?: string[] } }): Promise<FirecrawlResponse> {
     return invokeWithRetry('firecrawl-search', { query, options });
   },
 };

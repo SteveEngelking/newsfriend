@@ -35,7 +35,7 @@ const Index = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,8 +47,9 @@ const Index = () => {
     saveEnabledState(newSources);
   }, []);
 
-  const searchSources = useCallback(async (enabledSources: NewsSource[], query: string) => {
+  const searchSources = useCallback(async (enabledSources: NewsSource[], query: string, lang: string) => {
     const allArticles: ScrapedArticle[] = [];
+    const langCode = lang === 'de' ? 'de' : 'en';
     for (let i = 0; i < enabledSources.length; i++) {
       const source = enabledSources[i];
       setLoadingMessage(`Searching ${source.name}...`);
@@ -63,6 +64,7 @@ const Index = () => {
         const searchQuery = `${query} site:${hostname}`;
         const result = await firecrawlApi.search(searchQuery, {
           limit: 3,
+          lang: langCode,
           scrapeOptions: { formats: ['markdown'] },
         });
 
@@ -98,7 +100,7 @@ const Index = () => {
     setLoadingProgress(0);
 
     try {
-      const allArticles = await searchSources(enabledSources, topic);
+      const allArticles = await searchSources(enabledSources, topic, language);
 
       if (allArticles.length === 0) {
         toast({ title: t('indexNoArticles'), description: t('indexNoArticlesDesc'), variant: 'destructive' });
@@ -113,6 +115,7 @@ const Index = () => {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('fact-check', {
         body: {
           topic,
+          language,
           allSourceNames: enabledSources.map(s => s.name),
           articles: allArticles.map(a => ({
             sourceName: a.sourceName,
@@ -142,9 +145,10 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [sources, toast, searchSources, t]);
+  }, [sources, toast, searchSources, t, language]);
 
   const handleDailyNews = useCallback(async (articlesPerSource: number) => {
+    const langCode = language === 'de' ? 'de' : 'en';
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
       toast({ title: t('indexNoSources'), description: t('indexNoSourcesDesc'), variant: 'destructive' });
@@ -171,7 +175,13 @@ const Index = () => {
             sourceUrl = `https://${sourceUrl}`;
           }
           const hostname = new URL(sourceUrl).hostname;
-          const queries = [
+          const queries = language === 'de' ? [
+            `aktuelle Nachrichten heute site:${hostname}`,
+            `Technologie Wissenschaft site:${hostname}`,
+            `Wirtschaft Finanzen site:${hostname}`,
+            `Gesundheit Umwelt Klima site:${hostname}`,
+            `Sport Kultur Unterhaltung site:${hostname}`,
+          ] : [
             `latest news today site:${hostname}`,
             `technology science site:${hostname}`,
             `economy business finance site:${hostname}`,
@@ -185,6 +195,7 @@ const Index = () => {
             try {
               const result = await firecrawlApi.search(query, {
                 limit: perQuery,
+                lang: langCode,
                 tbs: 'qdr:d',
                 scrapeOptions: { formats: ['markdown'] },
               });
@@ -226,6 +237,7 @@ const Index = () => {
 
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('daily-news', {
         body: {
+          language,
           allSourceNames: enabledSources.map(s => s.name),
           totalArticlesRequested: articlesPerSource * enabledSources.length,
           articles: allArticles.map(a => ({
@@ -256,7 +268,7 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [sources, toast, t]);
+  }, [sources, toast, t, language]);
 
   const handleReset = useCallback(() => {
     setReport(null);
