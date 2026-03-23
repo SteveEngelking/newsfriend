@@ -126,7 +126,18 @@ export const translations = {
     adminAccepted: '✓ Accepted',
     adminPending: 'Pending',
     adminLoginFailed: 'Login failed',
+    adminSignUp: 'Sign Up',
+    adminSigningUp: 'Signing up...',
+    adminSignUpSuccess: 'Account created! Please check your email to verify.',
+    adminSignUpFailed: 'Sign up failed',
+    adminNoAccount: "Don't have an account?",
+    adminHaveAccount: 'Already have an account?',
     adminError: 'Error',
+    adminEditSource: 'Edit',
+    adminSaveSource: 'Save',
+    adminCancelEdit: 'Cancel',
+    adminSourceUpdated: 'Source updated',
+    adminSourceUpdateFailed: 'Failed to update source',
     adminMustBeLoggedIn: 'You must be logged in to claim admin.',
 
     // Index page
