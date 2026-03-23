@@ -90,6 +90,20 @@ const Admin = () => {
     }
   };
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      toast({ title: t('adminSignUpSuccess') });
+    } catch (err: any) {
+      toast({ title: t('adminSignUpFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleClaimAdmin = async () => {
     setIsLoading(true);
     try {
