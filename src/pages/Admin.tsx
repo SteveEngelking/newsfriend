@@ -200,16 +200,27 @@ const Admin = () => {
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
               <Lock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>{t('adminLogin')}</CardTitle>
+              <CardTitle>{isSignUp ? t('adminSignUp') : t('adminLogin')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? t('adminSigningIn') : t('adminSignIn')}
+                  {isLoading
+                    ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn'))
+                    : (isSignUp ? t('adminSignUp') : t('adminSignIn'))}
                 </Button>
               </form>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {isSignUp ? t('adminHaveAccount') : t('adminNoAccount')}
+                </button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
