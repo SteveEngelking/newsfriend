@@ -1,24 +1,35 @@
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Languages } from 'lucide-react';
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
 
-  const toggle = () => setLanguage(language === 'en' ? 'de' : 'en');
-
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggle}
-      title={language === 'en' ? 'Auf Deutsch wechseln' : 'Switch to English'}
-      className="relative"
-    >
-      <Languages className="h-4 w-4" />
-      <span className="absolute -bottom-0.5 -right-0.5 text-[9px] font-bold uppercase leading-none">
-        {language === 'en' ? 'DE' : 'EN'}
-      </span>
-    </Button>
+    <div className="flex items-center rounded-full border border-border bg-muted/50 p-0.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setLanguage('de')}
+        className={`h-7 rounded-full px-2.5 text-xs font-semibold transition-all ${
+          language === 'de'
+            ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+        }`}
+      >
+        DE
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setLanguage('en')}
+        className={`h-7 rounded-full px-2.5 text-xs font-semibold transition-all ${
+          language === 'en'
+            ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+        }`}
+      >
+        EN
+      </Button>
+    </div>
   );
 }
