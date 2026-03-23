@@ -65,6 +65,7 @@ const Index = () => {
         const result = await firecrawlApi.search(searchQuery, {
           limit: 3,
           lang: langCode,
+          country: langCode === 'de' ? 'de' : 'us',
           scrapeOptions: { formats: ['markdown'] },
         });
 
