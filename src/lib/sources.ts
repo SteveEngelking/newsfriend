@@ -82,6 +82,23 @@ export async function removeSource(id: string): Promise<boolean> {
   return true;
 }
 
+/** Update a source's name and URL in the shared DB (admin only) */
+export async function updateSource(id: string, name: string, url: string): Promise<boolean> {
+  // Use service-level update via edge function or direct if RLS allows
+  // Since news_sources doesn't allow UPDATE via RLS, we delete + re-insert
+  const { error: delError } = await supabase.from('news_sources').delete().eq('id', id);
+  if (delError) {
+    console.error('Failed to delete source for update:', delError);
+    return false;
+  }
+  const { error: insError } = await supabase.from('news_sources').insert({ id, name, url });
+  if (insError) {
+    console.error('Failed to re-insert source:', insError);
+    return false;
+  }
+  return true;
+}
+
 /** Save enabled/disabled state locally */
 export function saveEnabledState(sources: NewsSource[]) {
   saveEnabledIds(sources);
