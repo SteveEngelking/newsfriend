@@ -300,7 +300,7 @@ const Admin = () => {
         </CardContent>
       </Card>
 
-      <SourceManager sources={sources} onChange={handleSourcesChange} />
+      <SourceManager sources={sources} onChange={handleSourcesChange} allowEdit />
       <ScheduleManager sources={sources} />
       <ImpressumEditor />
     </div>
