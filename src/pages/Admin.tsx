@@ -20,6 +20,7 @@ const Admin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [invites, setInvites] = useState<{ id: string; email: string; created_at: string; used_at: string | null }[]>([]);
