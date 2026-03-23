@@ -197,6 +197,7 @@ const Index = () => {
               const result = await firecrawlApi.search(query, {
                 limit: perQuery,
                 lang: langCode,
+                country: langCode === 'de' ? 'de' : 'us',
                 tbs: 'qdr:d',
                 scrapeOptions: { formats: ['markdown'] },
               });
