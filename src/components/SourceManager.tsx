@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { NewsSource } from '@/lib/types';
-import { addSource, removeSource } from '@/lib/sources';
+import { addSource, removeSource, updateSource } from '@/lib/sources';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { X, Plus, ChevronDown, Newspaper, Loader2 } from 'lucide-react';
+import { X, Plus, ChevronDown, Newspaper, Loader2, Pencil, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -14,13 +14,17 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 interface Props {
   sources: NewsSource[];
   onChange: (sources: NewsSource[]) => void;
+  allowEdit?: boolean;
 }
 
-export function SourceManager({ sources, onChange }: Props) {
+export function SourceManager({ sources, onChange, allowEdit = false }: Props) {
   const [open, setOpen] = useState(true);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editUrl, setEditUrl] = useState('');
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -68,6 +72,28 @@ export function SourceManager({ sources, onChange }: Props) {
     setAdding(false);
   };
 
+  const startEdit = (source: NewsSource) => {
+    setEditingId(source.id);
+    setEditName(source.name);
+    setEditUrl(source.url);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editName.trim() || !editUrl.trim()) return;
+    let url = editUrl.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
+    }
+    const ok = await updateSource(editingId, editName.trim(), url);
+    if (ok) {
+      onChange(sources.map(s => s.id === editingId ? { ...s, name: editName.trim(), url } : s));
+      toast({ title: t('adminSourceUpdated') });
+    } else {
+      toast({ title: t('sourceError'), description: t('adminSourceUpdateFailed'), variant: 'destructive' });
+    }
+    setEditingId(null);
+  };
+
   const enabledCount = sources.filter(s => s.enabled).length;
 
   return (
@@ -103,18 +129,51 @@ export function SourceManager({ sources, onChange }: Props) {
                     checked={source.enabled}
                     onCheckedChange={() => toggle(source.id)}
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{source.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{source.url}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleRemove(source.id)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
+                  {editingId === source.id ? (
+                    <div className="flex-1 flex gap-2 min-w-0">
+                      <Input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      <Input
+                        value={editUrl}
+                        onChange={e => setEditUrl(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-primary" onClick={handleSaveEdit}>
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditingId(null)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{source.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{source.url}</p>
+                      </div>
+                      {allowEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+                          onClick={() => startEdit(source)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemove(source.id)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

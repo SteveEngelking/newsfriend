@@ -37,7 +37,7 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check if this user is admin
+    // Check if this user is already admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
@@ -46,6 +46,25 @@ serve(async (req) => {
       .maybeSingle();
 
     if (roleData) {
+      return new Response(JSON.stringify({ isAdmin: true, noAdminsExist: false }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check if this user has a pending invite and auto-grant admin role
+    const { data: invite } = await adminClient
+      .from("admin_invites")
+      .select("id")
+      .eq("email", user.email)
+      .is("used_at", null)
+      .maybeSingle();
+
+    if (invite) {
+      // Grant admin role
+      await adminClient.from("user_roles").insert({ user_id: user.id, role: "admin" });
+      // Mark invite as used
+      await adminClient.from("admin_invites").update({ used_at: new Date().toISOString() }).eq("id", invite.id);
+      
       return new Response(JSON.stringify({ isAdmin: true, noAdminsExist: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

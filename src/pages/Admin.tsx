@@ -20,6 +20,7 @@ const Admin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [invites, setInvites] = useState<{ id: string; email: string; created_at: string; used_at: string | null }[]>([]);
@@ -84,6 +85,20 @@ const Admin = () => {
       if (error) throw error;
     } catch (err: any) {
       toast({ title: t('adminLoginFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      toast({ title: t('adminSignUpSuccess') });
+    } catch (err: any) {
+      toast({ title: t('adminSignUpFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -200,16 +215,27 @@ const Admin = () => {
           <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
               <Lock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>{t('adminLogin')}</CardTitle>
+              <CardTitle>{isSignUp ? t('adminSignUp') : t('adminLogin')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
                 <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? t('adminSigningIn') : t('adminSignIn')}
+                  {isLoading
+                    ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn'))
+                    : (isSignUp ? t('adminSignUp') : t('adminSignIn'))}
                 </Button>
               </form>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {isSignUp ? t('adminHaveAccount') : t('adminNoAccount')}
+                </button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -274,7 +300,7 @@ const Admin = () => {
         </CardContent>
       </Card>
 
-      <SourceManager sources={sources} onChange={handleSourcesChange} />
+      <SourceManager sources={sources} onChange={handleSourcesChange} allowEdit />
       <ScheduleManager sources={sources} />
       <ImpressumEditor />
     </div>
