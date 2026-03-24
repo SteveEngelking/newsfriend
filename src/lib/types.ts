@@ -53,6 +53,7 @@ export interface DailyTheme {
 export interface DailyNewsReport {
   title: string;
   generatedAt: string;
+  language?: 'en' | 'de';
   introduction: string;
   themes: DailyTheme[];
   conclusion: string;
