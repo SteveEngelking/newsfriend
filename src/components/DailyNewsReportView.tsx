@@ -26,7 +26,7 @@ export function DailyNewsReportView({ report }: Props) {
     const variants: Record<string, 'destructive' | 'default' | 'secondary'> = {
       high: 'destructive',
       medium: 'default',
-      low: 'secondary',
+      low: 'secondary'
     };
     return variants[significance] || 'secondary';
   };
@@ -53,13 +53,13 @@ export function DailyNewsReportView({ report }: Props) {
         </header>
 
         <section className="mb-8">
-          <p className="text-base leading-relaxed whitespace-pre-line">{report.introduction}</p>
+          <p className="text-base leading-relaxed whitespace-pre-line pr-0 mx-0">{report.introduction}</p>
         </section>
 
         <Separator className="my-8" />
 
-        {report.themes.map((theme, index) => (
-          <article key={theme.id} className="mb-10">
+        {report.themes.map((theme, index) =>
+        <article key={theme.id} className="mb-10">
             <header className="mb-4">
               <div className="flex items-start justify-between gap-4">
                 <h2 className="text-xl font-bold leading-tight">
@@ -78,42 +78,42 @@ export function DailyNewsReportView({ report }: Props) {
                 {t('dailySourceComparison')}
               </h3>
               <div className="space-y-4">
-                {theme.sourceAnalysis.map((sa, saIndex) => (
-                  <div key={saIndex} className="border-l-2 border-primary/30 pl-4">
+                {theme.sourceAnalysis.map((sa, saIndex) =>
+              <div key={saIndex} className="border-l-2 border-primary/30 pl-4">
                     <div className="flex items-center gap-2">
                       <h4 className="font-semibold text-sm">{sa.sourceName}</h4>
-                      {sa.articleUrl && (
-                        <a
-                          href={sa.articleUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline"
-                        >
+                      {sa.articleUrl &&
+                  <a
+                    href={sa.articleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline">
+                    
                           {t('dailyReadArticle')}
                         </a>
-                      )}
+                  }
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{sa.stance}</p>
-                    {sa.keyQuotes.length > 0 && (
-                      <div className="mt-2">
-                        {sa.keyQuotes.map((quote, qi) => (
-                          <blockquote key={qi} className="text-sm italic border-l-2 border-muted pl-2 my-1">
+                    {sa.keyQuotes.length > 0 &&
+                <div className="mt-2">
+                        {sa.keyQuotes.map((quote, qi) =>
+                  <blockquote key={qi} className="text-sm italic border-l-2 border-muted pl-2 my-1">
                             "{quote}"
                           </blockquote>
-                        ))}
+                  )}
                       </div>
-                    )}
-                    {sa.biasIndicators.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {sa.biasIndicators.map((bias, bi) => (
-                          <Badge key={bi} variant="outline" className="text-xs">
+                }
+                    {sa.biasIndicators.length > 0 &&
+                <div className="mt-2 flex flex-wrap gap-1">
+                        {sa.biasIndicators.map((bias, bi) =>
+                  <Badge key={bi} variant="outline" className="text-xs">
                             {bias}
                           </Badge>
-                        ))}
+                  )}
                       </div>
-                    )}
+                }
                   </div>
-                ))}
+              )}
               </div>
             </div>
 
@@ -126,7 +126,7 @@ export function DailyNewsReportView({ report }: Props) {
 
             {index < report.themes.length - 1 && <Separator className="mt-8" />}
           </article>
-        ))}
+        )}
 
         <Separator className="my-8" />
         <section className="bg-muted/50 rounded-lg p-6">
@@ -139,6 +139,6 @@ export function DailyNewsReportView({ report }: Props) {
           <p>{t('dailyFooter2')}</p>
         </footer>
       </div>
-    </div>
-  );
+    </div>);
+
 }
