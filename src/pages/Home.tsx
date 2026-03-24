@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
@@ -18,20 +18,20 @@ const Home = () => {
   const [report, setReport] = useState<GeneratedReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  const fetchLatest = async () => {
+  const fetchLatest = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('generated_reports')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(20);
 
-      if (data && !error) {
-        setReport(data as unknown as GeneratedReport);
+      if (data && !error && data.length > 0) {
+        const localized = data.find((row: any) => row?.report_data?.language === language);
+        setReport((localized || data[0]) as unknown as GeneratedReport);
       }
     } catch (err) {
       console.error('Error fetching latest report:', err);
@@ -39,7 +39,11 @@ const Home = () => {
       setIsLoading(false);
       setHasChecked(true);
     }
-  };
+  }, [language]);
+
+  useEffect(() => {
+    if (hasChecked) fetchLatest();
+  }, [language, hasChecked, fetchLatest]);
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">

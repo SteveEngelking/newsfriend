@@ -219,8 +219,8 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
-                <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+                <Input type="email" placeholder={t('adminEmailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required />
+                <Input type="password" placeholder={t('adminPasswordPlaceholder')} value={password} onChange={e => setPassword(e.target.value)} required />
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading
                     ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn'))
@@ -266,7 +266,7 @@ const Admin = () => {
           <div className="flex gap-2">
             <Input
               type="email"
-              placeholder="admin@example.com"
+                placeholder={t('adminInvitePlaceholder')}
               value={inviteEmail}
               onChange={e => setInviteEmail(e.target.value)}
               className="flex-1"

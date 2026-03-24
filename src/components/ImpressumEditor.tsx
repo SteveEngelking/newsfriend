@@ -61,9 +61,9 @@ export function ImpressumEditor() {
       .eq('id', data.id);
 
     if (error) {
-      toast({ title: t('sourceError'), description: 'Failed to save Impressum', variant: 'destructive' });
+      toast({ title: t('sourceError'), description: t('impressumSaveError'), variant: 'destructive' });
     } else {
-      toast({ title: 'Saved', description: 'Impressum updated successfully.' });
+      toast({ title: t('impressumSave'), description: t('impressumSaveSuccess') });
     }
     setSaving(false);
   };
@@ -118,12 +118,12 @@ export function ImpressumEditor() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Additional Information</Label>
-          <Textarea value={data?.additional_info ?? ''} onChange={e => update('additional_info', e.target.value)} placeholder="Responsible for content, disclaimers, etc." className="text-sm" rows={4} />
+          <Label className="text-xs">{t('impressumAdditionalInfoLabel')}</Label>
+          <Textarea value={data?.additional_info ?? ''} onChange={e => update('additional_info', e.target.value)} placeholder={t('impressumAdditionalInfoPlaceholder')} className="text-sm" rows={4} />
         </div>
         <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save {t('impressumTitle')}
+          {t('impressumSave')}
         </Button>
       </CardContent>
     </Card>

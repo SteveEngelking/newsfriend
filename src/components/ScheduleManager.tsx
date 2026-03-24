@@ -19,6 +19,7 @@ interface Props {
 interface Schedule {
   id: string;
   frequency: string;
+  language: 'en' | 'de';
   source_ids: string[];
   articles_per_source: number;
   enabled: boolean;
@@ -38,9 +39,10 @@ export function ScheduleManager({ sources }: Props) {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [reports, setReports] = useState<GeneratedReport[]>([]);
   const [frequency, setFrequency] = useState('daily');
+  const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const loadData = useCallback(async () => {
     const [schedRes, repRes] = await Promise.all([
@@ -52,9 +54,12 @@ export function ScheduleManager({ sources }: Props) {
       const sched = schedRes.data as Schedule;
       setSchedule(sched);
       setFrequency(sched.frequency);
+      setOutputLanguage(sched.language || language);
+    } else {
+      setOutputLanguage(language);
     }
     if (repRes.data) setReports(repRes.data as unknown as GeneratedReport[]);
-  }, []);
+  }, [language]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -80,7 +85,7 @@ export function ScheduleManager({ sources }: Props) {
     if (schedule) {
       const { error } = await supabase
         .from('report_schedules')
-        .update({ frequency, source_ids: sourceIds, enabled: true })
+        .update({ frequency, language: outputLanguage, source_ids: sourceIds, enabled: true } as any)
         .eq('id', schedule.id);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleUpdateFailed'), variant: 'destructive' });
@@ -91,7 +96,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, source_ids: sourceIds, articles_per_source: 8, enabled: true });
+        .insert({ frequency, language: outputLanguage, source_ids: sourceIds, articles_per_source: 8, enabled: true } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
@@ -117,7 +122,8 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const getReportHtml = (report: GeneratedReport) => {
-    return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport);
+    const reportLanguage = (report.report_data as any)?.language === 'de' ? 'de' : outputLanguage;
+    return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport, reportLanguage);
   };
 
   const handleDownloadReport = (report: GeneratedReport) => {
@@ -159,6 +165,15 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectItem value="daily">{t('scheduleDaily')}</SelectItem>
                 <SelectItem value="every_other_day">{t('scheduleEveryOtherDay')}</SelectItem>
                 <SelectItem value="weekly">{t('scheduleWeekly')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={outputLanguage} onValueChange={(value) => setOutputLanguage(value as 'en' | 'de')}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">{t('languageEnglish')}</SelectItem>
+                <SelectItem value="de">{t('languageGerman')}</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={handleSaveSchedule} disabled={isLoading} size="sm">

@@ -143,6 +143,7 @@ export type Database = {
           enabled: boolean
           frequency: string
           id: string
+          language: string
           last_run_at: string | null
           source_ids: string[]
         }
@@ -152,6 +153,7 @@ export type Database = {
           enabled?: boolean
           frequency?: string
           id?: string
+          language?: string
           last_run_at?: string | null
           source_ids?: string[]
         }
@@ -161,6 +163,7 @@ export type Database = {
           enabled?: boolean
           frequency?: string
           id?: string
+          language?: string
           last_run_at?: string | null
           source_ids?: string[]
         }
