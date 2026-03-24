@@ -85,7 +85,7 @@ export function ScheduleManager({ sources }: Props) {
     if (schedule) {
       const { error } = await supabase
         .from('report_schedules')
-        .update({ frequency, language: outputLanguage, source_ids: sourceIds, enabled: true })
+        .update({ frequency, language: outputLanguage, source_ids: sourceIds, enabled: true } as any)
         .eq('id', schedule.id);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleUpdateFailed'), variant: 'destructive' });
@@ -96,7 +96,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: outputLanguage, source_ids: sourceIds, articles_per_source: 8, enabled: true });
+        .insert({ frequency, language: outputLanguage, source_ids: sourceIds, articles_per_source: 8, enabled: true } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
