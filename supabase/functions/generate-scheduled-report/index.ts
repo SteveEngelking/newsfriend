@@ -69,13 +69,21 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const scheduleLanguage = schedule.language === 'de' ? 'de' : 'en';
+      const outputLang = scheduleLanguage === 'de' ? 'German' : 'English';
+
       // Search articles from each source via Firecrawl (parallelized)
       const allArticles: any[] = [];
       // Use 2 broad queries with higher limits to reduce API calls
-      const queries = [
-        'latest news today breaking',
-        'world politics economy technology health science',
-      ];
+      const queries = scheduleLanguage === 'de'
+        ? [
+            'aktuelle nachrichten heute eilmeldung',
+            'welt politik wirtschaft technologie gesundheit wissenschaft',
+          ]
+        : [
+            'latest news today breaking',
+            'world politics economy technology health science',
+          ];
 
       // Build all fetch tasks upfront
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
@@ -109,6 +117,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             query: searchQuery,
             limit: task.perQuery,
+            lang: scheduleLanguage,
+            country: scheduleLanguage === 'de' ? 'de' : 'us',
             tbs: 'qdr:d',
           }),
         });
@@ -182,6 +192,8 @@ Deno.serve(async (req) => {
 
       const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
+LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All headlines, summaries, commentary, and analysis must be in ${outputLang}. Source names and URLs remain as-is.
+
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
 - For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available. Never limit yourself to just 1-2 sources per theme.
@@ -191,7 +203,7 @@ CRITICAL RULES:
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality
 - You MUST respond with a valid JSON object using tool calling`;
 
-      const userPrompt = `Analyze these articles and produce a critical daily news briefing.\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes.`;
+      const userPrompt = `Analyze these articles and produce a critical daily news briefing in ${outputLang}.\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes.\n\nIf source material is written in another language, translate and rewrite all output into ${outputLang}.`;
 
       const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -264,9 +276,12 @@ CRITICAL RULES:
       }
 
       const parsed = JSON.parse(toolCall.function.arguments);
+      const dateLocale = scheduleLanguage === 'de' ? 'de-DE' : 'en-GB';
+      const titlePrefix = scheduleLanguage === 'de' ? 'Nachrichten des Tages' : 'News of the Day';
       const report = {
-        title: `News of the Day — ${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
+        title: `${titlePrefix} — ${now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
         generatedAt: now.toISOString(),
+        language: scheduleLanguage,
         introduction: parsed.introduction,
         themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
         conclusion: parsed.conclusion,
