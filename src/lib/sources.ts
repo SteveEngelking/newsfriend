@@ -32,8 +32,8 @@ function saveEnabledIds(sources: NewsSource[]) {
 export async function fetchSources(): Promise<NewsSource[]> {
   const { data, error } = await supabase
     .from('news_sources')
-    .select('id, name, url')
-    .order('created_at', { ascending: true });
+    .select('id, name, url, sort_order')
+    .order('sort_order', { ascending: true });
 
   if (error || !data?.length) {
     // Fallback to defaults
