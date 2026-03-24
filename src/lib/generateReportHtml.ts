@@ -4,8 +4,8 @@ import { DailyNewsReport } from '@/lib/types';
  * Generates a fully self-contained HTML string from a DailyNewsReport.
  * No DOM dependency — works for scheduled reports loaded from DB.
  */
-export function generateDailyNewsHtml(report: DailyNewsReport): string {
-  const lang = report.language === 'de' ? 'de' : 'en';
+export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage?: 'en' | 'de'): string {
+  const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
   const labels = lang === 'de'
     ? {
         generated: 'Erstellt',
