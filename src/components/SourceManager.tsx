@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { NewsSource } from '@/lib/types';
-import { addSource, removeSource, updateSource } from '@/lib/sources';
+import { addSource, removeSource, updateSource, updateSourceOrder } from '@/lib/sources';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { X, Plus, ChevronDown, Newspaper, Loader2, Pencil, Check } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Newspaper, Loader2, Pencil, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -94,6 +94,22 @@ export function SourceManager({ sources, onChange, allowEdit = false }: Props) {
     setEditingId(null);
   };
 
+  const handleMoveUp = async (index: number) => {
+    if (index === 0) return;
+    const newSources = [...sources];
+    [newSources[index - 1], newSources[index]] = [newSources[index], newSources[index - 1]];
+    onChange(newSources);
+    await updateSourceOrder(newSources.map(s => s.id));
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index >= sources.length - 1) return;
+    const newSources = [...sources];
+    [newSources[index], newSources[index + 1]] = [newSources[index + 1], newSources[index]];
+    onChange(newSources);
+    await updateSourceOrder(newSources.map(s => s.id));
+  };
+
   const enabledCount = sources.filter(s => s.enabled).length;
 
   return (
@@ -116,7 +132,7 @@ export function SourceManager({ sources, onChange, allowEdit = false }: Props) {
         <CollapsibleContent>
           <CardContent className="space-y-3 pt-0">
             <AnimatePresence mode="popLayout">
-              {sources.map(source => (
+              {sources.map((source, index) => (
                 <motion.div
                   key={source.id}
                   layout
@@ -155,14 +171,34 @@ export function SourceManager({ sources, onChange, allowEdit = false }: Props) {
                         <p className="text-xs text-muted-foreground truncate">{source.url}</p>
                       </div>
                       {allowEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
-                          onClick={() => startEdit(source)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleMoveUp(index)}
+                            disabled={index === 0}
+                          >
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleMoveDown(index)}
+                            disabled={index === sources.length - 1}
+                          >
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => startEdit(source)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       )}
                       <Button
                         variant="ghost"
