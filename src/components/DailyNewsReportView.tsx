@@ -14,7 +14,7 @@ interface Props {
 
 export function DailyNewsReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleDownload = () => {
     if (reportRef.current) {
@@ -34,7 +34,7 @@ export function DailyNewsReportView({ report }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-2">
-        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report))} variant="outline" className="gap-2">
+        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report, language))} variant="outline" className="gap-2">
           <ExternalLink className="h-4 w-4" />
           {t('dailyOpenNewTab')}
         </Button>
@@ -48,7 +48,7 @@ export function DailyNewsReportView({ report }: Props) {
         <header className="text-center mb-8 pb-6 border-b-2 border-primary">
           <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {t('homeGenerated')} {new Date(report.generatedAt).toLocaleString('en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • Sources: {report.sourcesAnalyzed.join(', ')}
+            {t('homeGenerated')} {new Date(report.generatedAt).toLocaleString('en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • {t('dailySourcesLabel')}: {report.sourcesAnalyzed.join(', ')}
           </p>
         </header>
 
