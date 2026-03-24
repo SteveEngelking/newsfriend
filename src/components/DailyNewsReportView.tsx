@@ -44,7 +44,7 @@ export function DailyNewsReportView({ report }: Props) {
         </Button>
       </div>
       
-      <div ref={reportRef} className="bg-background text-foreground p-8 max-w-4xl mx-auto">
+      <div ref={reportRef} className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px]">
         <header className="text-center mb-8 pb-6 border-b-2 border-primary">
           <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
           <p className="text-sm text-muted-foreground">
