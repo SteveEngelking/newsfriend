@@ -23,11 +23,11 @@ const Home = () => {
   const fetchLatest = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('generated_reports')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const { data, error } = await supabase.
+      from('generated_reports').
+      select('*').
+      order('created_at', { ascending: false }).
+      limit(20);
 
       if (data && !error && data.length > 0) {
         const localized = data.find((row: any) => row?.report_data?.language === language);
@@ -46,13 +46,13 @@ const Home = () => {
   }, [language, hasChecked, fetchLatest]);
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
-      {!hasChecked && !report && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-6"
-        >
+    <div className="min-h-[80vh] flex flex-col items-center justify-center px-0">
+      {!hasChecked && !report &&
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-6">
+        
           <div className="flex items-center justify-center gap-3 mb-4">
             <Shield className="h-10 w-10 text-primary" />
             <h1 className="text-4xl font-bold tracking-tight">NewsFriend</h1>
@@ -61,38 +61,38 @@ const Home = () => {
             {t('homeTagline')}
           </p>
           <Button
-            size="lg"
-            onClick={fetchLatest}
-            disabled={isLoading}
-            className="gap-2 text-base px-8 py-6"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Newspaper className="h-5 w-5" />
-            )}
+          size="lg"
+          onClick={fetchLatest}
+          disabled={isLoading}
+          className="gap-2 text-base px-8 py-6">
+          
+            {isLoading ?
+          <Loader2 className="h-5 w-5 animate-spin" /> :
+
+          <Newspaper className="h-5 w-5" />
+          }
             {t('homeLatestNews')}
           </Button>
         </motion.div>
-      )}
+      }
 
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-3"
-        >
+      {isLoading &&
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col items-center gap-3">
+        
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">{t('homeLoadingReport')}</p>
         </motion.div>
-      )}
+      }
 
-      {hasChecked && !isLoading && !report && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center space-y-4"
-        >
+      {hasChecked && !isLoading && !report &&
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-center space-y-4">
+        
           <Newspaper className="h-12 w-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-semibold">{t('homeNoReports')}</h2>
           <p className="text-muted-foreground">{t('homeNoReportsDesc')}</p>
@@ -100,14 +100,14 @@ const Home = () => {
             {t('homeTryAgain')}
           </Button>
         </motion.div>
-      )}
+      }
 
-      {report && !isLoading && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-4xl mx-auto space-y-4"
-        >
+      {report && !isLoading &&
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-4xl mx-auto space-y-4">
+        
           <div className="text-center mb-4">
             <p className="text-xs text-muted-foreground">
               {t('homeGenerated')} {new Date(report.created_at).toLocaleString()}
@@ -121,9 +121,9 @@ const Home = () => {
             </Button>
           </div>
         </motion.div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default Home;
