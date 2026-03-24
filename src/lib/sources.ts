@@ -84,17 +84,28 @@ export async function removeSource(id: string): Promise<boolean> {
 
 /** Update a source's name and URL in the shared DB (admin only) */
 export async function updateSource(id: string, name: string, url: string): Promise<boolean> {
-  // Use service-level update via edge function or direct if RLS allows
-  // Since news_sources doesn't allow UPDATE via RLS, we delete + re-insert
-  const { error: delError } = await supabase.from('news_sources').delete().eq('id', id);
-  if (delError) {
-    console.error('Failed to delete source for update:', delError);
+  const { error } = await supabase
+    .from('news_sources')
+    .update({ name, url })
+    .eq('id', id);
+  if (error) {
+    console.error('Failed to update source:', error);
     return false;
   }
-  const { error: insError } = await supabase.from('news_sources').insert({ id, name, url });
-  if (insError) {
-    console.error('Failed to re-insert source:', insError);
-    return false;
+  return true;
+}
+
+/** Update sort_order for all sources (admin only) */
+export async function updateSourceOrder(orderedIds: string[]): Promise<boolean> {
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from('news_sources')
+      .update({ sort_order: i + 1 })
+      .eq('id', orderedIds[i]);
+    if (error) {
+      console.error('Failed to update sort order:', error);
+      return false;
+    }
   }
   return true;
 }
