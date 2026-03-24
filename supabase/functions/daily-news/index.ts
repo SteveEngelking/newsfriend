@@ -86,8 +86,9 @@ Deno.serve(async (req) => {
 
   try {
     const { articles, allSourceNames, totalArticlesRequested, language } = await req.json();
+    const normalizedLanguage = typeof language === 'string' && language.toLowerCase().startsWith('de') ? 'de' : 'en';
     const themeCount = Math.min(20, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
-    const outputLang = language === 'de' ? 'German' : 'English';
+    const outputLang = normalizedLanguage === 'de' ? 'German' : 'English';
 
     if (!Array.isArray(articles) || !articles.length) {
       return new Response(
@@ -145,6 +146,8 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 3. Analyze how each source covered it (stance, quotes, bias indicators) in ${outputLang}
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
+
+If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
 Be critical and insightful. This is investigative journalism, not stenography.`;
 
@@ -264,10 +267,12 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
 
     const parsed = JSON.parse(toolCall.function.arguments);
 
-    const dateLocale = language === 'de' ? 'de-DE' : 'en-GB';
+    const dateLocale = normalizedLanguage === 'de' ? 'de-DE' : 'en-GB';
+    const titlePrefix = normalizedLanguage === 'de' ? 'Nachrichten des Tages' : 'News of the Day';
     const report = {
-      title: `News of the Day — ${new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
+      title: `${titlePrefix} — ${new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
       generatedAt: new Date().toISOString(),
+      language: normalizedLanguage,
       introduction: parsed.introduction,
       themes: parsed.themes.map((t: any, i: number) => ({
         id: `theme-${i}`,
