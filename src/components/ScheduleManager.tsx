@@ -135,6 +135,7 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const frequencyLabelKey: Record<string, string> = {
+    immediate: 'scheduleImmediate',
     hourly: 'scheduleHourly',
     every_6_hours: 'scheduleEvery6h',
     every_12_hours: 'scheduleEvery12h',
@@ -159,6 +160,7 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="immediate">{t('scheduleImmediate')}</SelectItem>
                 <SelectItem value="hourly">{t('scheduleHourly')}</SelectItem>
                 <SelectItem value="every_6_hours">{t('scheduleEvery6h')}</SelectItem>
                 <SelectItem value="every_12_hours">{t('scheduleEvery12h')}</SelectItem>
