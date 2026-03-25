@@ -47,9 +47,8 @@ const Index = () => {
     saveEnabledState(newSources);
   }, []);
 
-  const searchSources = useCallback(async (enabledSources: NewsSource[], query: string, lang: string) => {
+  const searchSources = useCallback(async (enabledSources: NewsSource[], query: string, _lang: string) => {
     const allArticles: ScrapedArticle[] = [];
-    const langCode = lang === 'de' ? 'de' : 'en';
     for (let i = 0; i < enabledSources.length; i++) {
       const source = enabledSources[i];
       setLoadingMessage(`Searching ${source.name}...`);
@@ -147,7 +146,6 @@ const Index = () => {
   }, [sources, toast, searchSources, t, language]);
 
   const handleDailyNews = useCallback(async (articlesPerSource: number) => {
-    const langCode = language === 'de' ? 'de' : 'en';
     const enabledSources = sources.filter(s => s.enabled);
     if (enabledSources.length === 0) {
       toast({ title: t('indexNoSources'), description: t('indexNoSourcesDesc'), variant: 'destructive' });
@@ -174,18 +172,12 @@ const Index = () => {
             sourceUrl = `https://${sourceUrl}`;
           }
           const hostname = new URL(sourceUrl).hostname;
-          const queries = language === 'de' ? [
-            `aktuelle Nachrichten heute site:${hostname}`,
-            `Technologie Wissenschaft site:${hostname}`,
-            `Wirtschaft Finanzen site:${hostname}`,
-            `Gesundheit Umwelt Klima site:${hostname}`,
-            `Sport Kultur Unterhaltung site:${hostname}`,
-          ] : [
+          const queries = [
             `latest news today site:${hostname}`,
-            `technology science site:${hostname}`,
-            `economy business finance site:${hostname}`,
-            `health environment climate site:${hostname}`,
-            `sports culture entertainment site:${hostname}`,
+            `aktuelle Nachrichten heute site:${hostname}`,
+            `technology science economy site:${hostname}`,
+            `Wirtschaft Technologie Wissenschaft site:${hostname}`,
+            `health environment sports site:${hostname}`,
           ];
           const perQuery = Math.max(1, Math.ceil(articlesPerSource / queries.length));
           const seenUrls = new Set<string>();
