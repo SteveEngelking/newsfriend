@@ -69,12 +69,8 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const scheduleLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const outputLang = scheduleLanguage === 'de' ? 'German' : 'English';
-
       // Search articles from each source via Firecrawl (parallelized)
       const allArticles: any[] = [];
-      // Use both EN and DE queries to get articles from ALL sources regardless of language
       const queries = [
         'latest news today breaking',
         'world politics economy technology health science',
@@ -82,7 +78,6 @@ Deno.serve(async (req) => {
         'welt politik wirtschaft technologie gesundheit wissenschaft',
       ];
 
-      // Build all fetch tasks upfront
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
         const perQuery = Math.max(3, Math.ceil(schedule.articles_per_source / queries.length));
@@ -91,7 +86,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Run ALL fetch tasks in parallel (no batching - search without scrape is fast)
       const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
@@ -143,7 +137,6 @@ Deno.serve(async (req) => {
         return true;
       });
 
-      // Shuffle for better source mix each run
       for (let i = dedupedArticles.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [dedupedArticles[i], dedupedArticles[j]] = [dedupedArticles[j], dedupedArticles[i]];
@@ -156,7 +149,7 @@ Deno.serve(async (req) => {
 
       console.log(`Schedule ${schedule.id}: ${dedupedArticles.length} unique articles from ${sources.length} sources`);
 
-      // Round-robin balance articles across sources
+      // Round-robin balance
       const bySource: Record<string, any[]> = {};
       for (const a of dedupedArticles) {
         if (!bySource[a.sourceName]) bySource[a.sourceName] = [];
@@ -180,120 +173,124 @@ Deno.serve(async (req) => {
       const totalRequested = schedule.articles_per_source * sources.length;
       const themeCount = Math.min(20, Math.max(5, Math.round(totalRequested / 4)));
 
-      // Call daily-news analysis via AI
       const articlesSummary = balanced.map((a: any, i: number) =>
         `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
       ).join('\n\n---\n\n');
 
-      const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
+      // Generate reports in BOTH languages
+      const languages = [
+        { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
+        { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
+      ];
 
-LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All headlines, summaries, commentary, and analysis must be in ${outputLang}. Source names and URLs remain as-is.
+      for (const lang of languages) {
+        const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
+
+LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single word of headlines, summaries, commentary, analysis, and conclusions must be in ${lang.outputLang}. The ONLY exceptions are source names and URLs which remain as-is.
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
-- For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available. Never limit yourself to just 1-2 sources per theme.
-- Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
+- For EVERY theme, include source analysis from AS MANY different sources as possible (3-5+ per theme)
+- If source material is in another language, you MUST translate it into ${lang.outputLang}
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
-- Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality
+- Do NOT mention interactive features
 - You MUST respond with a valid JSON object using tool calling`;
 
-      const userPrompt = `Analyze these articles and produce a critical daily news briefing in ${outputLang}.\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes.\n\nIf source material is written in another language, translate and rewrite all output into ${outputLang}.`;
+        const userPrompt = `Analyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
-      const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-3-flash-preview',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          tools: [{
-            type: 'function',
-            function: {
-              name: 'generate_daily_news_report',
-              description: 'Generate a daily news briefing',
-              parameters: {
-                type: 'object',
-                properties: {
-                  introduction: { type: 'string' },
-                  themes: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        headline: { type: 'string' },
-                        summary: { type: 'string' },
-                        sourceAnalysis: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              sourceName: { type: 'string' },
-                              stance: { type: 'string' },
-                              keyQuotes: { type: 'array', items: { type: 'string' } },
-                              biasIndicators: { type: 'array', items: { type: 'string' } },
-                              articleUrl: { type: 'string' },
+        const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-3-flash-preview',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'generate_daily_news_report',
+                description: 'Generate a daily news briefing',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    introduction: { type: 'string' },
+                    themes: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          headline: { type: 'string' },
+                          summary: { type: 'string' },
+                          sourceAnalysis: {
+                            type: 'array',
+                            items: {
+                              type: 'object',
+                              properties: {
+                                sourceName: { type: 'string' },
+                                stance: { type: 'string' },
+                                keyQuotes: { type: 'array', items: { type: 'string' } },
+                                biasIndicators: { type: 'array', items: { type: 'string' } },
+                                articleUrl: { type: 'string' },
+                              },
+                              required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                             },
-                            required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                           },
+                          criticalCommentary: { type: 'string' },
+                          significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                         },
-                        criticalCommentary: { type: 'string' },
-                        significance: { type: 'string', enum: ['high', 'medium', 'low'] },
+                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
                       },
-                      required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
                     },
+                    conclusion: { type: 'string' },
                   },
-                  conclusion: { type: 'string' },
+                  required: ['introduction', 'themes', 'conclusion'],
                 },
-                required: ['introduction', 'themes', 'conclusion'],
               },
-            },
-          }],
-          tool_choice: { type: 'function', function: { name: 'generate_daily_news_report' } },
-        }),
-      });
+            }],
+            tool_choice: { type: 'function', function: { name: 'generate_daily_news_report' } },
+          }),
+        });
 
-      if (!aiResp.ok) {
-        results.push(`Schedule ${schedule.id}: AI analysis failed (${aiResp.status})`);
-        continue;
-      }
+        if (!aiResp.ok) {
+          console.error(`Schedule ${schedule.id}: AI failed for ${lang.code} (${aiResp.status})`);
+          continue;
+        }
 
-      const aiData = await aiResp.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      if (!toolCall?.function?.arguments) {
-        results.push(`Schedule ${schedule.id}: no structured response from AI`);
-        continue;
-      }
+        const aiData = await aiResp.json();
+        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall?.function?.arguments) {
+          console.error(`Schedule ${schedule.id}: no structured response for ${lang.code}`);
+          continue;
+        }
 
-      const parsed = JSON.parse(toolCall.function.arguments);
-      const dateLocale = scheduleLanguage === 'de' ? 'de-DE' : 'en-GB';
-      const titlePrefix = scheduleLanguage === 'de' ? 'Nachrichten des Tages' : 'News of the Day';
-      const report = {
-        title: `${titlePrefix} — ${now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
-        generatedAt: now.toISOString(),
-        language: scheduleLanguage,
-        introduction: parsed.introduction,
-        themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
-        conclusion: parsed.conclusion,
-        sourcesAnalyzed: sourceNames,
-      };
+        const parsed = JSON.parse(toolCall.function.arguments);
+        const report = {
+          title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
+          generatedAt: now.toISOString(),
+          language: lang.code,
+          introduction: parsed.introduction,
+          themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
+          conclusion: parsed.conclusion,
+          sourcesAnalyzed: sourceNames,
+        };
 
-      // Store the report
-      const { error: insertErr } = await supabase.from('generated_reports').insert({
-        schedule_id: schedule.id,
-        title: report.title,
-        report_data: report,
-      });
+        const { error: insertErr } = await supabase.from('generated_reports').insert({
+          schedule_id: schedule.id,
+          title: report.title,
+          report_data: report,
+        });
 
-      if (insertErr) {
-        console.error('Failed to store report:', insertErr);
-        results.push(`Schedule ${schedule.id}: failed to store report`);
-        continue;
+        if (insertErr) {
+          console.error(`Failed to store ${lang.code} report:`, insertErr);
+        } else {
+          console.log(`Schedule ${schedule.id}: ${lang.code} report stored`);
+        }
       }
 
       // Update last_run_at
@@ -302,7 +299,7 @@ CRITICAL RULES:
         .update({ last_run_at: now.toISOString() })
         .eq('id', schedule.id);
 
-      results.push(`Schedule ${schedule.id}: report generated successfully`);
+      results.push(`Schedule ${schedule.id}: reports generated in EN+DE`);
     }
 
     return new Response(
