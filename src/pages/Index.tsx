@@ -64,8 +64,6 @@ const Index = () => {
         const searchQuery = `${query} site:${hostname}`;
         const result = await firecrawlApi.search(searchQuery, {
           limit: 3,
-          lang: langCode,
-          country: langCode === 'de' ? 'de' : 'us',
           scrapeOptions: { formats: ['markdown'] },
         });
 
@@ -196,10 +194,7 @@ const Index = () => {
             try {
               const result = await firecrawlApi.search(query, {
                 limit: perQuery,
-                lang: langCode,
-                country: langCode === 'de' ? 'de' : 'us',
                 tbs: 'qdr:d',
-                scrapeOptions: { formats: ['markdown'] },
               });
 
               if (result.success && result.data) {
