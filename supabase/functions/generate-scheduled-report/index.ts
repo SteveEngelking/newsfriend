@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
       if (schedule.last_run_at) {
         const lastRun = new Date(schedule.last_run_at);
         const hoursSince = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
-        const requiredHours = schedule.frequency === 'hourly' ? 0.9
+        const requiredHours = schedule.frequency === 'immediate' ? 0
+          : schedule.frequency === 'hourly' ? 0.9
           : schedule.frequency === 'every_6_hours' ? 5.5
           : schedule.frequency === 'every_12_hours' ? 11.5
           : schedule.frequency === 'daily' ? 23
