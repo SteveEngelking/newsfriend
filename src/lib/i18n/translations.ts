@@ -75,6 +75,7 @@ export const translations = {
     // ScheduleManager
     scheduleTitle: 'Scheduled Reports',
     schedulePastReports: 'Past Reports',
+    scheduleImmediate: 'Immediate (one-time)',
     scheduleHourly: 'Hourly',
     scheduleEvery6h: 'Every 6 Hours',
     scheduleEvery12h: 'Every 12 Hours',
@@ -302,6 +303,7 @@ export const translations = {
 
     scheduleTitle: 'Geplante Berichte',
     schedulePastReports: 'Vergangene Berichte',
+    scheduleImmediate: 'Sofort (einmalig)',
     scheduleHourly: 'Stündlich',
     scheduleEvery6h: 'Alle 6 Stunden',
     scheduleEvery12h: 'Alle 12 Stunden',

@@ -85,12 +85,15 @@ export function ScheduleManager({ sources }: Props) {
     if (schedule) {
       const { error } = await supabase
         .from('report_schedules')
-        .update({ frequency, language: language, source_ids: sourceIds, enabled: true } as any)
+        .update({ frequency, language: language, source_ids: sourceIds, enabled: true, last_run_at: frequency === 'immediate' ? null : schedule.last_run_at } as any)
         .eq('id', schedule.id);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleUpdateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleUpdated') });
+        if (frequency === 'immediate') {
+          await triggerImmediateGeneration();
+        }
         loadData();
       }
     } else {
@@ -101,10 +104,25 @@ export function ScheduleManager({ sources }: Props) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleCreated') });
+        if (frequency === 'immediate') {
+          await triggerImmediateGeneration();
+        }
         loadData();
       }
     }
     setIsLoading(false);
+  };
+
+  const triggerImmediateGeneration = async () => {
+    toast({ title: language === 'de' ? 'Bericht wird generiert…' : 'Generating report…' });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-scheduled-report');
+      if (error) throw error;
+      toast({ title: language === 'de' ? 'Bericht erstellt' : 'Report generated' });
+      loadData();
+    } catch (e) {
+      toast({ title: t('sourceError'), description: String(e), variant: 'destructive' });
+    }
   };
 
   const handleToggleSchedule = async () => {
@@ -135,6 +153,7 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const frequencyLabelKey: Record<string, string> = {
+    immediate: 'scheduleImmediate',
     hourly: 'scheduleHourly',
     every_6_hours: 'scheduleEvery6h',
     every_12_hours: 'scheduleEvery12h',
@@ -159,6 +178,7 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="immediate">{t('scheduleImmediate')}</SelectItem>
                 <SelectItem value="hourly">{t('scheduleHourly')}</SelectItem>
                 <SelectItem value="every_6_hours">{t('scheduleEvery6h')}</SelectItem>
                 <SelectItem value="every_12_hours">{t('scheduleEvery12h')}</SelectItem>
