@@ -74,16 +74,13 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl (parallelized)
       const allArticles: any[] = [];
-      // Use 2 broad queries with higher limits to reduce API calls
-      const queries = scheduleLanguage === 'de'
-        ? [
-            'aktuelle nachrichten heute eilmeldung',
-            'welt politik wirtschaft technologie gesundheit wissenschaft',
-          ]
-        : [
-            'latest news today breaking',
-            'world politics economy technology health science',
-          ];
+      // Use both EN and DE queries to get articles from ALL sources regardless of language
+      const queries = [
+        'latest news today breaking',
+        'world politics economy technology health science',
+        'aktuelle nachrichten heute eilmeldung',
+        'welt politik wirtschaft technologie gesundheit wissenschaft',
+      ];
 
       // Build all fetch tasks upfront
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
@@ -117,8 +114,6 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             query: searchQuery,
             limit: task.perQuery,
-            lang: scheduleLanguage,
-            country: scheduleLanguage === 'de' ? 'de' : 'us',
             tbs: 'qdr:d',
           }),
         });
