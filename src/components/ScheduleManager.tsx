@@ -83,12 +83,17 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true };
+      if (frequency === 'immediate') {
+        updateData.last_run_at = null;
+      }
       const { error } = await supabase
         .from('report_schedules')
-        .update({ frequency, language: language, source_ids: sourceIds, enabled: true, last_run_at: frequency === 'immediate' ? null : schedule.last_run_at } as any)
+        .update(updateData as any)
         .eq('id', schedule.id);
       if (error) {
-        toast({ title: t('sourceError'), description: t('scheduleUpdateFailed'), variant: 'destructive' });
+        console.error('Schedule update error:', error);
+        toast({ title: t('sourceError'), description: error.message || t('scheduleUpdateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleUpdated') });
         if (frequency === 'immediate') {
