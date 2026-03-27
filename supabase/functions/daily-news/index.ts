@@ -154,6 +154,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 3. Analyze how each source covered it (stance, quotes, bias indicators) in ${outputLang}
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
+${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
@@ -217,13 +218,19 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                         type: 'string', 
                         description: '2-3 sentences of critical analysis on how this story is being covered overall' 
                       },
+                      ...(mondcivitanEnabled ? {
+                        mondcivitanReflection: {
+                          type: 'string',
+                          description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                        },
+                      } : {}),
                       significance: { 
                         type: 'string', 
                         enum: ['high', 'medium', 'low'],
                         description: 'How significant is this story?' 
                       },
                     },
-                    required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
+                    required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                     additionalProperties: false,
                   },
                 },
