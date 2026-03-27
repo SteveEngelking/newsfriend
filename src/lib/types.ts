@@ -47,6 +47,7 @@ export interface DailyTheme {
     articleUrl?: string;
   }[];
   criticalCommentary: string;
+  mondcivitanReflection?: string;
   significance: 'high' | 'medium' | 'low';
 }
 

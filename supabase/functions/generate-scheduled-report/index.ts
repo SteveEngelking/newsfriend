@@ -184,6 +184,11 @@ Deno.serve(async (req) => {
         { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
       ];
 
+      const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
+      const mondcivitanInstruction = mondcivitanEnabled ? `
+
+MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
+
       for (const lang of languages) {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
@@ -196,9 +201,9 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention interactive features
-- You MUST respond with a valid JSON object using tool calling`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}`;
 
-        const userPrompt = `Analyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
+        const userPrompt = `Analyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
         const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -243,9 +248,15 @@ CRITICAL RULES:
                             },
                           },
                           criticalCommentary: { type: 'string' },
+                          ...(mondcivitanEnabled ? {
+                            mondcivitanReflection: {
+                              type: 'string',
+                              description: 'Reflection through Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                            },
+                          } : {}),
                           significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                         },
-                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
+                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
                     },
                     conclusion: { type: 'string' },

@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { articles, allSourceNames, totalArticlesRequested, language } = await req.json();
+    const { articles, allSourceNames, totalArticlesRequested, language, mondcivitanEnabled } = await req.json();
     const normalizedLanguage = typeof language === 'string' && language.toLowerCase().startsWith('de') ? 'de' : 'en';
     const themeCount = Math.min(20, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
     const outputLang = normalizedLanguage === 'de' ? 'German' : 'English';
@@ -112,6 +112,14 @@ Deno.serve(async (req) => {
       `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
     ).join('\n\n---\n\n');
 
+    const mondcivitanInstruction = mondcivitanEnabled ? `
+
+MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story through the lens of the Mondcivitan Republic principles. The Mondcivitan Republic was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, later embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. Its aim was to create an international servant nation as spokesman for mankind. It was a considerable influence on John Lennon, and its ideas are embodied in his song "Imagine".
+
+The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
+
+Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
+
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All headlines, summaries, commentary, and analysis must be in ${outputLang}. Source names and URLs remain as-is.
@@ -132,7 +140,7 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
-- You MUST respond with a valid JSON object using tool calling`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}`;
 
     const userPrompt = `Analyze the following news articles from the last 24 hours and produce a critical daily news briefing in ${outputLang}.
 
@@ -146,6 +154,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 3. Analyze how each source covered it (stance, quotes, bias indicators) in ${outputLang}
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
+${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
@@ -209,13 +218,19 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                         type: 'string', 
                         description: '2-3 sentences of critical analysis on how this story is being covered overall' 
                       },
+                      ...(mondcivitanEnabled ? {
+                        mondcivitanReflection: {
+                          type: 'string',
+                          description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                        },
+                      } : {}),
                       significance: { 
                         type: 'string', 
                         enum: ['high', 'medium', 'low'],
                         description: 'How significant is this story?' 
                       },
                     },
-                    required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
+                    required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                     additionalProperties: false,
                   },
                 },
