@@ -270,18 +270,33 @@ CRITICAL RULES:
         });
 
         if (!aiResp.ok) {
-          console.error(`Schedule ${schedule.id}: AI failed for ${lang.code} (${aiResp.status})`);
+          const errText = await aiResp.text().catch(() => 'no body');
+          console.error(`Schedule ${schedule.id}: AI failed for ${lang.code} (${aiResp.status}): ${errText}`);
           continue;
         }
 
-        const aiData = await aiResp.json();
+        const aiText = await aiResp.text();
+        let aiData: any;
+        try {
+          aiData = JSON.parse(aiText);
+        } catch (parseErr) {
+          console.error(`Schedule ${schedule.id}: Failed to parse AI response for ${lang.code}, length=${aiText.length}`);
+          continue;
+        }
+
         const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
         if (!toolCall?.function?.arguments) {
-          console.error(`Schedule ${schedule.id}: no structured response for ${lang.code}`);
+          console.error(`Schedule ${schedule.id}: no structured response for ${lang.code}`, JSON.stringify(aiData).slice(0, 500));
           continue;
         }
 
-        const parsed = JSON.parse(toolCall.function.arguments);
+        let parsed: any;
+        try {
+          parsed = JSON.parse(toolCall.function.arguments);
+        } catch {
+          console.error(`Schedule ${schedule.id}: Failed to parse tool_call arguments for ${lang.code}`);
+          continue;
+        }
         const report = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
           generatedAt: now.toISOString(),
