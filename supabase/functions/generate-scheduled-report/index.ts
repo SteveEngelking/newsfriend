@@ -248,9 +248,15 @@ CRITICAL RULES:
                             },
                           },
                           criticalCommentary: { type: 'string' },
+                          ...(mondcivitanEnabled ? {
+                            mondcivitanReflection: {
+                              type: 'string',
+                              description: 'Reflection through Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                            },
+                          } : {}),
                           significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                         },
-                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance'],
+                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
                     },
                     conclusion: { type: 'string' },
