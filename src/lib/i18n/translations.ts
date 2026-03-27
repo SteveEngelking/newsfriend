@@ -233,6 +233,11 @@ export const translations = {
     impressumSaveError: 'Failed to save Impressum',
     impressumLastUpdated: 'Last updated:',
 
+    // Mondcivitan
+    mondcivitanLabel: 'Mondcivitan News',
+    mondcivitanDesc: 'Include a reflection based on the principles of the Mondcivitan Republic with each theme.',
+    mondcivitanReflectionTitle: 'Mondcivitan Reflection',
+
     // Language
     language: 'Language',
     languageEnglish: 'English',
@@ -454,6 +459,10 @@ export const translations = {
     impressumSaveSuccess: 'Impressum erfolgreich aktualisiert.',
     impressumSaveError: 'Impressum konnte nicht gespeichert werden',
     impressumLastUpdated: 'Letzte Aktualisierung:',
+
+    mondcivitanLabel: 'Mondcivitan News',
+    mondcivitanDesc: 'Jedes Thema mit einer Reflexion auf Grundlage der Prinzipien der Mondcivitan-Republik ergänzen.',
+    mondcivitanReflectionTitle: 'Mondcivitan-Reflexion',
 
     language: 'Sprache',
     languageEnglish: 'Englisch',
