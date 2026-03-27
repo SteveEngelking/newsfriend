@@ -208,6 +208,17 @@ export function ScheduleManager({ sources }: Props) {
               </div>
             )}
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="mondcivitan"
+              checked={mondcivitanEnabled}
+              onCheckedChange={(checked) => setMondcivitanEnabled(checked === true)}
+            />
+            <label htmlFor="mondcivitan" className="text-sm cursor-pointer">
+              <span className="font-medium">{t('mondcivitanLabel')}</span>
+              <span className="text-muted-foreground ml-1 text-xs">— {t('mondcivitanDesc')}</span>
+            </label>
+          </div>
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
