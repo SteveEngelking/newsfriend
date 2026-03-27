@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN IF NOT EXISTS mondcivitan_enabled boolean NOT NULL DEFAULT false;
