@@ -124,6 +124,15 @@ export function DailyNewsReportView({ report }: Props) {
               <p className="text-sm leading-relaxed">{theme.criticalCommentary}</p>
             </div>
 
+            {theme.mondcivitanReflection && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
+                  ☮ {t('mondcivitanReflectionTitle')}
+                </h3>
+                <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">{theme.mondcivitanReflection}</p>
+              </div>
+            )}
+
             {index < report.themes.length - 1 && <Separator className="mt-8" />}
           </article>
         )}
