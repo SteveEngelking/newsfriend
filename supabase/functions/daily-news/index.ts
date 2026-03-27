@@ -269,18 +269,37 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       );
     }
 
-    const aiData = await response.json();
+    const aiText = await response.text();
+    let aiData: any;
+    try {
+      aiData = JSON.parse(aiText);
+    } catch {
+      console.error('Failed to parse AI response, length=', aiText.length);
+      return new Response(
+        JSON.stringify({ error: 'AI returned invalid JSON' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
-      console.error('No tool call in response:', JSON.stringify(aiData));
+      console.error('No tool call in response:', JSON.stringify(aiData).slice(0, 500));
       return new Response(
         JSON.stringify({ error: 'AI did not return structured data' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const parsed = JSON.parse(toolCall.function.arguments);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(toolCall.function.arguments);
+    } catch {
+      console.error('Failed to parse tool_call arguments');
+      return new Response(
+        JSON.stringify({ error: 'AI returned malformed arguments' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const dateLocale = normalizedLanguage === 'de' ? 'de-DE' : 'en-GB';
     const titlePrefix = normalizedLanguage === 'de' ? 'Nachrichten des Tages' : 'News of the Day';
