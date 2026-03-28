@@ -142,7 +142,11 @@ CRITICAL RULES:
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
 - You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}`;
 
-    const userPrompt = `Analyze the following news articles from the last 24 hours and produce a critical daily news briefing in ${outputLang}.
+    const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+    const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.
+
+Analyze the following news articles from the last 24 hours and produce a critical daily news briefing in ${outputLang}.
 
 ${articlesSummary}
 
