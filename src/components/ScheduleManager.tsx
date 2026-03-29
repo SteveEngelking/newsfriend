@@ -25,6 +25,7 @@ interface Schedule {
   articles_per_source: number;
   enabled: boolean;
   mondcivitan_enabled: boolean;
+  schweitzer_enabled: boolean;
   last_run_at: string | null;
   created_at: string;
 }
@@ -42,6 +43,7 @@ export function ScheduleManager({ sources }: Props) {
   const [reports, setReports] = useState<GeneratedReport[]>([]);
   const [frequency, setFrequency] = useState('daily');
   const [mondcivitanEnabled, setMondcivitanEnabled] = useState(false);
+  const [schweitzerEnabled, setSchweitzerEnabled] = useState(false);
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -58,6 +60,7 @@ export function ScheduleManager({ sources }: Props) {
       setSchedule(sched);
       setFrequency(sched.frequency);
       setMondcivitanEnabled(sched.mondcivitan_enabled ?? false);
+      setSchweitzerEnabled(sched.schweitzer_enabled ?? false);
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
@@ -87,7 +90,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled };
       if (frequency === 'immediate') {
         updateData.last_run_at = null;
       }
@@ -108,7 +111,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled } as any);
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
@@ -217,6 +220,17 @@ export function ScheduleManager({ sources }: Props) {
             <label htmlFor="mondcivitan" className="text-sm cursor-pointer">
               <span className="font-medium">{t('mondcivitanLabel')}</span>
               <span className="text-muted-foreground ml-1 text-xs">— {t('mondcivitanDesc')}</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="schweitzer"
+              checked={schweitzerEnabled}
+              onCheckedChange={(checked) => setSchweitzerEnabled(checked === true)}
+            />
+            <label htmlFor="schweitzer" className="text-sm cursor-pointer">
+              <span className="font-medium">{t('schweitzerLabel')}</span>
+              <span className="text-muted-foreground ml-1 text-xs">— {t('schweitzerDesc')}</span>
             </label>
           </div>
           {schedule && (

@@ -238,6 +238,11 @@ export const translations = {
     mondcivitanDesc: 'Include a reflection based on the principles of the Mondcivitan Republic with each theme.',
     mondcivitanReflectionTitle: 'Mondcivitan Reflection',
 
+    // Schweitzer
+    schweitzerLabel: 'Ethical Considerations',
+    schweitzerDesc: 'Include an ethical consideration based on the teachings of Albert Schweitzer.',
+    schweitzerEthicalTitle: 'Ethical Consideration — Albert Schweitzer',
+
     // About
     navAbout: 'About',
     aboutTitle: 'About NewsFriend',
@@ -489,6 +494,10 @@ export const translations = {
     mondcivitanLabel: 'Mondcivitan News',
     mondcivitanDesc: 'Jedes Thema mit einer Reflexion auf Grundlage der Prinzipien der Mondcivitan-Republik ergänzen.',
     mondcivitanReflectionTitle: 'Mondcivitan-Reflexion',
+
+    schweitzerLabel: 'Ethische Betrachtungen',
+    schweitzerDesc: 'Eine ethische Betrachtung basierend auf den Lehren von Albert Schweitzer hinzufügen.',
+    schweitzerEthicalTitle: 'Ethische Betrachtung — Albert Schweitzer',
 
     navAbout: 'Über uns',
     aboutTitle: 'Über NewsFriend',

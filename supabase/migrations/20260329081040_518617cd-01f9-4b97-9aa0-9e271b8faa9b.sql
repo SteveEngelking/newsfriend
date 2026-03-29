@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN schweitzer_enabled boolean NOT NULL DEFAULT false;

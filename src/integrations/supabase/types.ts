@@ -146,6 +146,7 @@ export type Database = {
           language: string
           last_run_at: string | null
           mondcivitan_enabled: boolean
+          schweitzer_enabled: boolean
           source_ids: string[]
         }
         Insert: {
@@ -157,6 +158,7 @@ export type Database = {
           language?: string
           last_run_at?: string | null
           mondcivitan_enabled?: boolean
+          schweitzer_enabled?: boolean
           source_ids?: string[]
         }
         Update: {
@@ -168,6 +170,7 @@ export type Database = {
           language?: string
           last_run_at?: string | null
           mondcivitan_enabled?: boolean
+          schweitzer_enabled?: boolean
           source_ids?: string[]
         }
         Relationships: []
