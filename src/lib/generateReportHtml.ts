@@ -134,6 +134,12 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
     <p style="line-height:1.7;white-space:pre-line;margin:0;">${escapeHtml(report.conclusion)}</p>
   </section>
 
+  ${report.schweitzerEthical ? `
+  <section style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#065f46;">🌿 ${labels.schweitzerEthical}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#064e3b;">${escapeHtml(report.schweitzerEthical)}</p>
+  </section>` : ''}
+
   <footer style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;text-align:center;font-size:14px;color:#9ca3af;">
     <p>${labels.footer1}</p>
     <p>${labels.footer2}</p>
