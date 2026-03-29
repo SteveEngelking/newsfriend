@@ -143,6 +143,15 @@ export function DailyNewsReportView({ report }: Props) {
           <p className="text-base leading-relaxed whitespace-pre-line">{report.conclusion}</p>
         </section>
 
+        {report.schweitzerEthical && (
+          <section className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-6 mt-4 border border-emerald-200 dark:border-emerald-800">
+            <h2 className="text-lg font-bold mb-3 text-emerald-700 dark:text-emerald-400">
+              🌿 {t('schweitzerEthicalTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-emerald-900 dark:text-emerald-200">{report.schweitzerEthical}</p>
+          </section>
+        )}
+
         <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p>{t('dailyFooter1')}</p>
           <p>{t('dailyFooter2')}</p>
