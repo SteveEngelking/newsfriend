@@ -185,9 +185,14 @@ Deno.serve(async (req) => {
       ];
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
+      const schweitzerEnabled = schedule.schweitzer_enabled === true;
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
+
+      const schweitzerInstruction = schweitzerEnabled ? `
+
+SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on Albert Schweitzer's "Reverence for Life" philosophy. Key principles: Reverence for Life (every living being has intrinsic worth), Personal Responsibility, Compassion over Ideology, Service to Others, Ethical Consistency. Write 2-3 substantive paragraphs examining how the day's events measure up against Schweitzer's ethical framework.` : '';
 
       for (const lang of languages) {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
@@ -201,10 +206,10 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention interactive features
-- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${schweitzerInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
+        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${schweitzerEnabled ? ' Include a Schweitzer ethical consideration at the end.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
         const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',

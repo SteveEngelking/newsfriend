@@ -335,6 +335,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         ...t,
       })),
       conclusion: parsed.conclusion,
+      ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
       sourcesAnalyzed: safeSourceNames,
     };
 
