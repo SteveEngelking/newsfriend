@@ -48,6 +48,7 @@ export interface DailyTheme {
   }[];
   criticalCommentary: string;
   mondcivitanReflection?: string;
+  schweitzerReflection?: string;
   significance: 'high' | 'medium' | 'low';
 }
 
@@ -58,5 +59,6 @@ export interface DailyNewsReport {
   introduction: string;
   themes: DailyTheme[];
   conclusion: string;
+  schweitzerEthical?: string;
   sourcesAnalyzed: string[];
 }
