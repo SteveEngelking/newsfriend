@@ -254,8 +254,14 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   type: 'string', 
                   description: '1-2 paragraphs summarizing key takeaways and what to watch for' 
                 },
+                ...(schweitzerEnabled ? {
+                  schweitzerEthical: {
+                    type: 'string',
+                    description: '2-3 paragraphs examining the day\'s news through Albert Schweitzer\'s "Reverence for Life" ethical philosophy, covering personal responsibility, compassion over ideology, and ethical consistency.',
+                  },
+                } : {}),
               },
-              required: ['introduction', 'themes', 'conclusion'],
+              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical'] : [])],
               additionalProperties: false,
             },
           },
