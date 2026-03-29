@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { articles, allSourceNames, totalArticlesRequested, language, mondcivitanEnabled } = await req.json();
+    const { articles, allSourceNames, totalArticlesRequested, language, mondcivitanEnabled, schweitzerEnabled } = await req.json();
     const normalizedLanguage = typeof language === 'string' && language.toLowerCase().startsWith('de') ? 'de' : 'en';
     const themeCount = Math.min(20, Math.max(5, Math.round((totalArticlesRequested || articles.length) / 4)));
     const outputLang = normalizedLanguage === 'de' ? 'German' : 'English';
@@ -120,6 +120,17 @@ The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to 
 
 Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
 
+    const schweitzerInstruction = schweitzerEnabled ? `
+
+SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on the ethical teachings of Albert Schweitzer. Schweitzer's philosophy centred on "Reverence for Life" (Ehrfurcht vor dem Leben) — the idea that all life has inherent value and that ethics consist in extending the same reverence one has for one's own life to all living beings. Draw on his key principles:
+- Reverence for Life: Every living being has intrinsic worth
+- Personal Responsibility: Each individual must act ethically regardless of societal norms
+- Compassion over Ideology: Human compassion must transcend political, national, and ideological boundaries
+- Service to Others: True meaning comes through dedicating oneself to helping others
+- Ethical Consistency: One cannot compartmentalise ethics — they must apply universally
+
+Apply these teachings to the major stories of the day, examining how the events and the media coverage measure up against Schweitzer's ethical framework. Write 2-3 substantive paragraphs.` : '';
+
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${outputLang}. All headlines, summaries, commentary, and analysis must be in ${outputLang}. Source names and URLs remain as-is.
@@ -140,7 +151,7 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
-- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${schweitzerInstruction}`;
 
     const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -159,6 +170,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 ${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
+${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write a comprehensive ethical consideration of all the day's news through Albert Schweitzer's "Reverence for Life" philosophy in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
