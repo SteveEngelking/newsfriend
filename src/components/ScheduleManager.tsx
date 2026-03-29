@@ -222,6 +222,17 @@ export function ScheduleManager({ sources }: Props) {
               <span className="text-muted-foreground ml-1 text-xs">— {t('mondcivitanDesc')}</span>
             </label>
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="schweitzer"
+              checked={schweitzerEnabled}
+              onCheckedChange={(checked) => setSchweitzerEnabled(checked === true)}
+            />
+            <label htmlFor="schweitzer" className="text-sm cursor-pointer">
+              <span className="font-medium">{t('schweitzerLabel')}</span>
+              <span className="text-muted-foreground ml-1 text-xs">— {t('schweitzerDesc')}</span>
+            </label>
+          </div>
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
