@@ -266,8 +266,14 @@ CRITICAL RULES:
                       },
                     },
                     conclusion: { type: 'string' },
+                    ...(schweitzerEnabled ? {
+                      schweitzerEthical: {
+                        type: 'string',
+                        description: '2-3 paragraphs examining the day\'s news through Albert Schweitzer\'s "Reverence for Life" ethical philosophy.',
+                      },
+                    } : {}),
                   },
-                  required: ['introduction', 'themes', 'conclusion'],
+                  required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical'] : [])],
                 },
               },
             }],
