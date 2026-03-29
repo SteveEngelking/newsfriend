@@ -316,6 +316,7 @@ CRITICAL RULES:
           introduction: parsed.introduction,
           themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
           conclusion: parsed.conclusion,
+          ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
           sourcesAnalyzed: sourceNames,
         };
 
