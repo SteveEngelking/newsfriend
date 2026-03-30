@@ -111,7 +111,7 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
 Write everything in ${outputLang}.`;
 
     const requestBody = JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
+      model: 'google/gemini-2.5-flash-lite',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
