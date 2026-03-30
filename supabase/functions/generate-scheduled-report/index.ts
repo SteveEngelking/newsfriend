@@ -59,7 +59,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Get source details from DB
+      // Cache check: skip if a report for this schedule was generated within the last 2 hours
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString();
+      const { data: recentReports } = await supabase
+        .from('generated_reports')
+        .select('id')
+        .eq('schedule_id', schedule.id)
+        .gte('created_at', twoHoursAgo)
+        .limit(1);
+
+      if (recentReports && recentReports.length > 0 && schedule.frequency !== 'immediate') {
+        results.push(`Schedule ${schedule.id}: cached (report exists within 2h)`);
+        continue;
+      }
+
       const { data: sources } = await supabase
         .from('news_sources')
         .select('id, name, url')
@@ -120,7 +133,7 @@ Deno.serve(async (req) => {
           sourceName: task.source.name,
           title: item.title || 'Untitled',
           url: item.url,
-          content: (item.markdown || item.description || '').slice(0, 3000),
+          content: (item.markdown || item.description || '').slice(0, 1500),
         }));
       }));
 
@@ -157,7 +170,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = 150;
+      const maxTotal = 80;
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
@@ -218,7 +231,7 @@ CRITICAL RULES:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview',
+            model: 'google/gemini-2.5-flash-lite',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
