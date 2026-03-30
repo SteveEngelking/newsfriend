@@ -25,7 +25,7 @@ function getClientIP(req: Request): string {
     || 'unknown';
 }
 
-function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
+function sanitizeArticles(articles: any[], maxTotal = 80): any[] {
   const shuffled = [...articles];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
