@@ -25,11 +25,11 @@ function getClientIP(req: Request): string {
 }
 
 function sanitizeArticles(articles: any[]): any[] {
-  return articles.slice(0, 20).map((a: any) => ({
+  return articles.slice(0, 15).map((a: any) => ({
     sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
     title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
     url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
-    content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
+    content: typeof a.content === 'string' ? a.content.slice(0, 1500) : '',
   }));
 }
 
