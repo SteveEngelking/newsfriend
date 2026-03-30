@@ -59,7 +59,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Get source details from DB
+      // Cache check: skip if a report for this schedule was generated within the last 2 hours
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString();
+      const { data: recentReports } = await supabase
+        .from('generated_reports')
+        .select('id')
+        .eq('schedule_id', schedule.id)
+        .gte('created_at', twoHoursAgo)
+        .limit(1);
+
+      if (recentReports && recentReports.length > 0 && schedule.frequency !== 'immediate') {
+        results.push(`Schedule ${schedule.id}: cached (report exists within 2h)`);
+        continue;
+      }
+
       const { data: sources } = await supabase
         .from('news_sources')
         .select('id, name, url')
