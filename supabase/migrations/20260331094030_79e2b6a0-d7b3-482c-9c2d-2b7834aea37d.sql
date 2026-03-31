@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN IF NOT EXISTS max_articles integer NOT NULL DEFAULT 80;

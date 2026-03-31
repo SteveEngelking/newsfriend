@@ -145,6 +145,7 @@ export type Database = {
           id: string
           language: string
           last_run_at: string | null
+          max_articles: number
           mondcivitan_enabled: boolean
           schweitzer_enabled: boolean
           source_ids: string[]
@@ -157,6 +158,7 @@ export type Database = {
           id?: string
           language?: string
           last_run_at?: string | null
+          max_articles?: number
           mondcivitan_enabled?: boolean
           schweitzer_enabled?: boolean
           source_ids?: string[]
@@ -169,6 +171,7 @@ export type Database = {
           id?: string
           language?: string
           last_run_at?: string | null
+          max_articles?: number
           mondcivitan_enabled?: boolean
           schweitzer_enabled?: boolean
           source_ids?: string[]
