@@ -183,7 +183,8 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-2.5-flash',
+        max_tokens: 8192,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
