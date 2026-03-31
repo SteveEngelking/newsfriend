@@ -293,6 +293,8 @@ export const translations = {
     homeTryAgain: 'Erneut versuchen',
     homeRefresh: 'Aktualisieren',
     homeGenerated: 'Erstellt',
+    homePreviousEditions: 'Frühere Ausgaben',
+    homeSelectEdition: 'Ausgabe auswählen',
 
     searchPlaceholder: 'Nachrichtenthema eingeben...',
     searchAnalyze: 'Analysieren',
