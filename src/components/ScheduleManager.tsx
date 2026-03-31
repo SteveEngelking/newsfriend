@@ -113,7 +113,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled } as any);
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
