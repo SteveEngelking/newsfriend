@@ -213,6 +213,19 @@ export function ScheduleManager({ sources }: Props) {
               </div>
             )}
           </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{t('scheduleMaxArticles')}</label>
+            <Select value={String(maxArticles)} onValueChange={(v) => setMaxArticles(Number(v))}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[40, 60, 80, 100, 120, 150].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id="mondcivitan"

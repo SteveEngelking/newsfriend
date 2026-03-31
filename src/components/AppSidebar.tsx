@@ -1,4 +1,4 @@
-import { Home, Settings, Shield, Cookie, Building2, Info } from 'lucide-react';
+import { Home, Settings, Cookie, Building2, Info } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
