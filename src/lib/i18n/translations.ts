@@ -21,6 +21,8 @@ export const translations = {
     homeTryAgain: 'Try Again',
     homeRefresh: 'Refresh',
     homeGenerated: 'Generated',
+    homePreviousEditions: 'Previous Editions',
+    homeSelectEdition: 'Select an edition',
 
     // SearchBar
     searchPlaceholder: 'Enter a news topic to fact-check...',
