@@ -96,6 +96,10 @@ export const translations = {
     scheduleUpdateFailed: 'Failed to update schedule',
     scheduleCreateFailed: 'Failed to create schedule',
     scheduleThemes: 'themes',
+    scheduleMaxArticles: 'Total articles to process:',
+
+    // Home editions
+    homePreviousEditions: 'Previous editions',
 
     // CookieConsent
     cookieMessage: 'We use cookies and local storage to remember your preferences and provide essential functionality. By continuing, you agree to our',
