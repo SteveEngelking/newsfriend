@@ -92,7 +92,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles };
       if (frequency === 'immediate') {
         updateData.last_run_at = null;
       }
