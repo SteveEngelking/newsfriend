@@ -44,6 +44,7 @@ export function ScheduleManager({ sources }: Props) {
   const [frequency, setFrequency] = useState('daily');
   const [mondcivitanEnabled, setMondcivitanEnabled] = useState(false);
   const [schweitzerEnabled, setSchweitzerEnabled] = useState(false);
+  const [maxArticles, setMaxArticles] = useState(80);
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -61,6 +62,7 @@ export function ScheduleManager({ sources }: Props) {
       setFrequency(sched.frequency);
       setMondcivitanEnabled(sched.mondcivitan_enabled ?? false);
       setSchweitzerEnabled(sched.schweitzer_enabled ?? false);
+      setMaxArticles((sched as any).max_articles ?? 80);
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
@@ -90,7 +92,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles };
       if (frequency === 'immediate') {
         updateData.last_run_at = null;
       }
@@ -111,7 +113,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled } as any);
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
@@ -210,6 +212,19 @@ export function ScheduleManager({ sources }: Props) {
                 </span>
               </div>
             )}
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{t('scheduleMaxArticles')}</label>
+            <Select value={String(maxArticles)} onValueChange={(v) => setMaxArticles(Number(v))}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[40, 60, 80, 100, 120, 150].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox

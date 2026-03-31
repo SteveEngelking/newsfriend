@@ -96,6 +96,10 @@ export const translations = {
     scheduleUpdateFailed: 'Failed to update schedule',
     scheduleCreateFailed: 'Failed to create schedule',
     scheduleThemes: 'themes',
+    scheduleMaxArticles: 'Total articles to process:',
+
+    // Home editions
+    homePreviousEditions: 'Previous editions',
 
     // CookieConsent
     cookieMessage: 'We use cookies and local storage to remember your preferences and provide essential functionality. By continuing, you agree to our',
@@ -360,6 +364,8 @@ export const translations = {
     scheduleUpdateFailed: 'Zeitplan konnte nicht aktualisiert werden',
     scheduleCreateFailed: 'Zeitplan konnte nicht erstellt werden',
     scheduleThemes: 'Themen',
+    scheduleMaxArticles: 'Gesamtzahl der Artikel:',
+    homePreviousEditions: 'Frühere Ausgaben',
 
     cookieMessage: 'Wir verwenden Cookies und lokalen Speicher, um Ihre Einstellungen zu speichern und wesentliche Funktionen bereitzustellen. Durch die Nutzung stimmen Sie unserer',
     cookiePolicyLink: 'Cookie-Richtlinie',
