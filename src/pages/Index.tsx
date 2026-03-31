@@ -119,7 +119,7 @@ const Index = () => {
             sourceName: a.sourceName,
             title: a.title,
             url: a.url,
-            content: a.content.slice(0, 1500),
+            content: a.content.slice(0, 3000),
           })),
         },
       });
@@ -234,7 +234,7 @@ const Index = () => {
             sourceName: a.sourceName,
             title: a.title,
             url: a.url,
-            content: a.content.slice(0, 1500),
+            content: a.content.slice(0, 3000),
           })),
         },
       });

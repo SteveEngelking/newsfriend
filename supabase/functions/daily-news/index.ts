@@ -25,7 +25,7 @@ function getClientIP(req: Request): string {
     || 'unknown';
 }
 
-function sanitizeArticles(articles: any[], maxTotal = 80): any[] {
+function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
   const shuffled = [...articles];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -62,7 +62,7 @@ function sanitizeArticles(articles: any[], maxTotal = 80): any[] {
     sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
     title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
     url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
-    content: typeof a.content === 'string' ? a.content.slice(0, 1500) : '',
+    content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
   }));
 }
 
@@ -183,8 +183,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        max_tokens: 8192,
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
