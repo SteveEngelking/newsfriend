@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
+import MondcivitanHistory from "./pages/MondcivitanHistory";
 import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
