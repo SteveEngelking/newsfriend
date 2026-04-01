@@ -34,10 +34,14 @@ const Home = () => {
 
       if (data && !error && data.length > 0) {
         const typed = data as unknown as GeneratedReport[];
-        setReports(typed);
-        // Auto-select latest matching language
-        const localized = typed.find(r => r.report_data?.language === language);
-        setSelectedId((localized || typed[0]).id);
+        // Filter to only show reports matching current UI language
+        const filtered = typed.filter(r => r.report_data?.language === language);
+        setReports(filtered.length > 0 ? filtered : typed);
+        if (filtered.length > 0) {
+          setSelectedId(filtered[0].id);
+        } else {
+          setSelectedId(typed[0].id);
+        }
       }
     } catch (err) {
       console.error('Error fetching reports:', err);
@@ -110,7 +114,7 @@ const Home = () => {
               <SelectContent>
                 {reports.map(r => (
                   <SelectItem key={r.id} value={r.id}>
-                    {new Date(r.created_at).toLocaleString()} {r.report_data?.language === 'de' ? '🇩🇪' : '🇬🇧'}
+                    {new Date(r.created_at).toLocaleString()}
                   </SelectItem>
                 ))}
               </SelectContent>
