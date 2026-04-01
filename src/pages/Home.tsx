@@ -114,7 +114,7 @@ const Home = () => {
               <SelectContent>
                 {reports.map(r => (
                   <SelectItem key={r.id} value={r.id}>
-                    {new Date(r.created_at).toLocaleString()} {r.report_data?.language === 'de' ? '🇩🇪' : '🇬🇧'}
+                    {new Date(r.created_at).toLocaleString()}
                   </SelectItem>
                 ))}
               </SelectContent>
