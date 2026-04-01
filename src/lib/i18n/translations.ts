@@ -313,7 +313,7 @@ export const translations = {
     navCookiePolicy: 'Cookie-Richtlinie',
     navImpressum: 'Impressum',
 
-    homeTagline: 'KI-gestützte Nachrichtenanalyse und Faktenprüfung auf einen Blick.',
+    homeTagline: 'KI-gestützte Nachrichtenanalyse und Faktenprüfung auf einen Blick. Präsentiert von der Hugh & Helene Schonfield World Service Trust',
     homeLatestNews: 'Aktuelle Nachrichten',
     homeLoadingReport: 'Lade neuesten Bericht...',
     homeNoReports: 'Noch keine Berichte',
