@@ -16,6 +16,7 @@ import type { TranslationKey } from '@/lib/i18n/translations';
 const items: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
   { titleKey: 'navLatestNews', url: '/', icon: Home },
   { titleKey: 'navAbout', url: '/about', icon: Info },
+  { titleKey: 'navMondcivitanHistory', url: '/mondcivitan-history', icon: Globe },
   { titleKey: 'navAdmin', url: '/admin', icon: Settings },
   { titleKey: 'navPrivacyPolicy', url: '/privacy-policy', icon: Shield },
   { titleKey: 'navCookiePolicy', url: '/cookie-policy', icon: Cookie },

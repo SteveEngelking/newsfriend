@@ -29,6 +29,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
+              <Route path="/mondcivitan-history" element={<MondcivitanHistory />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
