@@ -194,7 +194,7 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
 
 SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on Albert Schweitzer's "Reverence for Life" philosophy. Key principles: Reverence for Life (every living being has intrinsic worth), Personal Responsibility, Compassion over Ideology, Service to Others, Ethical Consistency. Write 2-3 substantive paragraphs examining how the day's events measure up against Schweitzer's ethical framework.` : '';
 
-      for (const lang of languages) {
+      const generateForLang = async (lang: typeof languages[0]) => {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single word of headlines, summaries, commentary, analysis, and conclusions must be in ${lang.outputLang}. The ONLY exceptions are source names and URLs which remain as-is.
@@ -257,7 +257,7 @@ CRITICAL RULES:
                           ...(mondcivitanEnabled ? {
                             mondcivitanReflection: {
                               type: 'string',
-                              description: 'Reflection through Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                              description: 'Reflection through Mondcivitan Republic principles.',
                             },
                           } : {}),
                           significance: { type: 'string', enum: ['high', 'medium', 'low'] },
@@ -284,7 +284,7 @@ CRITICAL RULES:
         if (!aiResp.ok) {
           const errText = await aiResp.text().catch(() => 'no body');
           console.error(`Schedule ${schedule.id}: AI failed for ${lang.code} (${aiResp.status}): ${errText}`);
-          continue;
+          return;
         }
 
         const aiText = await aiResp.text();
@@ -293,13 +293,13 @@ CRITICAL RULES:
           aiData = JSON.parse(aiText);
         } catch (parseErr) {
           console.error(`Schedule ${schedule.id}: Failed to parse AI response for ${lang.code}, length=${aiText.length}`);
-          continue;
+          return;
         }
 
         const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
         if (!toolCall?.function?.arguments) {
           console.error(`Schedule ${schedule.id}: no structured response for ${lang.code}`, JSON.stringify(aiData).slice(0, 500));
-          continue;
+          return;
         }
 
         let parsed: any;
@@ -307,7 +307,7 @@ CRITICAL RULES:
           parsed = JSON.parse(toolCall.function.arguments);
         } catch {
           console.error(`Schedule ${schedule.id}: Failed to parse tool_call arguments for ${lang.code}`);
-          continue;
+          return;
         }
         const report = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
@@ -331,7 +331,10 @@ CRITICAL RULES:
         } else {
           console.log(`Schedule ${schedule.id}: ${lang.code} report stored`);
         }
-      }
+      };
+
+      // Run both languages in parallel to avoid timeout
+      await Promise.allSettled(languages.map(lang => generateForLang(lang)));
 
       // Update last_run_at
       await supabase
