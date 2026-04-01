@@ -13,7 +13,7 @@ export const translations = {
     navImpressum: 'Impressum',
 
     // Home
-    homeTagline: 'AI-powered news analysis and fact-checking at your fingertips.',
+    homeTagline: 'AI-powered news analysis and fact-checking at your fingertips. Presented by the Hugh & Helene Schonfield World Service Trust',
     homeLatestNews: 'Latest News',
     homeLoadingReport: 'Loading latest report...',
     homeNoReports: 'No reports yet',
