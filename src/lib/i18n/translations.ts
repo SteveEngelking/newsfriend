@@ -535,8 +535,15 @@ export const translations = {
     mondcivitanReflectionTitle: 'Mondcivitan-Reflexion',
 
     schweitzerLabel: 'Ethische Betrachtungen',
-    schweitzerDesc: 'Eine ethische Betrachtung basierend auf den Lehren von Albert Schweitzer hinzufügen.',
+    schweitzerDesc: 'Ethische Betrachtungen basierend auf den Lehren bedeutender Denker und Traditionen hinzufügen.',
     schweitzerEthicalTitle: 'Ethische Betrachtung — Albert Schweitzer',
+    ethicalJesusTitle: 'Ethische Betrachtung — Jesus von Nazareth',
+    ethicalCoveyTitle: 'Ethische Betrachtung — Stephen R. Covey',
+    ethicalGandhiTitle: 'Ethische Betrachtung — Mahatma Gandhi',
+    ethicalBuddhaTitle: 'Ethische Betrachtung — Buddha',
+    ethicalMohammedTitle: 'Ethische Betrachtung — Prophet Mohammed',
+    ethicalTorahTitle: 'Ethische Betrachtung — Tora',
+    ethicalOshiTitle: 'Ethische Betrachtung — Oshi',
 
     navAbout: 'Über uns',
     aboutTitle: 'Über NewsFriend',
