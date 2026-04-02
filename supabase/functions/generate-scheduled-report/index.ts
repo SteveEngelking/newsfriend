@@ -214,7 +214,7 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention interactive features
-- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${schweitzerInstruction}`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${schweitzerEnabled ? ' Include a Schweitzer ethical consideration at the end.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
