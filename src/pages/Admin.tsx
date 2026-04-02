@@ -24,6 +24,7 @@ const Admin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [humanCheck, setHumanCheck] = useState(false);
   const [invites, setInvites] = useState<{ id: string; email: string; created_at: string; used_at: string | null }[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
