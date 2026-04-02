@@ -242,10 +242,17 @@ export const translations = {
     mondcivitanDesc: 'Include a reflection based on the principles of the Mondcivitan Republic with each theme.',
     mondcivitanReflectionTitle: 'Mondcivitan Reflection',
 
-    // Schweitzer
+    // Schweitzer / Ethical
     schweitzerLabel: 'Ethical Considerations',
-    schweitzerDesc: 'Include an ethical consideration based on the teachings of Albert Schweitzer.',
+    schweitzerDesc: 'Include ethical considerations based on the teachings of major thinkers and traditions.',
     schweitzerEthicalTitle: 'Ethical Consideration — Albert Schweitzer',
+    ethicalJesusTitle: 'Ethical Consideration — Jesus of Nazareth',
+    ethicalCoveyTitle: 'Ethical Consideration — Stephen R. Covey',
+    ethicalGandhiTitle: 'Ethical Consideration — Mahatma Gandhi',
+    ethicalBuddhaTitle: 'Ethical Consideration — Buddha',
+    ethicalMohammedTitle: 'Ethical Consideration — Prophet Mohammed',
+    ethicalTorahTitle: 'Ethical Consideration — Torah',
+    ethicalOshiTitle: 'Ethical Consideration — Oshi',
 
     // About
     navAbout: 'About',
