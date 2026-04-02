@@ -190,9 +190,17 @@ Deno.serve(async (req) => {
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
 
-      const schweitzerInstruction = schweitzerEnabled ? `
+      const ethicalInstruction = schweitzerEnabled ? `
 
-SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on Albert Schweitzer's "Reverence for Life" philosophy. Key principles: Reverence for Life (every living being has intrinsic worth), Personal Responsibility, Compassion over Ideology, Service to Others, Ethical Consistency. Write 2-3 substantive paragraphs examining how the day's events measure up against Schweitzer's ethical framework.` : '';
+ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):
+1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy
+2. "ethicalJesus" — Jesus of Nazareth: love, Golden Rule, forgiveness, care for marginalised
+3. "ethicalCovey" — Stephen R. Covey: 7 Habits applied to global events and leadership
+4. "ethicalGandhi" — Mahatma Gandhi: non-violence, truth, moral courage
+5. "ethicalBuddha" — Buddha: compassion, mindfulness, interdependence, Middle Way
+6. "ethicalMohammed" — Prophet Mohammed: justice, mercy, community solidarity, stewardship
+7. "ethicalTorah" — Torah: justice (tzedek), tikkun olam, loving-kindness (chesed)
+8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity` : '';
 
       const generateForLang = async (lang: typeof languages[0]) => {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
