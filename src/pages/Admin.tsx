@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NewsSource } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
 import { ScheduleManager } from '@/components/ScheduleManager';
