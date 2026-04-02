@@ -264,13 +264,17 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   description: '1-2 paragraphs summarizing key takeaways and what to watch for' 
                 },
                 ...(schweitzerEnabled ? {
-                  schweitzerEthical: {
-                    type: 'string',
-                    description: '2-3 paragraphs examining the day\'s news through Albert Schweitzer\'s "Reverence for Life" ethical philosophy, covering personal responsibility, compassion over ideology, and ethical consistency.',
-                  },
+                  schweitzerEthical: { type: 'string', description: 'Albert Schweitzer — Reverence for Life ethical analysis.' },
+                  ethicalJesus: { type: 'string', description: 'Jesus of Nazareth — love, forgiveness, Golden Rule ethical analysis.' },
+                  ethicalCovey: { type: 'string', description: 'Stephen R. Covey — 7 Habits principles applied to global events.' },
+                  ethicalGandhi: { type: 'string', description: 'Mahatma Gandhi — non-violence, truth, moral courage analysis.' },
+                  ethicalBuddha: { type: 'string', description: 'Buddha — compassion, mindfulness, interdependence analysis.' },
+                  ethicalMohammed: { type: 'string', description: 'Prophet Mohammed — justice, mercy, community solidarity analysis.' },
+                  ethicalTorah: { type: 'string', description: 'Torah — justice, tikkun olam, loving-kindness analysis.' },
+                  ethicalOshi: { type: 'string', description: 'Oshi/Shinto — reverence for nature, harmony, purity analysis.' },
                 } : {}),
               },
-              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical'] : [])],
+              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
               additionalProperties: false,
             },
           },
