@@ -329,6 +329,13 @@ CRITICAL RULES:
           themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
           conclusion: parsed.conclusion,
           ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
+          ...(parsed.ethicalJesus ? { ethicalJesus: parsed.ethicalJesus } : {}),
+          ...(parsed.ethicalCovey ? { ethicalCovey: parsed.ethicalCovey } : {}),
+          ...(parsed.ethicalGandhi ? { ethicalGandhi: parsed.ethicalGandhi } : {}),
+          ...(parsed.ethicalBuddha ? { ethicalBuddha: parsed.ethicalBuddha } : {}),
+          ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
+          ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
+          ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
           sourcesAnalyzed: sourceNames,
         };
 
