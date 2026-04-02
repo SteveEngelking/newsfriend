@@ -223,7 +223,17 @@ const Admin = () => {
               <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
                 <Input type="email" placeholder={t('adminEmailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder={t('adminPasswordPlaceholder')} value={password} onChange={e => setPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="human-check"
+                    checked={humanCheck}
+                    onCheckedChange={(checked) => setHumanCheck(checked === true)}
+                  />
+                  <label htmlFor="human-check" className="text-sm font-medium leading-none cursor-pointer select-none">
+                    I am a human
+                  </label>
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading || !humanCheck}>
                   {isLoading
                     ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn'))
                     : (isSignUp ? t('adminSignUp') : t('adminSignIn'))}
