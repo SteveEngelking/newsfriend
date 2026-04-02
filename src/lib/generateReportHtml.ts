@@ -154,6 +154,48 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
     <p style="line-height:1.7;white-space:pre-line;margin:0;color:#064e3b;">${escapeHtml(report.schweitzerEthical)}</p>
   </section>` : ''}
 
+  ${report.ethicalJesus ? `
+  <section style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#0c4a6e;">✝ ${labels.ethicalJesus}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#0c4a6e;">${escapeHtml(report.ethicalJesus)}</p>
+  </section>` : ''}
+
+  ${report.ethicalCovey ? `
+  <section style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#3730a3;">🧭 ${labels.ethicalCovey}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#312e81;">${escapeHtml(report.ethicalCovey)}</p>
+  </section>` : ''}
+
+  ${report.ethicalGandhi ? `
+  <section style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#9a3412;">☸ ${labels.ethicalGandhi}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#7c2d12;">${escapeHtml(report.ethicalGandhi)}</p>
+  </section>` : ''}
+
+  ${report.ethicalBuddha ? `
+  <section style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#854d0e;">🪷 ${labels.ethicalBuddha}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#713f12;">${escapeHtml(report.ethicalBuddha)}</p>
+  </section>` : ''}
+
+  ${report.ethicalMohammed ? `
+  <section style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#134e4a;">☪ ${labels.ethicalMohammed}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#115e59;">${escapeHtml(report.ethicalMohammed)}</p>
+  </section>` : ''}
+
+  ${report.ethicalTorah ? `
+  <section style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#5b21b6;">✡ ${labels.ethicalTorah}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#4c1d95;">${escapeHtml(report.ethicalTorah)}</p>
+  </section>` : ''}
+
+  ${report.ethicalOshi ? `
+  <section style="background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#9f1239;">⛩ ${labels.ethicalOshi}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#881337;">${escapeHtml(report.ethicalOshi)}</p>
+  </section>` : ''}
+
   <footer style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;text-align:center;font-size:14px;color:#9ca3af;">
     <p>${labels.footer1}</p>
     <p>${labels.footer2}</p>
