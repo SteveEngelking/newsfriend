@@ -120,16 +120,25 @@ The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to 
 
 Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
 
-    const schweitzerInstruction = schweitzerEnabled ? `
+    const ethicalInstruction = schweitzerEnabled ? `
 
-SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on the ethical teachings of Albert Schweitzer. Schweitzer's philosophy centred on "Reverence for Life" (Ehrfurcht vor dem Leben) — the idea that all life has inherent value and that ethics consist in extending the same reverence one has for one's own life to all living beings. Draw on his key principles:
-- Reverence for Life: Every living being has intrinsic worth
-- Personal Responsibility: Each individual must act ethically regardless of societal norms
-- Compassion over Ideology: Human compassion must transcend political, national, and ideological boundaries
-- Service to Others: True meaning comes through dedicating oneself to helping others
-- Ethical Consistency: One cannot compartmentalise ethics — they must apply universally
+ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions. Each should be 2-3 substantive paragraphs examining the day's news through that ethical lens. Write ALL in ${outputLang}.
 
-Apply these teachings to the major stories of the day, examining how the events and the media coverage measure up against Schweitzer's ethical framework. Write 2-3 substantive paragraphs.` : '';
+1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy: every living being has intrinsic worth, personal responsibility, compassion over ideology, service to others, ethical consistency.
+
+2. "ethicalJesus" — Jesus of Nazareth: love thy neighbour, the Golden Rule, forgiveness, care for the poor and marginalised, peace-making, speaking truth to power, mercy over judgement.
+
+3. "ethicalCovey" — Stephen R. Covey (The 7 Habits of Highly Effective People): be proactive, begin with the end in mind, put first things first, think win-win, seek first to understand then to be understood, synergise, sharpen the saw. Apply these principles to global events and leadership.
+
+4. "ethicalGandhi" — Mahatma Gandhi: non-violence (ahimsa), truth (satya), self-discipline, service to others, civil disobedience against injustice, be the change you wish to see, strength through moral courage.
+
+5. "ethicalBuddha" — Buddha: the Four Noble Truths, the Eightfold Path, compassion (karuna), loving-kindness (metta), non-attachment, mindfulness, the interdependence of all beings, the Middle Way.
+
+6. "ethicalMohammed" — Prophet Mohammed: justice and equity, mercy and compassion, care for the vulnerable, seeking knowledge, community solidarity (ummah), moderation, stewardship of the earth.
+
+7. "ethicalTorah" — Torah: justice (tzedek), loving-kindness (chesed), repair of the world (tikkun olam), sanctity of life, obligation to the stranger, truthfulness, communal responsibility.
+
+8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.` : '';
 
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
