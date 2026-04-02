@@ -60,5 +60,12 @@ export interface DailyNewsReport {
   themes: DailyTheme[];
   conclusion: string;
   schweitzerEthical?: string;
+  ethicalJesus?: string;
+  ethicalCovey?: string;
+  ethicalGandhi?: string;
+  ethicalBuddha?: string;
+  ethicalMohammed?: string;
+  ethicalTorah?: string;
+  ethicalOshi?: string;
   sourcesAnalyzed: string[];
 }

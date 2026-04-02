@@ -120,16 +120,25 @@ The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to 
 
 Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
 
-    const schweitzerInstruction = schweitzerEnabled ? `
+    const ethicalInstruction = schweitzerEnabled ? `
 
-SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on the ethical teachings of Albert Schweitzer. Schweitzer's philosophy centred on "Reverence for Life" (Ehrfurcht vor dem Leben) — the idea that all life has inherent value and that ethics consist in extending the same reverence one has for one's own life to all living beings. Draw on his key principles:
-- Reverence for Life: Every living being has intrinsic worth
-- Personal Responsibility: Each individual must act ethically regardless of societal norms
-- Compassion over Ideology: Human compassion must transcend political, national, and ideological boundaries
-- Service to Others: True meaning comes through dedicating oneself to helping others
-- Ethical Consistency: One cannot compartmentalise ethics — they must apply universally
+ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions. Each should be 2-3 substantive paragraphs examining the day's news through that ethical lens. Write ALL in ${outputLang}.
 
-Apply these teachings to the major stories of the day, examining how the events and the media coverage measure up against Schweitzer's ethical framework. Write 2-3 substantive paragraphs.` : '';
+1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy: every living being has intrinsic worth, personal responsibility, compassion over ideology, service to others, ethical consistency.
+
+2. "ethicalJesus" — Jesus of Nazareth: love thy neighbour, the Golden Rule, forgiveness, care for the poor and marginalised, peace-making, speaking truth to power, mercy over judgement.
+
+3. "ethicalCovey" — Stephen R. Covey (The 7 Habits of Highly Effective People): be proactive, begin with the end in mind, put first things first, think win-win, seek first to understand then to be understood, synergise, sharpen the saw. Apply these principles to global events and leadership.
+
+4. "ethicalGandhi" — Mahatma Gandhi: non-violence (ahimsa), truth (satya), self-discipline, service to others, civil disobedience against injustice, be the change you wish to see, strength through moral courage.
+
+5. "ethicalBuddha" — Buddha: the Four Noble Truths, the Eightfold Path, compassion (karuna), loving-kindness (metta), non-attachment, mindfulness, the interdependence of all beings, the Middle Way.
+
+6. "ethicalMohammed" — Prophet Mohammed: justice and equity, mercy and compassion, care for the vulnerable, seeking knowledge, community solidarity (ummah), moderation, stewardship of the earth.
+
+7. "ethicalTorah" — Torah: justice (tzedek), loving-kindness (chesed), repair of the world (tikkun olam), sanctity of life, obligation to the stranger, truthfulness, communal responsibility.
+
+8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.` : '';
 
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
@@ -151,7 +160,7 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention or reference any interactive features such as commenting, sharing, liking, user accounts, or any platform functionality. This is a static read-only report.
-- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${schweitzerInstruction}`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
     const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -170,7 +179,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 ${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
-${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write a comprehensive ethical consideration of all the day's news through Albert Schweitzer's "Reverence for Life" philosophy in ${outputLang}` : ''}
+${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from eight different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi) in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
@@ -255,13 +264,17 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   description: '1-2 paragraphs summarizing key takeaways and what to watch for' 
                 },
                 ...(schweitzerEnabled ? {
-                  schweitzerEthical: {
-                    type: 'string',
-                    description: '2-3 paragraphs examining the day\'s news through Albert Schweitzer\'s "Reverence for Life" ethical philosophy, covering personal responsibility, compassion over ideology, and ethical consistency.',
-                  },
+                  schweitzerEthical: { type: 'string', description: 'Albert Schweitzer — Reverence for Life ethical analysis.' },
+                  ethicalJesus: { type: 'string', description: 'Jesus of Nazareth — love, forgiveness, Golden Rule ethical analysis.' },
+                  ethicalCovey: { type: 'string', description: 'Stephen R. Covey — 7 Habits principles applied to global events.' },
+                  ethicalGandhi: { type: 'string', description: 'Mahatma Gandhi — non-violence, truth, moral courage analysis.' },
+                  ethicalBuddha: { type: 'string', description: 'Buddha — compassion, mindfulness, interdependence analysis.' },
+                  ethicalMohammed: { type: 'string', description: 'Prophet Mohammed — justice, mercy, community solidarity analysis.' },
+                  ethicalTorah: { type: 'string', description: 'Torah — justice, tikkun olam, loving-kindness analysis.' },
+                  ethicalOshi: { type: 'string', description: 'Oshi/Shinto — reverence for nature, harmony, purity analysis.' },
                 } : {}),
               },
-              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical'] : [])],
+              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
               additionalProperties: false,
             },
           },
@@ -336,6 +349,13 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       })),
       conclusion: parsed.conclusion,
       ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
+      ...(parsed.ethicalJesus ? { ethicalJesus: parsed.ethicalJesus } : {}),
+      ...(parsed.ethicalCovey ? { ethicalCovey: parsed.ethicalCovey } : {}),
+      ...(parsed.ethicalGandhi ? { ethicalGandhi: parsed.ethicalGandhi } : {}),
+      ...(parsed.ethicalBuddha ? { ethicalBuddha: parsed.ethicalBuddha } : {}),
+      ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
+      ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
+      ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
       sourcesAnalyzed: safeSourceNames,
     };
 

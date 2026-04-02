@@ -190,9 +190,17 @@ Deno.serve(async (req) => {
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
 
-      const schweitzerInstruction = schweitzerEnabled ? `
+      const ethicalInstruction = schweitzerEnabled ? `
 
-SCHWEITZER ETHICAL CONSIDERATION: At the END of the report (as a separate "schweitzerEthical" field), write a comprehensive ethical consideration of the day's news based on Albert Schweitzer's "Reverence for Life" philosophy. Key principles: Reverence for Life (every living being has intrinsic worth), Personal Responsibility, Compassion over Ideology, Service to Others, Ethical Consistency. Write 2-3 substantive paragraphs examining how the day's events measure up against Schweitzer's ethical framework.` : '';
+ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):
+1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy
+2. "ethicalJesus" — Jesus of Nazareth: love, Golden Rule, forgiveness, care for marginalised
+3. "ethicalCovey" — Stephen R. Covey: 7 Habits applied to global events and leadership
+4. "ethicalGandhi" — Mahatma Gandhi: non-violence, truth, moral courage
+5. "ethicalBuddha" — Buddha: compassion, mindfulness, interdependence, Middle Way
+6. "ethicalMohammed" — Prophet Mohammed: justice, mercy, community solidarity, stewardship
+7. "ethicalTorah" — Torah: justice (tzedek), tikkun olam, loving-kindness (chesed)
+8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity` : '';
 
       const generateForLang = async (lang: typeof languages[0]) => {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
@@ -206,7 +214,7 @@ CRITICAL RULES:
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention interactive features
-- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${schweitzerInstruction}`;
+- You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${schweitzerEnabled ? ' Include a Schweitzer ethical consideration at the end.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
@@ -267,13 +275,17 @@ CRITICAL RULES:
                     },
                     conclusion: { type: 'string' },
                     ...(schweitzerEnabled ? {
-                      schweitzerEthical: {
-                        type: 'string',
-                        description: '2-3 paragraphs examining the day\'s news through Albert Schweitzer\'s "Reverence for Life" ethical philosophy.',
-                      },
+                      schweitzerEthical: { type: 'string' },
+                      ethicalJesus: { type: 'string' },
+                      ethicalCovey: { type: 'string' },
+                      ethicalGandhi: { type: 'string' },
+                      ethicalBuddha: { type: 'string' },
+                      ethicalMohammed: { type: 'string' },
+                      ethicalTorah: { type: 'string' },
+                      ethicalOshi: { type: 'string' },
                     } : {}),
                   },
-                  required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical'] : [])],
+                  required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
                 },
               },
             }],
@@ -317,6 +329,13 @@ CRITICAL RULES:
           themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
           conclusion: parsed.conclusion,
           ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
+          ...(parsed.ethicalJesus ? { ethicalJesus: parsed.ethicalJesus } : {}),
+          ...(parsed.ethicalCovey ? { ethicalCovey: parsed.ethicalCovey } : {}),
+          ...(parsed.ethicalGandhi ? { ethicalGandhi: parsed.ethicalGandhi } : {}),
+          ...(parsed.ethicalBuddha ? { ethicalBuddha: parsed.ethicalBuddha } : {}),
+          ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
+          ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
+          ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
           sourcesAnalyzed: sourceNames,
         };
 

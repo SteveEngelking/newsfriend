@@ -152,6 +152,69 @@ export function DailyNewsReportView({ report }: Props) {
           </section>
         )}
 
+        {report.ethicalJesus && (
+          <section className="bg-sky-50 dark:bg-sky-950/30 rounded-lg p-6 mt-4 border border-sky-200 dark:border-sky-800">
+            <h2 className="text-lg font-bold mb-3 text-sky-700 dark:text-sky-400">
+              ✝ {t('ethicalJesusTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-sky-900 dark:text-sky-200">{report.ethicalJesus}</p>
+          </section>
+        )}
+
+        {report.ethicalCovey && (
+          <section className="bg-indigo-50 dark:bg-indigo-950/30 rounded-lg p-6 mt-4 border border-indigo-200 dark:border-indigo-800">
+            <h2 className="text-lg font-bold mb-3 text-indigo-700 dark:text-indigo-400">
+              🧭 {t('ethicalCoveyTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-indigo-900 dark:text-indigo-200">{report.ethicalCovey}</p>
+          </section>
+        )}
+
+        {report.ethicalGandhi && (
+          <section className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-6 mt-4 border border-orange-200 dark:border-orange-800">
+            <h2 className="text-lg font-bold mb-3 text-orange-700 dark:text-orange-400">
+              ☸ {t('ethicalGandhiTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-orange-900 dark:text-orange-200">{report.ethicalGandhi}</p>
+          </section>
+        )}
+
+        {report.ethicalBuddha && (
+          <section className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-6 mt-4 border border-yellow-200 dark:border-yellow-800">
+            <h2 className="text-lg font-bold mb-3 text-yellow-700 dark:text-yellow-400">
+              🪷 {t('ethicalBuddhaTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-yellow-900 dark:text-yellow-200">{report.ethicalBuddha}</p>
+          </section>
+        )}
+
+        {report.ethicalMohammed && (
+          <section className="bg-teal-50 dark:bg-teal-950/30 rounded-lg p-6 mt-4 border border-teal-200 dark:border-teal-800">
+            <h2 className="text-lg font-bold mb-3 text-teal-700 dark:text-teal-400">
+              ☪ {t('ethicalMohammedTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-teal-900 dark:text-teal-200">{report.ethicalMohammed}</p>
+          </section>
+        )}
+
+        {report.ethicalTorah && (
+          <section className="bg-violet-50 dark:bg-violet-950/30 rounded-lg p-6 mt-4 border border-violet-200 dark:border-violet-800">
+            <h2 className="text-lg font-bold mb-3 text-violet-700 dark:text-violet-400">
+              ✡ {t('ethicalTorahTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-violet-900 dark:text-violet-200">{report.ethicalTorah}</p>
+          </section>
+        )}
+
+        {report.ethicalOshi && (
+          <section className="bg-rose-50 dark:bg-rose-950/30 rounded-lg p-6 mt-4 border border-rose-200 dark:border-rose-800">
+            <h2 className="text-lg font-bold mb-3 text-rose-700 dark:text-rose-400">
+              ⛩ {t('ethicalOshiTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-rose-900 dark:text-rose-200">{report.ethicalOshi}</p>
+          </section>
+        )}
+
         <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p>{t('dailyFooter1')}</p>
           <p>{t('dailyFooter2')}</p>
