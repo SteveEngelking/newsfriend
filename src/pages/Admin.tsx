@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NewsSource } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { SourceManager } from '@/components/SourceManager';
 import { ScheduleManager } from '@/components/ScheduleManager';
@@ -23,6 +24,7 @@ const Admin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [humanCheck, setHumanCheck] = useState(false);
   const [invites, setInvites] = useState<{ id: string; email: string; created_at: string; used_at: string | null }[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -221,7 +223,17 @@ const Admin = () => {
               <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
                 <Input type="email" placeholder={t('adminEmailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required />
                 <Input type="password" placeholder={t('adminPasswordPlaceholder')} value={password} onChange={e => setPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="human-check"
+                    checked={humanCheck}
+                    onCheckedChange={(checked) => setHumanCheck(checked === true)}
+                  />
+                  <label htmlFor="human-check" className="text-sm font-medium leading-none cursor-pointer select-none">
+                    I am a human
+                  </label>
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading || !humanCheck}>
                   {isLoading
                     ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn'))
                     : (isSignUp ? t('adminSignUp') : t('adminSignIn'))}
