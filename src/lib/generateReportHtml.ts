@@ -21,6 +21,8 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
         ethicalMohammed: 'Ethische Betrachtung — Prophet Mohammed',
         ethicalTorah: 'Ethische Betrachtung — Tora',
         ethicalOshi: 'Ethische Betrachtung — Oshi',
+        ethicalRajneesh: 'Ethische Betrachtung — Bhagwan Shree Rajneesh',
+        ethicalGita: 'Ethische Betrachtung — Bhagavad Gita',
         conclusion: 'Fazit',
         readArticle: '[Artikel lesen]',
         footer1: 'Dieser Bericht wurde durch die VerifyNews KI-Analyse erstellt.',
