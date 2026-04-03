@@ -190,7 +190,8 @@ Deno.serve(async (req) => {
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
 
-      const ethicalInstruction = schweitzerEnabled ? `
+      const generateForLang = async (lang: typeof languages[0]) => {
+        const ethicalInstruction = schweitzerEnabled ? `
 
 ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):
 1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy
@@ -201,8 +202,6 @@ ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical conside
 6. "ethicalMohammed" — Prophet Mohammed: justice, mercy, community solidarity, stewardship
 7. "ethicalTorah" — Torah: justice (tzedek), tikkun olam, loving-kindness (chesed)
 8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity` : '';
-
-      const generateForLang = async (lang: typeof languages[0]) => {
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single word of headlines, summaries, commentary, analysis, and conclusions must be in ${lang.outputLang}. The ONLY exceptions are source names and URLs which remain as-is.
