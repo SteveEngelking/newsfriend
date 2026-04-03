@@ -138,7 +138,11 @@ ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical conside
 
 7. "ethicalTorah" — Torah: justice (tzedek), loving-kindness (chesed), repair of the world (tikkun olam), sanctity of life, obligation to the stranger, truthfulness, communal responsibility.
 
-8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.` : '';
+8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.
+
+9. "ethicalRajneesh" — Bhagwan Shree Rajneesh (Osho): awareness and consciousness, living in the present moment, freedom from conditioning, celebrating life, meditation as transformation, courage to be authentic, love without attachment.
+
+10. "ethicalGita" — Bhagavad Gita: dharma (righteous duty), selfless action (nishkama karma), equanimity in success and failure, devotion and surrender, the eternal soul beyond material concerns, courage in the face of moral dilemmas, unity of all existence.` : '';
 
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
