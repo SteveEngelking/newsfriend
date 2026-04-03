@@ -280,7 +280,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   ethicalGita: { type: 'string', description: 'Bhagavad Gita — dharma, selfless action, equanimity, devotion analysis.' },
                 } : {}),
               },
-              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
+              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi', 'ethicalRajneesh', 'ethicalGita'] : [])],
               additionalProperties: false,
             },
           },
