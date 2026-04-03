@@ -183,7 +183,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 ${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
-${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from eight different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi) in ${outputLang}` : ''}
+${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from ten different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi, Rajneesh, Bhagavad Gita) in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
