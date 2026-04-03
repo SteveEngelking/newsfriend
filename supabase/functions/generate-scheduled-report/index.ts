@@ -284,6 +284,8 @@ CRITICAL RULES:
                       ethicalMohammed: { type: 'string' },
                       ethicalTorah: { type: 'string' },
                       ethicalOshi: { type: 'string' },
+                      ethicalRajneesh: { type: 'string' },
+                      ethicalGita: { type: 'string' },
                     } : {}),
                   },
                   required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
