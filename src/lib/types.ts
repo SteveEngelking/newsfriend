@@ -67,5 +67,7 @@ export interface DailyNewsReport {
   ethicalMohammed?: string;
   ethicalTorah?: string;
   ethicalOshi?: string;
+  ethicalRajneesh?: string;
+  ethicalGita?: string;
   sourcesAnalyzed: string[];
 }

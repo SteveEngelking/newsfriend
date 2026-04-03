@@ -72,14 +72,42 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send invite email via Supabase Auth
+    // Try to send invite email via Supabase Auth
     const { error: authInviteError } = await adminClient.auth.admin.inviteUserByEmail(normalizedEmail, {
       redirectTo: `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/admin`,
     });
 
     if (authInviteError) {
       console.error('Auth invite email error:', authInviteError);
-      // Don't fail the whole request — the invite record was created
+
+      // If user already exists, grant admin role directly
+      if (authInviteError.message?.includes('already been registered')) {
+        // Find the existing user
+        const { data: listData } = await adminClient.auth.admin.listUsers();
+        const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+
+        if (existingUser) {
+          // Grant admin role directly
+          const { error: roleError } = await adminClient
+            .from('user_roles')
+            .upsert({ user_id: existingUser.id, role: 'admin' }, { onConflict: 'user_id,role' });
+
+          // Mark invite as used
+          await adminClient.from('admin_invites').update({ used_at: new Date().toISOString() }).eq('email', normalizedEmail);
+
+          if (roleError) {
+            console.error('Role grant error:', roleError);
+          }
+
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: `${normalizedEmail} already has an account and has been granted admin access directly.`,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
         message: `Invite created for ${normalizedEmail}`,

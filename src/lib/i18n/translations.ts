@@ -253,6 +253,8 @@ export const translations = {
     ethicalMohammedTitle: 'Ethical Consideration — Prophet Mohammed',
     ethicalTorahTitle: 'Ethical Consideration — Torah',
     ethicalOshiTitle: 'Ethical Consideration — Oshi',
+    ethicalRajneeshTitle: 'Ethical Consideration — Bhagwan Shree Rajneesh',
+    ethicalGitaTitle: 'Ethical Consideration — Bhagavad Gita',
 
     // About
     navAbout: 'About',
@@ -544,6 +546,8 @@ export const translations = {
     ethicalMohammedTitle: 'Ethische Betrachtung — Prophet Mohammed',
     ethicalTorahTitle: 'Ethische Betrachtung — Tora',
     ethicalOshiTitle: 'Ethische Betrachtung — Oshi',
+    ethicalRajneeshTitle: 'Ethische Betrachtung — Bhagwan Shree Rajneesh',
+    ethicalGitaTitle: 'Ethische Betrachtung — Bhagavad Gita',
 
     navAbout: 'Über uns',
     aboutTitle: 'Über NewsFriend',

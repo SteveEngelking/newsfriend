@@ -215,6 +215,24 @@ export function DailyNewsReportView({ report }: Props) {
           </section>
         )}
 
+        {report.ethicalRajneesh && (
+          <section className="bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-lg p-6 mt-4 border border-fuchsia-200 dark:border-fuchsia-800">
+            <h2 className="text-lg font-bold mb-3 text-fuchsia-700 dark:text-fuchsia-400">
+              🪷 {t('ethicalRajneeshTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-fuchsia-900 dark:text-fuchsia-200">{report.ethicalRajneesh}</p>
+          </section>
+        )}
+
+        {report.ethicalGita && (
+          <section className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-6 mt-4 border border-amber-200 dark:border-amber-800">
+            <h2 className="text-lg font-bold mb-3 text-amber-700 dark:text-amber-400">
+              🙏 {t('ethicalGitaTitle')}
+            </h2>
+            <p className="text-base leading-relaxed whitespace-pre-line text-amber-900 dark:text-amber-200">{report.ethicalGita}</p>
+          </section>
+        )}
+
         <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p>{t('dailyFooter1')}</p>
           <p>{t('dailyFooter2')}</p>

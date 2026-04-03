@@ -138,7 +138,11 @@ ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical conside
 
 7. "ethicalTorah" — Torah: justice (tzedek), loving-kindness (chesed), repair of the world (tikkun olam), sanctity of life, obligation to the stranger, truthfulness, communal responsibility.
 
-8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.` : '';
+8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.
+
+9. "ethicalRajneesh" — Bhagwan Shree Rajneesh (Osho): awareness and consciousness, living in the present moment, freedom from conditioning, celebrating life, meditation as transformation, courage to be authentic, love without attachment.
+
+10. "ethicalGita" — Bhagavad Gita: dharma (righteous duty), selfless action (nishkama karma), equanimity in success and failure, devotion and surrender, the eternal soul beyond material concerns, courage in the face of moral dilemmas, unity of all existence.` : '';
 
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
@@ -179,7 +183,7 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 ${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
-${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from eight different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi) in ${outputLang}` : ''}
+${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from ten different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi, Rajneesh, Bhagavad Gita) in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
@@ -272,9 +276,11 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   ethicalMohammed: { type: 'string', description: 'Prophet Mohammed — justice, mercy, community solidarity analysis.' },
                   ethicalTorah: { type: 'string', description: 'Torah — justice, tikkun olam, loving-kindness analysis.' },
                   ethicalOshi: { type: 'string', description: 'Oshi/Shinto — reverence for nature, harmony, purity analysis.' },
+                  ethicalRajneesh: { type: 'string', description: 'Bhagwan Shree Rajneesh — awareness, present moment, freedom from conditioning analysis.' },
+                  ethicalGita: { type: 'string', description: 'Bhagavad Gita — dharma, selfless action, equanimity, devotion analysis.' },
                 } : {}),
               },
-              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
+              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi', 'ethicalRajneesh', 'ethicalGita'] : [])],
               additionalProperties: false,
             },
           },
@@ -356,6 +362,8 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
       ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
       ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
+      ...(parsed.ethicalRajneesh ? { ethicalRajneesh: parsed.ethicalRajneesh } : {}),
+      ...(parsed.ethicalGita ? { ethicalGita: parsed.ethicalGita } : {}),
       sourcesAnalyzed: safeSourceNames,
     };
 
