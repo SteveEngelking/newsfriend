@@ -276,6 +276,8 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   ethicalMohammed: { type: 'string', description: 'Prophet Mohammed — justice, mercy, community solidarity analysis.' },
                   ethicalTorah: { type: 'string', description: 'Torah — justice, tikkun olam, loving-kindness analysis.' },
                   ethicalOshi: { type: 'string', description: 'Oshi/Shinto — reverence for nature, harmony, purity analysis.' },
+                  ethicalRajneesh: { type: 'string', description: 'Bhagwan Shree Rajneesh — awareness, present moment, freedom from conditioning analysis.' },
+                  ethicalGita: { type: 'string', description: 'Bhagavad Gita — dharma, selfless action, equanimity, devotion analysis.' },
                 } : {}),
               },
               required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi'] : [])],
