@@ -253,6 +253,8 @@ export const translations = {
     ethicalMohammedTitle: 'Ethical Consideration — Prophet Mohammed',
     ethicalTorahTitle: 'Ethical Consideration — Torah',
     ethicalOshiTitle: 'Ethical Consideration — Oshi',
+    ethicalRajneeshTitle: 'Ethical Consideration — Bhagwan Shree Rajneesh',
+    ethicalGitaTitle: 'Ethical Consideration — Bhagavad Gita',
 
     // About
     navAbout: 'About',
