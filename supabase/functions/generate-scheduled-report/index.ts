@@ -201,7 +201,9 @@ ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical conside
 5. "ethicalBuddha" — Buddha: compassion, mindfulness, interdependence, Middle Way
 6. "ethicalMohammed" — Prophet Mohammed: justice, mercy, community solidarity, stewardship
 7. "ethicalTorah" — Torah: justice (tzedek), tikkun olam, loving-kindness (chesed)
-8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity` : '';
+8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity
+9. "ethicalRajneesh" — Bhagwan Shree Rajneesh (Osho): awareness, present moment, freedom from conditioning, celebrating life, meditation as transformation
+10. "ethicalGita" — Bhagavad Gita: dharma (righteous duty), selfless action (nishkama karma), equanimity, devotion, unity of all existence` : '';
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single word of headlines, summaries, commentary, analysis, and conclusions must be in ${lang.outputLang}. The ONLY exceptions are source names and URLs which remain as-is.
