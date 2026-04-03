@@ -546,6 +546,8 @@ export const translations = {
     ethicalMohammedTitle: 'Ethische Betrachtung — Prophet Mohammed',
     ethicalTorahTitle: 'Ethische Betrachtung — Tora',
     ethicalOshiTitle: 'Ethische Betrachtung — Oshi',
+    ethicalRajneeshTitle: 'Ethische Betrachtung — Bhagwan Shree Rajneesh',
+    ethicalGitaTitle: 'Ethische Betrachtung — Bhagavad Gita',
 
     navAbout: 'Über uns',
     aboutTitle: 'Über NewsFriend',

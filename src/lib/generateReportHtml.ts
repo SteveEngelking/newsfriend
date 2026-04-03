@@ -200,6 +200,18 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
     <p style="line-height:1.7;white-space:pre-line;margin:0;color:#881337;">${escapeHtml(report.ethicalOshi)}</p>
   </section>` : ''}
 
+  ${report.ethicalRajneesh ? `
+  <section style="background:#fdf4ff;border:1px solid #f0abfc;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#86198f;">🪷 ${labels.ethicalRajneesh}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#701a75;">${escapeHtml(report.ethicalRajneesh)}</p>
+  </section>` : ''}
+
+  ${report.ethicalGita ? `
+  <section style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:24px;margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px 0;color:#92400e;">🙏 ${labels.ethicalGita}</h2>
+    <p style="line-height:1.7;white-space:pre-line;margin:0;color:#78350f;">${escapeHtml(report.ethicalGita)}</p>
+  </section>` : ''}
+
   <footer style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;text-align:center;font-size:14px;color:#9ca3af;">
     <p>${labels.footer1}</p>
     <p>${labels.footer2}</p>
