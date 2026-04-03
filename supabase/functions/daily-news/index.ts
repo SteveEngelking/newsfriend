@@ -362,6 +362,8 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
       ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
       ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
+      ...(parsed.ethicalRajneesh ? { ethicalRajneesh: parsed.ethicalRajneesh } : {}),
+      ...(parsed.ethicalGita ? { ethicalGita: parsed.ethicalGita } : {}),
       sourcesAnalyzed: safeSourceNames,
     };
 

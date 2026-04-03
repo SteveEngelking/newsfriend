@@ -339,6 +339,8 @@ CRITICAL RULES:
           ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
           ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
           ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
+          ...(parsed.ethicalRajneesh ? { ethicalRajneesh: parsed.ethicalRajneesh } : {}),
+          ...(parsed.ethicalGita ? { ethicalGita: parsed.ethicalGita } : {}),
           sourcesAnalyzed: sourceNames,
         };
 
