@@ -621,6 +621,28 @@ export const translations = {
     mondHistoryLegacyDesc: 'Die Aktivitäten der Organisation verlagerten sich zunehmend nach Deutschland, wo ein dezentralerer Ansatz gewählt wurde. 2004 wurde die International Leadership and Business Society gegründet, um die Anwendung der Mondcivitan-Prinzipien in Wirtschaft und Alltag zu fördern. 2014 begann eine Wiederbelebung der Bewegung mit neuen Bemühungen, eine zeitgemäße Interpretation dieser bleibenden Ideale zu finden. Die Archive der Mondcivitan-Republik befinden sich im Bishopsgate Institute in London.',
     mondHistoryFooter: 'Die Mondcivitan-Republik — eine Dienernation für Frieden, Gerechtigkeit und Dienst an der gesamten Menschheit.',
 
+    // Admin Tabs
+    adminTabUsers: 'Benutzer',
+    adminTabSources: 'Quellen',
+    adminTabSchedule: 'Zeitplan',
+    adminTabEthics: 'Ethik',
+    adminTabImpressum: 'Impressum',
+    adminCurrentAdmins: 'Aktuelle Admins',
+    adminRemoveBtn: 'Entfernen',
+    adminRemoved: 'Admin entfernt',
+
+    // Ethical Perspectives Manager
+    ethicalPerspectivesTitle: 'Ethische Perspektiven',
+    ethicalPerspectivesDesc: 'Verwalten Sie die ethischen Perspektiven in den Berichten. Aktivieren, umsortieren, hinzufügen oder entfernen.',
+    ethicalDeleted: 'Perspektive gelöscht',
+    ethicalAdded: 'Perspektive hinzugefügt',
+    ethicalUpdated: 'Perspektive aktualisiert',
+    ethicalAddNew: 'Neue Perspektive hinzufügen',
+    ethicalNamePlaceholder: 'Name (z.B. Konfuzius)',
+    ethicalDescPlaceholder: 'Kurzbeschreibung',
+    ethicalPromptPlaceholder: 'KI-Anweisung mit den ethischen Prinzipien...',
+    ethicalAddBtn: 'Hinzufügen',
+
     language: 'Sprache',
     languageEnglish: 'Englisch',
     languageGerman: 'Deutsch',
