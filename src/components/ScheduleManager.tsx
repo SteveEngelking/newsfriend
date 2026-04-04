@@ -93,34 +93,22 @@ export function ScheduleManager({ sources }: Props) {
 
     if (schedule) {
       const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles };
-      if (frequency === 'immediate') {
-        updateData.last_run_at = null;
-      }
-      const { error } = await supabase
-        .from('report_schedules')
-        .update(updateData as any)
-        .eq('id', schedule.id);
+      if (frequency === 'immediate') updateData.last_run_at = null;
+      const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
-        console.error('Schedule update error:', error);
         toast({ title: t('sourceError'), description: error.message || t('scheduleUpdateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleUpdated') });
-        if (frequency === 'immediate') {
-          await triggerImmediateGeneration();
-        }
+        if (frequency === 'immediate') await triggerImmediateGeneration();
         loadData();
       }
     } else {
-      const { error } = await supabase
-        .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles } as any);
+      const { error } = await supabase.from('report_schedules').insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleCreated') });
-        if (frequency === 'immediate') {
-          await triggerImmediateGeneration();
-        }
+        if (frequency === 'immediate') await triggerImmediateGeneration();
         loadData();
       }
     }
@@ -130,7 +118,7 @@ export function ScheduleManager({ sources }: Props) {
   const triggerImmediateGeneration = async () => {
     toast({ title: language === 'de' ? 'Bericht wird generiert…' : 'Generating report…' });
     try {
-      const { data, error } = await supabase.functions.invoke('generate-scheduled-report');
+      const { error } = await supabase.functions.invoke('generate-scheduled-report');
       if (error) throw error;
       toast({ title: language === 'de' ? 'Bericht erstellt' : 'Report generated' });
       loadData();
@@ -141,10 +129,7 @@ export function ScheduleManager({ sources }: Props) {
 
   const handleToggleSchedule = async () => {
     if (!schedule) return;
-    const { error } = await supabase
-      .from('report_schedules')
-      .update({ enabled: !schedule.enabled })
-      .eq('id', schedule.id);
+    const { error } = await supabase.from('report_schedules').update({ enabled: !schedule.enabled }).eq('id', schedule.id);
     if (!error) loadData();
   };
 
@@ -158,22 +143,9 @@ export function ScheduleManager({ sources }: Props) {
     return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport, reportLanguage);
   };
 
-  const handleDownloadReport = (report: GeneratedReport) => {
-    downloadReportHtml(getReportHtml(report), report.title || 'scheduled-report');
-  };
-
-  const handleViewReport = (report: GeneratedReport) => {
-    openReportInNewTab(getReportHtml(report));
-  };
-
   const frequencyLabelKey: Record<string, string> = {
-    immediate: 'scheduleImmediate',
-    hourly: 'scheduleHourly',
-    every_6_hours: 'scheduleEvery6h',
-    every_12_hours: 'scheduleEvery12h',
-    daily: 'scheduleDaily',
-    every_other_day: 'scheduleEveryOtherDay',
-    weekly: 'scheduleWeekly',
+    immediate: 'scheduleImmediate', hourly: 'scheduleHourly', every_6_hours: 'scheduleEvery6h',
+    every_12_hours: 'scheduleEvery12h', daily: 'scheduleDaily', every_other_day: 'scheduleEveryOtherDay', weekly: 'scheduleWeekly',
   };
 
   return (
@@ -188,9 +160,7 @@ export function ScheduleManager({ sources }: Props) {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="immediate">{t('scheduleImmediate')}</SelectItem>
                 <SelectItem value="hourly">{t('scheduleHourly')}</SelectItem>
@@ -216,9 +186,7 @@ export function ScheduleManager({ sources }: Props) {
           <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-medium">{t('scheduleMaxArticles')}</label>
             <Select value={String(maxArticles)} onValueChange={(v) => setMaxArticles(Number(v))}>
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[40, 60, 80, 100, 120, 150].map(n => (
                   <SelectItem key={n} value={String(n)}>{n}</SelectItem>
@@ -227,22 +195,14 @@ export function ScheduleManager({ sources }: Props) {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <Checkbox
-              id="mondcivitan"
-              checked={mondcivitanEnabled}
-              onCheckedChange={(checked) => setMondcivitanEnabled(checked === true)}
-            />
+            <Checkbox id="mondcivitan" checked={mondcivitanEnabled} onCheckedChange={(checked) => setMondcivitanEnabled(checked === true)} />
             <label htmlFor="mondcivitan" className="text-sm cursor-pointer">
               <span className="font-medium">{t('mondcivitanLabel')}</span>
               <span className="text-muted-foreground ml-1 text-xs">— {t('mondcivitanDesc')}</span>
             </label>
           </div>
           <div className="flex items-center gap-2">
-            <Checkbox
-              id="schweitzer"
-              checked={schweitzerEnabled}
-              onCheckedChange={(checked) => setSchweitzerEnabled(checked === true)}
-            />
+            <Checkbox id="schweitzer" checked={schweitzerEnabled} onCheckedChange={(checked) => setSchweitzerEnabled(checked === true)} />
             <label htmlFor="schweitzer" className="text-sm cursor-pointer">
               <span className="font-medium">{t('schweitzerLabel')}</span>
               <span className="text-muted-foreground ml-1 text-xs">— {t('schweitzerDesc')}</span>
@@ -276,10 +236,10 @@ export function ScheduleManager({ sources }: Props) {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewReport(report)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openReportInNewTab(getReportHtml(report))}>
                       <ExternalLink className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadReport(report)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadReportHtml(getReportHtml(report), report.title || 'scheduled-report')}>
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteReport(report.id)}>
