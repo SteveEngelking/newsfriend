@@ -308,6 +308,28 @@ export const translations = {
     mondHistoryLegacyDesc: 'The organisation\'s activities became more centred in Germany, where a more decentralised approach was adopted. In 2004, the International Leadership and Business Society was founded to encourage the application of Mondcivitan principles in business and everyday life. In 2014, a revival of the movement began with new efforts to find a current interpretation of these enduring ideals. The archives of the Mondcivitan Republic are deposited at the Bishopsgate Institute in London.',
     mondHistoryFooter: 'The Mondcivitan Republic — a servant-nation devoted to peace, equity, and service to all mankind.',
 
+    // Admin Tabs
+    adminTabUsers: 'Users',
+    adminTabSources: 'Sources',
+    adminTabSchedule: 'Schedule',
+    adminTabEthics: 'Ethics',
+    adminTabImpressum: 'Impressum',
+    adminCurrentAdmins: 'Current Admins',
+    adminRemoveBtn: 'Remove',
+    adminRemoved: 'Admin removed',
+
+    // Ethical Perspectives Manager
+    ethicalPerspectivesTitle: 'Ethical Perspectives',
+    ethicalPerspectivesDesc: 'Manage which ethical viewpoints are included in reports. Enable, reorder, add or remove perspectives.',
+    ethicalDeleted: 'Perspective deleted',
+    ethicalAdded: 'Perspective added',
+    ethicalUpdated: 'Perspective updated',
+    ethicalAddNew: 'Add New Perspective',
+    ethicalNamePlaceholder: 'Name (e.g. Confucius)',
+    ethicalDescPlaceholder: 'Short description',
+    ethicalPromptPlaceholder: 'AI prompt instruction describing the ethical principles to apply...',
+    ethicalAddBtn: 'Add',
+
     // Language
     language: 'Language',
     languageEnglish: 'English',
