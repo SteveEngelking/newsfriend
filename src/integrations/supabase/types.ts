@@ -38,6 +38,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ethical_perspectives: {
+        Row: {
+          color_bg: string
+          color_border: string
+          color_heading: string
+          color_text: string
+          created_at: string
+          description: string
+          enabled: boolean
+          icon: string
+          id: string
+          name: string
+          prompt_instruction: string
+          sort_order: number
+        }
+        Insert: {
+          color_bg?: string
+          color_border?: string
+          color_heading?: string
+          color_text?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          icon?: string
+          id?: string
+          name: string
+          prompt_instruction?: string
+          sort_order?: number
+        }
+        Update: {
+          color_bg?: string
+          color_border?: string
+          color_heading?: string
+          color_text?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          icon?: string
+          id?: string
+          name?: string
+          prompt_instruction?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       generated_reports: {
         Row: {
           created_at: string
