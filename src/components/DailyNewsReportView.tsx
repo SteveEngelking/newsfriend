@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { DailyNewsReport } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -7,40 +7,112 @@ import { downloadAsHtml } from '@/lib/downloadHtml';
 import { generateDailyNewsHtml, openReportInNewTab } from '@/lib/generateReportHtml';
 import { Download, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   report: DailyNewsReport;
 }
 
+interface EthicalPerspective {
+  id: string;
+  name: string;
+  icon: string;
+  color_bg: string;
+  color_border: string;
+  color_heading: string;
+  color_text: string;
+}
+
+// Map old fixed field keys to perspective names for backward compatibility
+const LEGACY_FIELD_MAP: Record<string, string> = {
+  schweitzerEthical: 'Albert Schweitzer',
+  ethicalJesus: 'Jesus of Nazareth',
+  ethicalCovey: 'Stephen R. Covey',
+  ethicalGandhi: 'Mahatma Gandhi',
+  ethicalBuddha: 'Buddha',
+  ethicalMohammed: 'Prophet Mohammed',
+  ethicalTorah: 'Torah',
+  ethicalOshi: 'Oshi',
+  ethicalRajneesh: 'Bhagwan Shree Rajneesh',
+  ethicalGita: 'Bhagavad Gita',
+};
+
+const LEGACY_STYLES: Record<string, { icon: string; bg: string; border: string; heading: string; text: string }> = {
+  schweitzerEthical: { icon: '🌿', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', heading: 'text-emerald-700 dark:text-emerald-400', text: 'text-emerald-900 dark:text-emerald-200' },
+  ethicalJesus: { icon: '✝', bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-800', heading: 'text-sky-700 dark:text-sky-400', text: 'text-sky-900 dark:text-sky-200' },
+  ethicalCovey: { icon: '🧭', bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-200 dark:border-indigo-800', heading: 'text-indigo-700 dark:text-indigo-400', text: 'text-indigo-900 dark:text-indigo-200' },
+  ethicalGandhi: { icon: '☸', bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800', heading: 'text-orange-700 dark:text-orange-400', text: 'text-orange-900 dark:text-orange-200' },
+  ethicalBuddha: { icon: '🪷', bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', heading: 'text-yellow-700 dark:text-yellow-400', text: 'text-yellow-900 dark:text-yellow-200' },
+  ethicalMohammed: { icon: '☪', bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-800', heading: 'text-teal-700 dark:text-teal-400', text: 'text-teal-900 dark:text-teal-200' },
+  ethicalTorah: { icon: '✡', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800', heading: 'text-violet-700 dark:text-violet-400', text: 'text-violet-900 dark:text-violet-200' },
+  ethicalOshi: { icon: '⛩', bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-200 dark:border-rose-800', heading: 'text-rose-700 dark:text-rose-400', text: 'text-rose-900 dark:text-rose-200' },
+  ethicalRajneesh: { icon: '🪷', bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/30', border: 'border-fuchsia-200 dark:border-fuchsia-800', heading: 'text-fuchsia-700 dark:text-fuchsia-400', text: 'text-fuchsia-900 dark:text-fuchsia-200' },
+  ethicalGita: { icon: '🙏', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', heading: 'text-amber-700 dark:text-amber-400', text: 'text-amber-900 dark:text-amber-200' },
+};
+
 export function DailyNewsReportView({ report }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
+  const [perspectives, setPerspectives] = useState<EthicalPerspective[]>([]);
+
+  useEffect(() => {
+    supabase.from('ethical_perspectives').select('id, name, icon, color_bg, color_border, color_heading, color_text')
+      .order('sort_order').then(({ data }) => { if (data) setPerspectives(data as unknown as EthicalPerspective[]); });
+  }, []);
 
   const handleDownload = () => {
-    if (reportRef.current) {
-      downloadAsHtml(reportRef.current, 'news-of-the-day');
-    }
+    if (reportRef.current) downloadAsHtml(reportRef.current, 'news-of-the-day');
   };
 
   const getSignificanceBadge = (significance: string) => {
-    const variants: Record<string, 'destructive' | 'default' | 'secondary'> = {
-      high: 'destructive',
-      medium: 'default',
-      low: 'secondary'
-    };
+    const variants: Record<string, 'destructive' | 'default' | 'secondary'> = { high: 'destructive', medium: 'default', low: 'secondary' };
     return variants[significance] || 'secondary';
   };
+
+  // Build ethical considerations from new format or legacy fields
+  const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string }[] = [];
+
+  // New dynamic format
+  if (Array.isArray((report as any).ethicalConsiderations)) {
+    for (const ec of (report as any).ethicalConsiderations) {
+      const p = perspectives.find(pp => pp.name === ec.perspectiveName);
+      ethicalItems.push({
+        name: ec.perspectiveName,
+        icon: ec.icon || p?.icon || '🌿',
+        content: ec.content,
+        bgClass: 'bg-muted/30',
+        borderClass: 'border-border',
+        headingClass: 'text-foreground',
+        textClass: 'text-foreground',
+      });
+    }
+  } else {
+    // Legacy fixed fields
+    for (const [key, name] of Object.entries(LEGACY_FIELD_MAP)) {
+      const content = (report as any)[key];
+      if (content) {
+        const style = LEGACY_STYLES[key];
+        ethicalItems.push({
+          name,
+          icon: style?.icon || '🌿',
+          content,
+          bgClass: style?.bg || 'bg-muted/30',
+          borderClass: style?.border || 'border-border',
+          headingClass: style?.heading || 'text-foreground',
+          textClass: style?.text || 'text-foreground',
+        });
+      }
+    }
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-2">
         <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report, language))} variant="outline" className="gap-2">
-          <ExternalLink className="h-4 w-4" />
-          {t('dailyOpenNewTab')}
+          <ExternalLink className="h-4 w-4" /> {t('dailyOpenNewTab')}
         </Button>
         <Button onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" />
-          {t('dailyDownloadHtml')}
+          <Download className="h-4 w-4" /> {t('dailyDownloadHtml')}
         </Button>
       </div>
       
@@ -53,89 +125,56 @@ export function DailyNewsReportView({ report }: Props) {
         </header>
 
         <section className="mb-8">
-          <p className="text-base leading-relaxed whitespace-pre-line pr-0 mx-0">{report.introduction}</p>
+          <p className="text-base leading-relaxed whitespace-pre-line">{report.introduction}</p>
         </section>
 
         <Separator className="my-8" />
 
-        {report.themes.map((theme, index) =>
-        <article key={theme.id} className="mb-10">
+        {report.themes.map((theme, index) => (
+          <article key={theme.id} className="mb-10">
             <header className="mb-4">
               <div className="flex items-start justify-between gap-4">
                 <h2 className="text-xl font-bold leading-tight">
                   <span className="text-primary mr-2">{index + 1}.</span>
                   {theme.headline}
                 </h2>
-                <Badge variant={getSignificanceBadge(theme.significance)} className="shrink-0">
-                  {theme.significance}
-                </Badge>
+                <Badge variant={getSignificanceBadge(theme.significance)} className="shrink-0">{theme.significance}</Badge>
               </div>
               <p className="mt-2 text-muted-foreground leading-relaxed">{theme.summary}</p>
             </header>
 
             <div className="bg-muted/30 rounded-lg p-4 mb-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                {t('dailySourceComparison')}
-              </h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">{t('dailySourceComparison')}</h3>
               <div className="space-y-4">
-                {theme.sourceAnalysis.map((sa, saIndex) =>
-              <div key={saIndex} className="border-l-2 border-primary/30 pl-4">
+                {theme.sourceAnalysis.map((sa, saIndex) => (
+                  <div key={saIndex} className="border-l-2 border-primary/30 pl-4">
                     <div className="flex items-center gap-2">
                       <h4 className="font-semibold text-sm">{sa.sourceName}</h4>
-                      {sa.articleUrl &&
-                  <a
-                    href={sa.articleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline">
-                    
-                          {t('dailyReadArticle')}
-                        </a>
-                  }
+                      {sa.articleUrl && <a href={sa.articleUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">{t('dailyReadArticle')}</a>}
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{sa.stance}</p>
-                    {sa.keyQuotes.length > 0 &&
-                <div className="mt-2">
-                        {sa.keyQuotes.map((quote, qi) =>
-                  <blockquote key={qi} className="text-sm italic border-l-2 border-muted pl-2 my-1">
-                            "{quote}"
-                          </blockquote>
-                  )}
-                      </div>
-                }
-                    {sa.biasIndicators.length > 0 &&
-                <div className="mt-2 flex flex-wrap gap-1">
-                        {sa.biasIndicators.map((bias, bi) =>
-                  <Badge key={bi} variant="outline" className="text-xs">
-                            {bias}
-                          </Badge>
-                  )}
-                      </div>
-                }
+                    {sa.keyQuotes.length > 0 && <div className="mt-2">{sa.keyQuotes.map((quote, qi) => <blockquote key={qi} className="text-sm italic border-l-2 border-muted pl-2 my-1">"{quote}"</blockquote>)}</div>}
+                    {sa.biasIndicators.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{sa.biasIndicators.map((bias, bi) => <Badge key={bi} variant="outline" className="text-xs">{bias}</Badge>)}</div>}
                   </div>
-              )}
+                ))}
               </div>
             </div>
 
             <div className="bg-primary/5 rounded-lg p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary mb-2">
-                {t('dailyCriticalCommentary')}
-              </h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary mb-2">{t('dailyCriticalCommentary')}</h3>
               <p className="text-sm leading-relaxed">{theme.criticalCommentary}</p>
             </div>
 
             {theme.mondcivitanReflection && (
               <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
-                  ☮ {t('mondcivitanReflectionTitle')}
-                </h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">☮ {t('mondcivitanReflectionTitle')}</h3>
                 <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">{theme.mondcivitanReflection}</p>
               </div>
             )}
 
             {index < report.themes.length - 1 && <Separator className="mt-8" />}
           </article>
-        )}
+        ))}
 
         <Separator className="my-8" />
         <section className="bg-muted/50 rounded-lg p-6">
@@ -143,101 +182,20 @@ export function DailyNewsReportView({ report }: Props) {
           <p className="text-base leading-relaxed whitespace-pre-line">{report.conclusion}</p>
         </section>
 
-        {report.schweitzerEthical && (
-          <section className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-6 mt-4 border border-emerald-200 dark:border-emerald-800">
-            <h2 className="text-lg font-bold mb-3 text-emerald-700 dark:text-emerald-400">
-              🌿 {t('schweitzerEthicalTitle')}
+        {ethicalItems.map((item, idx) => (
+          <section key={idx} className={`${item.bgClass} rounded-lg p-6 mt-4 border ${item.borderClass}`}>
+            <h2 className={`text-lg font-bold mb-3 ${item.headingClass}`}>
+              {item.icon} Ethical Consideration — {item.name}
             </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-emerald-900 dark:text-emerald-200">{report.schweitzerEthical}</p>
+            <p className={`text-base leading-relaxed whitespace-pre-line ${item.textClass}`}>{item.content}</p>
           </section>
-        )}
-
-        {report.ethicalJesus && (
-          <section className="bg-sky-50 dark:bg-sky-950/30 rounded-lg p-6 mt-4 border border-sky-200 dark:border-sky-800">
-            <h2 className="text-lg font-bold mb-3 text-sky-700 dark:text-sky-400">
-              ✝ {t('ethicalJesusTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-sky-900 dark:text-sky-200">{report.ethicalJesus}</p>
-          </section>
-        )}
-
-        {report.ethicalCovey && (
-          <section className="bg-indigo-50 dark:bg-indigo-950/30 rounded-lg p-6 mt-4 border border-indigo-200 dark:border-indigo-800">
-            <h2 className="text-lg font-bold mb-3 text-indigo-700 dark:text-indigo-400">
-              🧭 {t('ethicalCoveyTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-indigo-900 dark:text-indigo-200">{report.ethicalCovey}</p>
-          </section>
-        )}
-
-        {report.ethicalGandhi && (
-          <section className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-6 mt-4 border border-orange-200 dark:border-orange-800">
-            <h2 className="text-lg font-bold mb-3 text-orange-700 dark:text-orange-400">
-              ☸ {t('ethicalGandhiTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-orange-900 dark:text-orange-200">{report.ethicalGandhi}</p>
-          </section>
-        )}
-
-        {report.ethicalBuddha && (
-          <section className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-6 mt-4 border border-yellow-200 dark:border-yellow-800">
-            <h2 className="text-lg font-bold mb-3 text-yellow-700 dark:text-yellow-400">
-              🪷 {t('ethicalBuddhaTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-yellow-900 dark:text-yellow-200">{report.ethicalBuddha}</p>
-          </section>
-        )}
-
-        {report.ethicalMohammed && (
-          <section className="bg-teal-50 dark:bg-teal-950/30 rounded-lg p-6 mt-4 border border-teal-200 dark:border-teal-800">
-            <h2 className="text-lg font-bold mb-3 text-teal-700 dark:text-teal-400">
-              ☪ {t('ethicalMohammedTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-teal-900 dark:text-teal-200">{report.ethicalMohammed}</p>
-          </section>
-        )}
-
-        {report.ethicalTorah && (
-          <section className="bg-violet-50 dark:bg-violet-950/30 rounded-lg p-6 mt-4 border border-violet-200 dark:border-violet-800">
-            <h2 className="text-lg font-bold mb-3 text-violet-700 dark:text-violet-400">
-              ✡ {t('ethicalTorahTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-violet-900 dark:text-violet-200">{report.ethicalTorah}</p>
-          </section>
-        )}
-
-        {report.ethicalOshi && (
-          <section className="bg-rose-50 dark:bg-rose-950/30 rounded-lg p-6 mt-4 border border-rose-200 dark:border-rose-800">
-            <h2 className="text-lg font-bold mb-3 text-rose-700 dark:text-rose-400">
-              ⛩ {t('ethicalOshiTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-rose-900 dark:text-rose-200">{report.ethicalOshi}</p>
-          </section>
-        )}
-
-        {report.ethicalRajneesh && (
-          <section className="bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-lg p-6 mt-4 border border-fuchsia-200 dark:border-fuchsia-800">
-            <h2 className="text-lg font-bold mb-3 text-fuchsia-700 dark:text-fuchsia-400">
-              🪷 {t('ethicalRajneeshTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-fuchsia-900 dark:text-fuchsia-200">{report.ethicalRajneesh}</p>
-          </section>
-        )}
-
-        {report.ethicalGita && (
-          <section className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-6 mt-4 border border-amber-200 dark:border-amber-800">
-            <h2 className="text-lg font-bold mb-3 text-amber-700 dark:text-amber-400">
-              🙏 {t('ethicalGitaTitle')}
-            </h2>
-            <p className="text-base leading-relaxed whitespace-pre-line text-amber-900 dark:text-amber-200">{report.ethicalGita}</p>
-          </section>
-        )}
+        ))}
 
         <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p>{t('dailyFooter1')}</p>
           <p>{t('dailyFooter2')}</p>
         </footer>
       </div>
-    </div>);
-
+    </div>
+  );
 }
