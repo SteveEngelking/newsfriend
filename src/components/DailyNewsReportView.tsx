@@ -187,11 +187,16 @@ export function DailyNewsReportView({ report }: Props) {
         </section>
 
         {ethicalItems.map((item, idx) => (
-          <section key={idx} className={`${item.bgClass} rounded-lg p-6 mt-4 border ${item.borderClass}`}>
-            <h2 className={`text-lg font-bold mb-3 ${item.headingClass}`}>
+          <section key={idx} className={`${item.customBg ? '' : item.bgClass} rounded-lg p-6 mt-4 border ${item.customBorder ? '' : item.borderClass}`}
+            style={item.customBg ? { backgroundColor: item.customBg, borderColor: item.customBorder } : undefined}>
+            <h2 className={`text-lg font-bold mb-3 ${item.customHeading ? '' : item.headingClass}`}
+              style={item.customHeading ? { color: item.customHeading } : undefined}>
               {item.icon} Ethical Consideration — {item.name}
             </h2>
-            <p className={`text-base leading-relaxed whitespace-pre-line ${item.textClass}`}>{item.content}</p>
+            <p className={`text-base leading-relaxed whitespace-pre-line ${item.customText ? '' : item.textClass}`}
+              style={item.customText ? { color: item.customText } : undefined}>
+              {item.content}
+            </p>
           </section>
         ))}
 
