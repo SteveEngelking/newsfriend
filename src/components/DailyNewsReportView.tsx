@@ -73,17 +73,21 @@ export function DailyNewsReportView({ report }: Props) {
   const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string }[] = [];
 
   // New dynamic format
-  if (Array.isArray((report as any).ethicalConsiderations)) {
-    for (const ec of (report as any).ethicalConsiderations) {
-      const p = perspectives.find(pp => pp.name === ec.perspectiveName);
+  if (Array.isArray(report.ethicalConsiderations) && report.ethicalConsiderations.length > 0) {
+    for (const ec of report.ethicalConsiderations) {
+      const p = perspectives.find(pp => pp.id === ec.id || pp.name === ec.name);
       ethicalItems.push({
-        name: ec.perspectiveName,
-        icon: ec.icon || p?.icon || '🌿',
+        name: ec.name,
+        icon: p?.icon || '🌿',
         content: ec.content,
-        bgClass: 'bg-muted/30',
-        borderClass: 'border-border',
-        headingClass: 'text-foreground',
-        textClass: 'text-foreground',
+        bgClass: p ? '' : 'bg-muted/30',
+        borderClass: p ? '' : 'border-border',
+        headingClass: p ? '' : 'text-foreground',
+        textClass: p ? '' : 'text-foreground',
+        customBg: p?.color_bg,
+        customBorder: p?.color_border,
+        customHeading: p?.color_heading,
+        customText: p?.color_text,
       });
     }
   } else {

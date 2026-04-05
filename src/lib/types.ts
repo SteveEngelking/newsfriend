@@ -52,6 +52,12 @@ export interface DailyTheme {
   significance: 'high' | 'medium' | 'low';
 }
 
+export interface EthicalConsiderationItem {
+  id: string;
+  name: string;
+  content: string;
+}
+
 export interface DailyNewsReport {
   title: string;
   generatedAt: string;
@@ -59,6 +65,8 @@ export interface DailyNewsReport {
   introduction: string;
   themes: DailyTheme[];
   conclusion: string;
+  ethicalConsiderations?: EthicalConsiderationItem[];
+  // Legacy fields for backward compat
   schweitzerEthical?: string;
   ethicalJesus?: string;
   ethicalCovey?: string;
@@ -69,5 +77,6 @@ export interface DailyNewsReport {
   ethicalOshi?: string;
   ethicalRajneesh?: string;
   ethicalGita?: string;
+  [key: string]: any;
   sourcesAnalyzed: string[];
 }
