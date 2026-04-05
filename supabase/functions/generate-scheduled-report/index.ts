@@ -5,6 +5,11 @@ const corsHeaders = {
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Convert perspective name to a safe JSON key
+function toFieldKey(name: string): string {
+  return 'ethical_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -39,6 +44,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch enabled ethical perspectives once for all schedules
+    const { data: ethicalPerspectivesData } = await supabase
+      .from('ethical_perspectives')
+      .select('id, name, prompt_instruction')
+      .eq('enabled', true)
+      .order('sort_order', { ascending: true });
+    const allEthicalPerspectives = ethicalPerspectivesData || [];
+
     const results: string[] = [];
 
     for (const schedule of schedules) {
@@ -70,7 +83,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Search articles from each source via Firecrawl (parallelized)
+      // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
       const queries = [
         'latest news today breaking',
@@ -186,24 +199,32 @@ Deno.serve(async (req) => {
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
+      const ethicalPerspectives = schweitzerEnabled ? allEthicalPerspectives : [];
+
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
 
       const generateForLang = async (lang: typeof languages[0]) => {
-        const ethicalInstruction = schweitzerEnabled ? `
+        // Build ethical instruction dynamically
+        let ethicalInstruction = '';
+        if (ethicalPerspectives.length > 0) {
+          ethicalInstruction = `\n\nETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):\n\n`;
+          ethicalPerspectives.forEach((p, i) => {
+            const key = toFieldKey(p.name);
+            ethicalInstruction += `${i + 1}. "${key}" — ${p.prompt_instruction}\n\n`;
+          });
+        }
 
-ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):
-1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy
-2. "ethicalJesus" — Jesus of Nazareth: love, Golden Rule, forgiveness, care for marginalised
-3. "ethicalCovey" — Stephen R. Covey: 7 Habits applied to global events and leadership
-4. "ethicalGandhi" — Mahatma Gandhi: non-violence, truth, moral courage
-5. "ethicalBuddha" — Buddha: compassion, mindfulness, interdependence, Middle Way
-6. "ethicalMohammed" — Prophet Mohammed: justice, mercy, community solidarity, stewardship
-7. "ethicalTorah" — Torah: justice (tzedek), tikkun olam, loving-kindness (chesed)
-8. "ethicalOshi" — Oshi/Shinto: reverence for nature, harmony, purity, sincerity
-9. "ethicalRajneesh" — Bhagwan Shree Rajneesh (Osho): awareness, present moment, freedom from conditioning, celebrating life, meditation as transformation
-10. "ethicalGita" — Bhagavad Gita: dharma (righteous duty), selfless action (nishkama karma), equanimity, devotion, unity of all existence` : '';
+        // Build ethical tool schema properties dynamically
+        const ethicalProperties: Record<string, any> = {};
+        const ethicalRequired: string[] = [];
+        for (const p of ethicalPerspectives) {
+          const key = toFieldKey(p.name);
+          ethicalProperties[key] = { type: 'string', description: `${p.name} — ethical analysis` };
+          ethicalRequired.push(key);
+        }
+
         const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
 LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single word of headlines, summaries, commentary, analysis, and conclusions must be in ${lang.outputLang}. The ONLY exceptions are source names and URLs which remain as-is.
@@ -218,7 +239,7 @@ CRITICAL RULES:
 - You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${schweitzerEnabled ? ' Include a Schweitzer ethical consideration at the end.' : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
+        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${ethicalPerspectives.length > 0 ? ` Include ethical considerations from ${ethicalPerspectives.length} perspectives at the end.` : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
         const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -275,20 +296,9 @@ CRITICAL RULES:
                       },
                     },
                     conclusion: { type: 'string' },
-                    ...(schweitzerEnabled ? {
-                      schweitzerEthical: { type: 'string' },
-                      ethicalJesus: { type: 'string' },
-                      ethicalCovey: { type: 'string' },
-                      ethicalGandhi: { type: 'string' },
-                      ethicalBuddha: { type: 'string' },
-                      ethicalMohammed: { type: 'string' },
-                      ethicalTorah: { type: 'string' },
-                      ethicalOshi: { type: 'string' },
-                      ethicalRajneesh: { type: 'string' },
-                      ethicalGita: { type: 'string' },
-                    } : {}),
+                    ...ethicalProperties,
                   },
-                  required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi', 'ethicalRajneesh', 'ethicalGita'] : [])],
+                  required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
                 },
               },
             }],
@@ -324,6 +334,18 @@ CRITICAL RULES:
           console.error(`Schedule ${schedule.id}: Failed to parse tool_call arguments for ${lang.code}`);
           return;
         }
+
+        // Build ethical considerations array dynamically
+        const ethicalConsiderations: any[] = [];
+        const legacyFields: Record<string, any> = {};
+        for (const p of ethicalPerspectives) {
+          const key = toFieldKey(p.name);
+          if (parsed[key]) {
+            ethicalConsiderations.push({ id: p.id, name: p.name, content: parsed[key] });
+            legacyFields[key] = parsed[key];
+          }
+        }
+
         const report = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
           generatedAt: now.toISOString(),
@@ -331,16 +353,8 @@ CRITICAL RULES:
           introduction: parsed.introduction,
           themes: parsed.themes.map((t: any, i: number) => ({ id: `theme-${i}`, ...t })),
           conclusion: parsed.conclusion,
-          ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
-          ...(parsed.ethicalJesus ? { ethicalJesus: parsed.ethicalJesus } : {}),
-          ...(parsed.ethicalCovey ? { ethicalCovey: parsed.ethicalCovey } : {}),
-          ...(parsed.ethicalGandhi ? { ethicalGandhi: parsed.ethicalGandhi } : {}),
-          ...(parsed.ethicalBuddha ? { ethicalBuddha: parsed.ethicalBuddha } : {}),
-          ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
-          ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
-          ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
-          ...(parsed.ethicalRajneesh ? { ethicalRajneesh: parsed.ethicalRajneesh } : {}),
-          ...(parsed.ethicalGita ? { ethicalGita: parsed.ethicalGita } : {}),
+          ...(ethicalConsiderations.length > 0 ? { ethicalConsiderations } : {}),
+          ...legacyFields,
           sourcesAnalyzed: sourceNames,
         };
 
@@ -357,7 +371,7 @@ CRITICAL RULES:
         }
       };
 
-      // Run both languages in parallel to avoid timeout
+      // Run both languages in parallel
       await Promise.allSettled(languages.map(lang => generateForLang(lang)));
 
       // Update last_run_at
