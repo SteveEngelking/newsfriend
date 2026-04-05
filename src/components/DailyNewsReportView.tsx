@@ -70,20 +70,24 @@ export function DailyNewsReportView({ report }: Props) {
   };
 
   // Build ethical considerations from new format or legacy fields
-  const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string }[] = [];
+  const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string; customBg?: string; customBorder?: string; customHeading?: string; customText?: string }[] = [];
 
   // New dynamic format
-  if (Array.isArray((report as any).ethicalConsiderations)) {
-    for (const ec of (report as any).ethicalConsiderations) {
-      const p = perspectives.find(pp => pp.name === ec.perspectiveName);
+  if (Array.isArray(report.ethicalConsiderations) && report.ethicalConsiderations.length > 0) {
+    for (const ec of report.ethicalConsiderations) {
+      const p = perspectives.find(pp => pp.id === ec.id || pp.name === ec.name);
       ethicalItems.push({
-        name: ec.perspectiveName,
-        icon: ec.icon || p?.icon || '🌿',
+        name: ec.name,
+        icon: p?.icon || '🌿',
         content: ec.content,
-        bgClass: 'bg-muted/30',
-        borderClass: 'border-border',
-        headingClass: 'text-foreground',
-        textClass: 'text-foreground',
+        bgClass: p ? '' : 'bg-muted/30',
+        borderClass: p ? '' : 'border-border',
+        headingClass: p ? '' : 'text-foreground',
+        textClass: p ? '' : 'text-foreground',
+        customBg: p?.color_bg,
+        customBorder: p?.color_border,
+        customHeading: p?.color_heading,
+        customText: p?.color_text,
       });
     }
   } else {
@@ -183,11 +187,16 @@ export function DailyNewsReportView({ report }: Props) {
         </section>
 
         {ethicalItems.map((item, idx) => (
-          <section key={idx} className={`${item.bgClass} rounded-lg p-6 mt-4 border ${item.borderClass}`}>
-            <h2 className={`text-lg font-bold mb-3 ${item.headingClass}`}>
+          <section key={idx} className={`${item.customBg ? '' : item.bgClass} rounded-lg p-6 mt-4 border ${item.customBorder ? '' : item.borderClass}`}
+            style={item.customBg ? { backgroundColor: item.customBg, borderColor: item.customBorder } : undefined}>
+            <h2 className={`text-lg font-bold mb-3 ${item.customHeading ? '' : item.headingClass}`}
+              style={item.customHeading ? { color: item.customHeading } : undefined}>
               {item.icon} Ethical Consideration — {item.name}
             </h2>
-            <p className={`text-base leading-relaxed whitespace-pre-line ${item.textClass}`}>{item.content}</p>
+            <p className={`text-base leading-relaxed whitespace-pre-line ${item.customText ? '' : item.textClass}`}
+              style={item.customText ? { color: item.customText } : undefined}>
+              {item.content}
+            </p>
           </section>
         ))}
 

@@ -3,6 +3,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 5;
@@ -71,6 +73,11 @@ function sanitizeSourceNames(names: any): string[] {
   return names.slice(0, 20).filter((n: any) => typeof n === 'string').map((n: string) => n.slice(0, 100));
 }
 
+// Convert perspective name to a safe JSON key like "ethical_albert_schweitzer"
+function toFieldKey(name: string): string {
+  return 'ethical_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -105,6 +112,20 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch enabled ethical perspectives from DB
+    let ethicalPerspectives: any[] = [];
+    if (schweitzerEnabled) {
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data } = await supabase
+        .from('ethical_perspectives')
+        .select('id, name, prompt_instruction')
+        .eq('enabled', true)
+        .order('sort_order', { ascending: true });
+      ethicalPerspectives = data || [];
+    }
+
     const safeArticles = sanitizeArticles(articles);
     const safeSourceNames = sanitizeSourceNames(allSourceNames);
 
@@ -120,29 +141,15 @@ The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to 
 
 Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
 
-    const ethicalInstruction = schweitzerEnabled ? `
-
-ETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions. Each should be 2-3 substantive paragraphs examining the day's news through that ethical lens. Write ALL in ${outputLang}.
-
-1. "schweitzerEthical" — Albert Schweitzer's "Reverence for Life" philosophy: every living being has intrinsic worth, personal responsibility, compassion over ideology, service to others, ethical consistency.
-
-2. "ethicalJesus" — Jesus of Nazareth: love thy neighbour, the Golden Rule, forgiveness, care for the poor and marginalised, peace-making, speaking truth to power, mercy over judgement.
-
-3. "ethicalCovey" — Stephen R. Covey (The 7 Habits of Highly Effective People): be proactive, begin with the end in mind, put first things first, think win-win, seek first to understand then to be understood, synergise, sharpen the saw. Apply these principles to global events and leadership.
-
-4. "ethicalGandhi" — Mahatma Gandhi: non-violence (ahimsa), truth (satya), self-discipline, service to others, civil disobedience against injustice, be the change you wish to see, strength through moral courage.
-
-5. "ethicalBuddha" — Buddha: the Four Noble Truths, the Eightfold Path, compassion (karuna), loving-kindness (metta), non-attachment, mindfulness, the interdependence of all beings, the Middle Way.
-
-6. "ethicalMohammed" — Prophet Mohammed: justice and equity, mercy and compassion, care for the vulnerable, seeking knowledge, community solidarity (ummah), moderation, stewardship of the earth.
-
-7. "ethicalTorah" — Torah: justice (tzedek), loving-kindness (chesed), repair of the world (tikkun olam), sanctity of life, obligation to the stranger, truthfulness, communal responsibility.
-
-8. "ethicalOshi" — Oshi (Shinto traditions): reverence for nature and kami, purity of heart and action, harmony with the natural world, gratitude, communal bonds, sincerity, respect for ancestors and tradition.
-
-9. "ethicalRajneesh" — Bhagwan Shree Rajneesh (Osho): awareness and consciousness, living in the present moment, freedom from conditioning, celebrating life, meditation as transformation, courage to be authentic, love without attachment.
-
-10. "ethicalGita" — Bhagavad Gita: dharma (righteous duty), selfless action (nishkama karma), equanimity in success and failure, devotion and surrender, the eternal soul beyond material concerns, courage in the face of moral dilemmas, unity of all existence.` : '';
+    // Build ethical instruction dynamically from DB
+    let ethicalInstruction = '';
+    if (ethicalPerspectives.length > 0) {
+      ethicalInstruction = `\n\nETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions. Each should be 2-3 substantive paragraphs examining the day's news through that ethical lens. Write ALL in ${outputLang}.\n\n`;
+      ethicalPerspectives.forEach((p, i) => {
+        const key = toFieldKey(p.name);
+        ethicalInstruction += `${i + 1}. "${key}" — ${p.prompt_instruction}\n\n`;
+      });
+    }
 
     const systemPrompt = `You are a senior investigative journalist and media critic writing a daily news briefing. Your role is to provide sharp, critical analysis of the day's news across multiple sources.
 
@@ -159,7 +166,7 @@ STYLE GUIDELINES:
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
-- For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available. Never limit yourself to just 1-2 sources per theme.
+- For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available.
 - Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
@@ -183,11 +190,20 @@ Create a comprehensive report with exactly ${themeCount} major themes/stories co
 4. Provide critical commentary on the overall media coverage in ${outputLang}
 5. Rate significance (high/medium/low)
 ${mondcivitanEnabled ? `6. Write a Mondcivitan Reflection paragraph applying the seven principles to this story in ${outputLang}` : ''}
-${schweitzerEnabled ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from ten different perspectives (Schweitzer, Jesus, Covey, Gandhi, Buddha, Mohammed, Torah, Oshi, Rajneesh, Bhagavad Gita) in ${outputLang}` : ''}
+${ethicalPerspectives.length > 0 ? `${mondcivitanEnabled ? '7' : '6'}. At the end, write ethical considerations from ${ethicalPerspectives.length} different perspectives in ${outputLang}` : ''}
 
 If source material is written in another language, translate and rewrite all output into ${outputLang}.
 
 Be critical and insightful. This is investigative journalism, not stenography.`;
+
+    // Build tool schema dynamically
+    const ethicalProperties: Record<string, any> = {};
+    const ethicalRequired: string[] = [];
+    for (const p of ethicalPerspectives) {
+      const key = toFieldKey(p.name);
+      ethicalProperties[key] = { type: 'string', description: `${p.name} — ethical analysis based on: ${p.prompt_instruction.slice(0, 200)}` };
+      ethicalRequired.push(key);
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -250,7 +266,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                       ...(mondcivitanEnabled ? {
                         mondcivitanReflection: {
                           type: 'string',
-                          description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.',
+                          description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles.',
                         },
                       } : {}),
                       significance: { 
@@ -267,20 +283,9 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
                   type: 'string', 
                   description: '1-2 paragraphs summarizing key takeaways and what to watch for' 
                 },
-                ...(schweitzerEnabled ? {
-                  schweitzerEthical: { type: 'string', description: 'Albert Schweitzer — Reverence for Life ethical analysis.' },
-                  ethicalJesus: { type: 'string', description: 'Jesus of Nazareth — love, forgiveness, Golden Rule ethical analysis.' },
-                  ethicalCovey: { type: 'string', description: 'Stephen R. Covey — 7 Habits principles applied to global events.' },
-                  ethicalGandhi: { type: 'string', description: 'Mahatma Gandhi — non-violence, truth, moral courage analysis.' },
-                  ethicalBuddha: { type: 'string', description: 'Buddha — compassion, mindfulness, interdependence analysis.' },
-                  ethicalMohammed: { type: 'string', description: 'Prophet Mohammed — justice, mercy, community solidarity analysis.' },
-                  ethicalTorah: { type: 'string', description: 'Torah — justice, tikkun olam, loving-kindness analysis.' },
-                  ethicalOshi: { type: 'string', description: 'Oshi/Shinto — reverence for nature, harmony, purity analysis.' },
-                  ethicalRajneesh: { type: 'string', description: 'Bhagwan Shree Rajneesh — awareness, present moment, freedom from conditioning analysis.' },
-                  ethicalGita: { type: 'string', description: 'Bhagavad Gita — dharma, selfless action, equanimity, devotion analysis.' },
-                } : {}),
+                ...ethicalProperties,
               },
-              required: ['introduction', 'themes', 'conclusion', ...(schweitzerEnabled ? ['schweitzerEthical', 'ethicalJesus', 'ethicalCovey', 'ethicalGandhi', 'ethicalBuddha', 'ethicalMohammed', 'ethicalTorah', 'ethicalOshi', 'ethicalRajneesh', 'ethicalGita'] : [])],
+              required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
               additionalProperties: false,
             },
           },
@@ -344,6 +349,29 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
 
     const dateLocale = normalizedLanguage === 'de' ? 'de-DE' : 'en-GB';
     const titlePrefix = normalizedLanguage === 'de' ? 'Nachrichten des Tages' : 'News of the Day';
+    
+    // Build ethical considerations array from dynamic perspectives
+    const ethicalConsiderations: any[] = [];
+    for (const p of ethicalPerspectives) {
+      const key = toFieldKey(p.name);
+      if (parsed[key]) {
+        ethicalConsiderations.push({
+          id: p.id,
+          name: p.name,
+          content: parsed[key],
+        });
+      }
+    }
+
+    // Also include legacy fields for backward compat
+    const legacyEthicalFields: Record<string, any> = {};
+    for (const p of ethicalPerspectives) {
+      const key = toFieldKey(p.name);
+      if (parsed[key]) {
+        legacyEthicalFields[key] = parsed[key];
+      }
+    }
+
     const report = {
       title: `${titlePrefix} — ${new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
       generatedAt: new Date().toISOString(),
@@ -354,16 +382,8 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         ...t,
       })),
       conclusion: parsed.conclusion,
-      ...(parsed.schweitzerEthical ? { schweitzerEthical: parsed.schweitzerEthical } : {}),
-      ...(parsed.ethicalJesus ? { ethicalJesus: parsed.ethicalJesus } : {}),
-      ...(parsed.ethicalCovey ? { ethicalCovey: parsed.ethicalCovey } : {}),
-      ...(parsed.ethicalGandhi ? { ethicalGandhi: parsed.ethicalGandhi } : {}),
-      ...(parsed.ethicalBuddha ? { ethicalBuddha: parsed.ethicalBuddha } : {}),
-      ...(parsed.ethicalMohammed ? { ethicalMohammed: parsed.ethicalMohammed } : {}),
-      ...(parsed.ethicalTorah ? { ethicalTorah: parsed.ethicalTorah } : {}),
-      ...(parsed.ethicalOshi ? { ethicalOshi: parsed.ethicalOshi } : {}),
-      ...(parsed.ethicalRajneesh ? { ethicalRajneesh: parsed.ethicalRajneesh } : {}),
-      ...(parsed.ethicalGita ? { ethicalGita: parsed.ethicalGita } : {}),
+      ...(ethicalConsiderations.length > 0 ? { ethicalConsiderations } : {}),
+      ...legacyEthicalFields,
       sourcesAnalyzed: safeSourceNames,
     };
 
