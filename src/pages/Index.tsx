@@ -224,10 +224,22 @@ const Index = () => {
       setLoadingProgress(60);
       setLoadingMessage(`Analyzing ${allArticles.length} articles for daily themes...`);
 
+      // Fetch schedule settings for mondcivitan/ethical flags
+      let mondcivitanEnabled = false;
+      let schweitzerEnabled = false;
+      try {
+        const { data: scheduleData } = await supabase.from('report_schedules').select('mondcivitan_enabled, schweitzer_enabled').limit(1).single();
+        if (scheduleData) {
+          mondcivitanEnabled = scheduleData.mondcivitan_enabled ?? false;
+          schweitzerEnabled = scheduleData.schweitzer_enabled ?? false;
+        }
+      } catch {}
+
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('daily-news', {
         body: {
           language,
-          mondcivitanEnabled: false,
+          mondcivitanEnabled,
+          schweitzerEnabled,
           allSourceNames: enabledSources.map(s => s.name),
           totalArticlesRequested: articlesPerSource * enabledSources.length,
           articles: allArticles.map(a => ({
