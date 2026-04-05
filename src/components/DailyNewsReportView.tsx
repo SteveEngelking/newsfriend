@@ -70,7 +70,7 @@ export function DailyNewsReportView({ report }: Props) {
   };
 
   // Build ethical considerations from new format or legacy fields
-  const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string }[] = [];
+  const ethicalItems: { name: string; icon: string; content: string; bgClass: string; borderClass: string; headingClass: string; textClass: string; customBg?: string; customBorder?: string; customHeading?: string; customText?: string }[] = [];
 
   // New dynamic format
   if (Array.isArray(report.ethicalConsiderations) && report.ethicalConsiderations.length > 0) {
