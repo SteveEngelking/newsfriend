@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UserPlus, Trash2, Shield } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { UserPlus, Trash2, Shield, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -14,12 +15,28 @@ interface Invite {
   used_at: string | null;
 }
 
+interface SenderConfig {
+  id: string;
+  sender_name: string;
+  sender_email: string;
+  organization: string;
+  reply_to_email: string;
+}
+
 export function AdminUsersManager() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [admins, setAdmins] = useState<{ user_id: string; email: string }[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [senderConfig, setSenderConfig] = useState<SenderConfig>({
+    id: '',
+    sender_name: '',
+    sender_email: '',
+    organization: '',
+    reply_to_email: '',
+  });
+  const [isSavingSender, setIsSavingSender] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -36,6 +53,14 @@ export function AdminUsersManager() {
       .select('*')
       .order('created_at', { ascending: false });
     if (inviteData) setInvites(inviteData);
+
+    // Load sender config
+    const { data: senderData } = await supabase
+      .from('email_sender_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (senderData) setSenderConfig(senderData as SenderConfig);
 
     // Load admin list via edge function
     try {
@@ -93,8 +118,82 @@ export function AdminUsersManager() {
     }
   };
 
+  const handleSaveSenderConfig = async () => {
+    setIsSavingSender(true);
+    try {
+      const { error } = await supabase
+        .from('email_sender_config')
+        .update({
+          sender_name: senderConfig.sender_name,
+          sender_email: senderConfig.sender_email,
+          organization: senderConfig.organization,
+          reply_to_email: senderConfig.reply_to_email,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', senderConfig.id);
+      if (error) throw error;
+      toast({ title: t('adminSenderSaved') });
+    } catch (err: any) {
+      toast({ title: t('adminSenderSaveFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSavingSender(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Email Sender Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Mail className="h-5 w-5" /> {t('adminSenderInfoTitle')}
+          </CardTitle>
+          <CardDescription>{t('adminSenderInfoDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{t('adminSenderName')}</Label>
+              <Input
+                value={senderConfig.sender_name}
+                onChange={e => setSenderConfig(p => ({ ...p, sender_name: e.target.value }))}
+                placeholder="NewsFriend Admin"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('adminSenderEmail')}</Label>
+              <Input
+                type="email"
+                value={senderConfig.sender_email}
+                onChange={e => setSenderConfig(p => ({ ...p, sender_email: e.target.value }))}
+                placeholder="noreply@example.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('adminSenderOrg')}</Label>
+              <Input
+                value={senderConfig.organization}
+                onChange={e => setSenderConfig(p => ({ ...p, organization: e.target.value }))}
+                placeholder="Hugh & Helene Schonfield World Service Trust"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('adminSenderReplyTo')}</Label>
+              <Input
+                type="email"
+                value={senderConfig.reply_to_email}
+                onChange={e => setSenderConfig(p => ({ ...p, reply_to_email: e.target.value }))}
+                placeholder="reply@example.com"
+              />
+            </div>
+          </div>
+          <Button onClick={handleSaveSenderConfig} disabled={isSavingSender}>
+            {t('adminSenderSaveBtn')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Invite Admin */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -140,6 +239,7 @@ export function AdminUsersManager() {
         </CardContent>
       </Card>
 
+      {/* Current Admins */}
       {admins.length > 0 && (
         <Card>
           <CardHeader>

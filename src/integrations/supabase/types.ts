@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_sender_config: {
+        Row: {
+          id: string
+          organization: string
+          reply_to_email: string
+          sender_email: string
+          sender_name: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization?: string
+          reply_to_email?: string
+          sender_email?: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization?: string
+          reply_to_email?: string
+          sender_email?: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ethical_perspectives: {
         Row: {
           color_bg: string

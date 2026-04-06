@@ -2,7 +2,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { Shield } from 'lucide-react';
+import logo from '@/assets/logo.jpg';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -18,7 +18,7 @@ export function AppLayout() {
             <div className="flex items-center justify-between h-14 px-4">
               <div className="flex items-center gap-2.5">
                 <SidebarTrigger className="mr-2" />
-                <Shield className="h-5 w-5 text-primary" />
+                <img src={logo} alt="NewsFriend" className="h-6 w-6 rounded" />
                 <h1 className="text-lg font-bold tracking-tight">NewsFriend</h1>
               </div>
               <div className="flex items-center gap-1">

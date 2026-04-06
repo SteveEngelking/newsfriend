@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { firecrawlApi } from '@/lib/api/firecrawl';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import logo from '@/assets/logo.jpg';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
@@ -284,8 +285,8 @@ const Index = () => {
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-lg">
         <div className="container max-w-4xl mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2.5">
-            <Shield className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-bold tracking-tight">VerifyNews</h1>
+            <img src={logo} alt="NewsFriend" className="h-6 w-6 rounded" />
+            <h1 className="text-lg font-bold tracking-tight">NewsFriend</h1>
           </div>
           <ThemeToggle />
         </div>
