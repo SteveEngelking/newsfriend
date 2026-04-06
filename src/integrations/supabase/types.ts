@@ -38,6 +38,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_pages: {
+        Row: {
+          content_de: string
+          content_en: string
+          created_at: string
+          icon: string
+          id: string
+          is_system: boolean
+          nav_order: number
+          published: boolean
+          show_in_nav: boolean
+          slug: string
+          title_de: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          content_de?: string
+          content_en?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_system?: boolean
+          nav_order?: number
+          published?: boolean
+          show_in_nav?: boolean
+          slug: string
+          title_de?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          content_de?: string
+          content_en?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_system?: boolean
+          nav_order?: number
+          published?: boolean
+          show_in_nav?: boolean
+          slug?: string
+          title_de?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_sender_config: {
         Row: {
           id: string
