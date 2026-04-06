@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import Impressum from "./pages/Impressum";
+import CmsPage from "./pages/CmsPage";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/impressum" element={<Impressum />} />
+              <Route path="/page/:slug" element={<CmsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

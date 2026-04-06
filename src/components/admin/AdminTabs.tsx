@@ -5,7 +5,8 @@ import { ScheduleManager } from '@/components/ScheduleManager';
 import { ImpressumEditor } from '@/components/ImpressumEditor';
 import { AdminUsersManager } from '@/components/admin/AdminUsersManager';
 import { EthicalPerspectivesManager } from '@/components/admin/EthicalPerspectivesManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText } from 'lucide-react';
+import { CmsPageManager } from '@/components/admin/CmsPageManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -18,10 +19,14 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="pages" className="gap-1.5 text-xs sm:text-sm">
+          <Layout className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabPages')}</span>
         </TabsTrigger>
         <TabsTrigger value="sources" className="gap-1.5 text-xs sm:text-sm">
           <Newspaper className="h-3.5 w-3.5" />
@@ -43,6 +48,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="users">
         <AdminUsersManager />
+      </TabsContent>
+
+      <TabsContent value="pages">
+        <CmsPageManager />
       </TabsContent>
 
       <TabsContent value="sources">
