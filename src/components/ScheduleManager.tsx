@@ -116,15 +116,16 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const triggerImmediateGeneration = async () => {
-    toast({ title: language === 'de' ? 'Bericht wird generiert…' : 'Generating report…' });
-    try {
-      const { error } = await supabase.functions.invoke('generate-scheduled-report');
-      if (error) throw error;
-      toast({ title: language === 'de' ? 'Bericht erstellt' : 'Report generated' });
-      loadData();
-    } catch (e) {
-      toast({ title: t('sourceError'), description: String(e), variant: 'destructive' });
-    }
+    toast({ title: language === 'de' ? 'Bericht wird im Hintergrund generiert… (2-3 Min.)' : 'Report generating in background… (2-3 min)' });
+    // Fire and forget — don't await, the edge function can take 2-3 minutes
+    supabase.functions.invoke('generate-scheduled-report').then(({ error }) => {
+      if (error) {
+        console.error('Background generation error:', error);
+      } else {
+        toast({ title: language === 'de' ? 'Bericht erstellt — Seite neu laden' : 'Report generated — refresh page' });
+        loadData();
+      }
+    }).catch(e => console.error('Background generation error:', e));
   };
 
   const handleToggleSchedule = async () => {
