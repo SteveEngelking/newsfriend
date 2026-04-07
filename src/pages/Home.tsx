@@ -34,7 +34,6 @@ const Home = () => {
         .limit(20);
 
       if (error || !data || data.length === 0) {
-        // Fallback: try without language filter
         const fallback = await supabase
           .from('generated_reports')
           .select('id, title, created_at')
@@ -42,7 +41,9 @@ const Home = () => {
           .limit(20);
         if (fallback.data && fallback.data.length > 0) {
           setReportList(fallback.data.map((r: any) => ({ id: r.id, title: r.title, created_at: r.created_at })));
-          if (!selectedId) setSelectedId(fallback.data[0].id);
+          setSelectedId(prev => prev || fallback.data[0].id);
+        } else {
+          setReportList([]);
         }
         return;
       }
@@ -54,15 +55,13 @@ const Home = () => {
       }));
 
       setReportList(list);
-      if (list.length > 0 && !selectedId) {
-        setSelectedId(list[0].id);
-      }
+      setSelectedId(prev => prev || list[0].id);
     } catch (err) {
       console.error('Error fetching report list:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [language, selectedId]);
+  }, [language]);
 
   // Fetch full report data for selected report only
   const fetchFullReport = useCallback(async (id: string) => {
@@ -87,8 +86,13 @@ const Home = () => {
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, []);
 
-  // Re-fetch list when language changes
-  useEffect(() => { fetchList(); }, [language]);
+  // Re-fetch list when language changes — reset selection so new language's report loads
+  useEffect(() => {
+    setSelectedId(null);
+    setSelectedReport(null);
+    setIsLoading(true);
+    fetchList();
+  }, [language]);
 
   // Fetch full report when selection changes
   useEffect(() => {
