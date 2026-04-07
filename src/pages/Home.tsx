@@ -87,8 +87,13 @@ const Home = () => {
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, []);
 
-  // Re-fetch list when language changes
-  useEffect(() => { fetchList(); }, [language]);
+  // Re-fetch list when language changes — reset selection so new language's report loads
+  useEffect(() => {
+    setSelectedId(null);
+    setSelectedReport(null);
+    setIsLoading(true);
+    fetchList();
+  }, [language]);
 
   // Fetch full report when selection changes
   useEffect(() => {
