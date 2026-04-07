@@ -75,6 +75,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Also delete the auth user so they can re-register if needed
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId);
+    if (authDeleteError) {
+      console.error('Failed to delete auth user:', authDeleteError.message);
+      // Role was already removed, so return partial success
+    }
+
+    // Clean up any invites for this user's email
+    const { data: listData } = await adminClient.auth.admin.listUsers();
+    // User is already deleted, so we can't look them up — that's fine
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -197,7 +197,7 @@ export function EthicalPerspectivesManager() {
                         placeholder="AI prompt instruction"
                       />
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={handleSaveEdit}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={handleSaveEdit} disabled={saving}>
                           <Check className="h-3.5 w-3.5" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
