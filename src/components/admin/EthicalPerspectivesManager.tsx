@@ -84,24 +84,29 @@ export function EthicalPerspectivesManager() {
   const handleAdd = async () => {
     if (!newName.trim() || !newPrompt.trim()) return;
     setAdding(true);
-    const { error } = await supabase.from('ethical_perspectives').insert({
-      name: newName.trim(),
-      icon: newIcon.trim() || '🌿',
-      description: newDescription.trim(),
-      prompt_instruction: newPrompt.trim(),
-      sort_order: perspectives.length,
-    } as any);
-    if (error) {
-      toast({ title: t('adminError'), description: error.message, variant: 'destructive' });
-    } else {
-      setNewName('');
-      setNewIcon('🌿');
-      setNewDescription('');
-      setNewPrompt('');
-      loadPerspectives();
-      toast({ title: t('ethicalAdded') });
+    try {
+      const { error } = await supabase.from('ethical_perspectives').insert({
+        name: newName.trim(),
+        icon: newIcon.trim() || '🌿',
+        description: newDescription.trim(),
+        prompt_instruction: newPrompt.trim(),
+        sort_order: perspectives.length,
+      } as any);
+      if (error) {
+        toast({ title: t('adminError'), description: error.message, variant: 'destructive' });
+      } else {
+        setNewName('');
+        setNewIcon('🌿');
+        setNewDescription('');
+        setNewPrompt('');
+        await loadPerspectives();
+        toast({ title: t('ethicalAdded') });
+      }
+    } catch (err: any) {
+      toast({ title: t('adminError'), description: err.message || 'Network error', variant: 'destructive' });
+    } finally {
+      setAdding(false);
     }
-    setAdding(false);
   };
 
   const startEdit = (p: EthicalPerspective) => {
@@ -109,12 +114,22 @@ export function EthicalPerspectivesManager() {
     setEditData({ name: p.name, icon: p.icon, description: p.description, prompt_instruction: p.prompt_instruction });
   };
 
+  const [saving, setSaving] = useState(false);
+
   const handleSaveEdit = async () => {
     if (!editingId) return;
-    await supabase.from('ethical_perspectives').update(editData as any).eq('id', editingId);
-    loadPerspectives();
-    setEditingId(null);
-    toast({ title: t('ethicalUpdated') });
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('ethical_perspectives').update(editData as any).eq('id', editingId);
+      if (error) throw error;
+      await loadPerspectives();
+      setEditingId(null);
+      toast({ title: t('ethicalUpdated') });
+    } catch (err: any) {
+      toast({ title: t('adminError'), description: err.message || 'Network error', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const enabledCount = perspectives.filter(p => p.enabled).length;
