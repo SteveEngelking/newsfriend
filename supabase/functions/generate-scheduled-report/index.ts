@@ -362,6 +362,7 @@ CRITICAL RULES:
           schedule_id: schedule.id,
           title: report.title,
           report_data: report,
+          language: lang.code,
         });
 
         if (insertErr) {

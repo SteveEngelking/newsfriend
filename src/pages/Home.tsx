@@ -28,15 +28,26 @@ const Home = () => {
     try {
       const { data, error } = await supabase
         .from('generated_reports')
-        .select('id, title, created_at, report_data')
+        .select('id, title, created_at, language')
+        .eq('language', language)
         .order('created_at', { ascending: false })
-        .limit(30);
+        .limit(20);
 
-      if (error || !data) return;
+      if (error || !data || data.length === 0) {
+        // Fallback: try without language filter
+        const fallback = await supabase
+          .from('generated_reports')
+          .select('id, title, created_at')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (fallback.data && fallback.data.length > 0) {
+          setReportList(fallback.data.map((r: any) => ({ id: r.id, title: r.title, created_at: r.created_at })));
+          if (!selectedId) setSelectedId(fallback.data[0].id);
+        }
+        return;
+      }
 
-      // Filter by current UI language, fall back to all
-      const filtered = data.filter((r: any) => (r.report_data as any)?.language === language);
-      const list = (filtered.length > 0 ? filtered : data).map((r: any) => ({
+      const list = data.map((r: any) => ({
         id: r.id,
         title: r.title,
         created_at: r.created_at,
