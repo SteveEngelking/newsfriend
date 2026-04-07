@@ -51,9 +51,24 @@ const Home = () => {
     }
   }, [language]);
 
+  // Auto-fetch on mount
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  // Re-fetch when language changes
   useEffect(() => {
     if (hasChecked) fetchReports();
   }, [language, hasChecked, fetchReports]);
+
+  // Auto-refresh every 2 minutes to pick up new reports
+  useEffect(() => {
+    if (!hasChecked) return;
+    const interval = setInterval(() => {
+      fetchReports();
+    }, 120000);
+    return () => clearInterval(interval);
+  }, [hasChecked, fetchReports]);
 
   const selectedReport = reports.find(r => r.id === selectedId) || null;
 
