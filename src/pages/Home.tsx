@@ -9,96 +9,104 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import logo from '@/assets/logo.jpg';
 
-interface GeneratedReport {
+interface ReportListItem {
   id: string;
   title: string;
-  report_data: DailyNewsReport;
   created_at: string;
 }
 
 const Home = () => {
-  const [reports, setReports] = useState<GeneratedReport[]>([]);
+  const [reportList, setReportList] = useState<ReportListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasChecked, setHasChecked] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<DailyNewsReport | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
   const { t, language } = useLanguage();
 
-  const fetchReports = useCallback(async () => {
-    setIsLoading(true);
+  // Lightweight list fetch — no report_data
+  const fetchList = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('generated_reports')
-        .select('*')
+        .select('id, title, created_at, language')
+        .eq('language', language)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(20);
 
-      if (data && !error && data.length > 0) {
-        const typed = data as unknown as GeneratedReport[];
-        // Filter to only show reports matching current UI language
-        const filtered = typed.filter(r => r.report_data?.language === language);
-        setReports(filtered.length > 0 ? filtered : typed);
-        if (filtered.length > 0) {
-          setSelectedId(filtered[0].id);
-        } else {
-          setSelectedId(typed[0].id);
+      if (error || !data || data.length === 0) {
+        // Fallback: try without language filter
+        const fallback = await supabase
+          .from('generated_reports')
+          .select('id, title, created_at')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (fallback.data && fallback.data.length > 0) {
+          setReportList(fallback.data.map((r: any) => ({ id: r.id, title: r.title, created_at: r.created_at })));
+          if (!selectedId) setSelectedId(fallback.data[0].id);
         }
+        return;
+      }
+
+      const list = data.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        created_at: r.created_at,
+      }));
+
+      setReportList(list);
+      if (list.length > 0 && !selectedId) {
+        setSelectedId(list[0].id);
       }
     } catch (err) {
-      console.error('Error fetching reports:', err);
+      console.error('Error fetching report list:', err);
     } finally {
       setIsLoading(false);
-      setHasChecked(true);
     }
-  }, [language]);
+  }, [language, selectedId]);
 
-  // Auto-fetch on mount
-  useEffect(() => {
-    fetchReports();
+  // Fetch full report data for selected report only
+  const fetchFullReport = useCallback(async (id: string) => {
+    setIsLoadingReport(true);
+    try {
+      const { data, error } = await supabase
+        .from('generated_reports')
+        .select('report_data')
+        .eq('id', id)
+        .single();
+
+      if (data && !error) {
+        setSelectedReport(data.report_data as unknown as DailyNewsReport);
+      }
+    } catch (err) {
+      console.error('Error fetching report:', err);
+    } finally {
+      setIsLoadingReport(false);
+    }
   }, []);
 
-  // Re-fetch when language changes
-  useEffect(() => {
-    if (hasChecked) fetchReports();
-  }, [language, hasChecked, fetchReports]);
+  // Auto-fetch list on mount
+  useEffect(() => { fetchList(); }, []);
 
-  // Auto-refresh every 2 minutes to pick up new reports
+  // Re-fetch list when language changes
+  useEffect(() => { fetchList(); }, [language]);
+
+  // Fetch full report when selection changes
   useEffect(() => {
-    if (!hasChecked) return;
-    const interval = setInterval(() => {
-      fetchReports();
-    }, 120000);
+    if (selectedId) fetchFullReport(selectedId);
+  }, [selectedId, fetchFullReport]);
+
+  // Auto-refresh list every 2 minutes
+  useEffect(() => {
+    const interval = setInterval(fetchList, 120000);
     return () => clearInterval(interval);
-  }, [hasChecked, fetchReports]);
+  }, [fetchList]);
 
-  const selectedReport = reports.find(r => r.id === selectedId) || null;
+  const handleSelectReport = (id: string) => {
+    setSelectedId(id);
+  };
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-0">
-      {!hasChecked && !selectedReport && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-6"
-        >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={logo} alt="NewsFriend" className="h-10 w-10 rounded" />
-            <h1 className="text-4xl font-bold tracking-tight">NewsFriend</h1>
-          </div>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            {t('homeTagline')}
-          </p>
-          <Button
-            size="lg"
-            onClick={fetchReports}
-            disabled={isLoading}
-            className="gap-2 text-base px-8 py-6"
-          >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Newspaper className="h-5 w-5" />}
-            {t('homeLatestNews')}
-          </Button>
-        </motion.div>
-      )}
-
       {isLoading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -106,40 +114,51 @@ const Home = () => {
         </motion.div>
       )}
 
-      {hasChecked && !isLoading && reports.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
+      {!isLoading && reportList.length === 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img src={logo} alt="NewsFriend" className="h-10 w-10 rounded" />
+            <h1 className="text-4xl font-bold tracking-tight">NewsFriend</h1>
+          </div>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto">{t('homeTagline')}</p>
           <Newspaper className="h-12 w-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-semibold">{t('homeNoReports')}</h2>
           <p className="text-muted-foreground">{t('homeNoReportsDesc')}</p>
-          <Button variant="outline" onClick={fetchReports}>{t('homeTryAgain')}</Button>
+          <Button variant="outline" onClick={fetchList}>{t('homeTryAgain')}</Button>
         </motion.div>
       )}
 
-      {selectedReport && !isLoading && (
+      {!isLoading && reportList.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-4xl mx-auto space-y-4"
         >
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-            <Select value={selectedId || ''} onValueChange={setSelectedId}>
+            <Select value={selectedId || ''} onValueChange={handleSelectReport}>
               <SelectTrigger className="w-full sm:w-80">
                 <SelectValue placeholder={t('homePreviousEditions')} />
               </SelectTrigger>
               <SelectContent>
-                {reports.map(r => (
+                {reportList.map(r => (
                   <SelectItem key={r.id} value={r.id}>
                     {new Date(r.created_at).toLocaleString()}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={fetchReports} className="gap-2" size="sm">
+            <Button variant="outline" onClick={fetchList} className="gap-2" size="sm">
               <Newspaper className="h-4 w-4" />
               {t('homeRefresh')}
             </Button>
           </div>
-          <DailyNewsReportView report={selectedReport.report_data} />
+          {isLoadingReport ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : selectedReport ? (
+            <DailyNewsReportView report={selectedReport} />
+          ) : null}
         </motion.div>
       )}
     </div>
