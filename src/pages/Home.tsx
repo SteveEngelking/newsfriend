@@ -28,14 +28,14 @@ const Home = () => {
     try {
       const { data, error } = await supabase
         .from('generated_reports')
-        .select('id, title, created_at, report_data->language')
+        .select('id, title, created_at, report_data')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(30);
 
       if (error || !data) return;
 
       // Filter by current UI language, fall back to all
-      const filtered = data.filter((r: any) => r.language === language);
+      const filtered = data.filter((r: any) => (r.report_data as any)?.language === language);
       const list = (filtered.length > 0 ? filtered : data).map((r: any) => ({
         id: r.id,
         title: r.title,
