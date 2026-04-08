@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,24 +31,41 @@ interface CmsPage {
 export function CmsPageManager() {
   const [pages, setPages] = useState<CmsPage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [editingPage, setEditingPage] = useState<CmsPage | null>(null);
   const [isNew, setIsNew] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const isMountedRef = useRef(true);
 
   const fetchPages = useCallback(async () => {
-    const { data } = await supabase
-      .from('cms_pages')
-      .select('*')
-      .order('nav_order', { ascending: true });
-    if (data) setPages(data as unknown as CmsPage[]);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from('cms_pages')
+        .select('*')
+        .order('nav_order', { ascending: true });
+
+      if (isMountedRef.current && data) {
+        setPages(data as unknown as CmsPage[]);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
   }, []);
 
-  useEffect(() => { fetchPages(); }, [fetchPages]);
+  useEffect(() => {
+    isMountedRef.current = true;
+    void fetchPages();
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [fetchPages]);
 
   const handleSave = async () => {
-    if (!editingPage) return;
+    if (!editingPage || saving) return;
     const { id, created_at, updated_at, ...rest } = editingPage;
 
     if (!rest.slug || !rest.title_en) {
@@ -60,6 +77,7 @@ export function CmsPageManager() {
     rest.slug = rest.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-').replace(/^-|-$/g, '');
 
     try {
+      setSaving(true);
       if (isNew) {
         const { error } = await supabase.from('cms_pages').insert(rest);
         if (error) throw error;
@@ -69,11 +87,17 @@ export function CmsPageManager() {
         if (error) throw error;
         toast({ title: t('cmsPageUpdated') });
       }
-      setEditingPage(null);
-      setIsNew(false);
-      fetchPages();
+      if (isMountedRef.current) {
+        setEditingPage(null);
+        setIsNew(false);
+      }
+      await fetchPages();
     } catch (err: any) {
       toast({ title: t('cmsSaveFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      if (isMountedRef.current) {
+        setSaving(false);
+      }
     }
   };
 
@@ -208,8 +232,11 @@ export function CmsPageManager() {
           </Tabs>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave}>{t('cmsSaveBtn')}</Button>
-            <Button variant="outline" onClick={() => { setEditingPage(null); setIsNew(false); }}>{t('cmsCancelBtn')}</Button>
+            <Button onClick={handleSave} disabled={saving} className="gap-2">
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t('cmsSaveBtn')}
+            </Button>
+            <Button variant="outline" onClick={() => { setEditingPage(null); setIsNew(false); }} disabled={saving}>{t('cmsCancelBtn')}</Button>
           </div>
         </CardContent>
       </Card>

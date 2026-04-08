@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsSource } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
@@ -24,25 +24,59 @@ const Admin = () => {
   const [humanCheck, setHumanCheck] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const mountedRef = useRef(true);
+  const statusCheckRef = useRef(0);
 
-  const checkAdminStatus = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setAdminState('login'); return; }
+  const checkAdminStatus = useCallback(async (sessionOverride?: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
+    const requestId = ++statusCheckRef.current;
+    const session = sessionOverride ?? (await supabase.auth.getSession()).data.session;
+    if (!mountedRef.current || requestId !== statusCheckRef.current) return;
+
+    if (!session) {
+      setAdminState('login');
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('check-admin-status', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
+      if (!mountedRef.current || requestId !== statusCheckRef.current) return;
+
       if (data.isAdmin) setAdminState('admin');
       else if (data.noAdminsExist) setAdminState('no-admin-exists');
       else setAdminState('not-admin');
-    } catch { setAdminState('not-admin'); }
+    } catch {
+      if (!mountedRef.current || requestId !== statusCheckRef.current) return;
+      setAdminState('not-admin');
+    }
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAdminStatus());
-    checkAdminStatus();
-    return () => subscription.unsubscribe();
+    mountedRef.current = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        statusCheckRef.current += 1;
+        if (mountedRef.current) setAdminState('login');
+        return;
+      }
+
+      window.setTimeout(() => {
+        if (mountedRef.current) {
+          void checkAdminStatus(session);
+        }
+      }, 0);
+    });
+
+    void checkAdminStatus();
+
+    return () => {
+      mountedRef.current = false;
+      statusCheckRef.current += 1;
+      subscription.unsubscribe();
+    };
   }, [checkAdminStatus]);
 
   useEffect(() => {
