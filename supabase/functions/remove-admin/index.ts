@@ -62,6 +62,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get the user's email BEFORE deleting (for invite cleanup)
+    let targetEmail: string | null = null;
+    try {
+      const { data: targetUser } = await adminClient.auth.admin.getUserById(userId);
+      targetEmail = targetUser?.user?.email ?? null;
+    } catch {}
+
     // Delete admin role
     const { error: deleteError } = await adminClient
       .from('user_roles')
@@ -79,12 +86,12 @@ Deno.serve(async (req) => {
     const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId);
     if (authDeleteError) {
       console.error('Failed to delete auth user:', authDeleteError.message);
-      // Role was already removed, so return partial success
     }
 
-    // Clean up any invites for this user's email
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    // User is already deleted, so we can't look them up — that's fine
+    // Clean up any invites for this user's email  
+    if (targetEmail) {
+      await adminClient.from('admin_invites').delete().eq('email', targetEmail.toLowerCase());
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
