@@ -249,17 +249,6 @@ export function AdminUsersManager() {
           )}
         </CardContent>
       </Card>
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" /> {t('adminRemoveBtn')}
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
