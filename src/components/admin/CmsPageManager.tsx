@@ -232,7 +232,10 @@ export function CmsPageManager() {
           </Tabs>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>{saving ? t('adminSaving') : t('cmsSaveBtn')}</Button>
+            <Button onClick={handleSave} disabled={saving} className="gap-2">
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t('cmsSaveBtn')}
+            </Button>
             <Button variant="outline" onClick={() => { setEditingPage(null); setIsNew(false); }} disabled={saving}>{t('cmsCancelBtn')}</Button>
           </div>
         </CardContent>
