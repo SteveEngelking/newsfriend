@@ -326,6 +326,9 @@ export const translations = {
     adminCurrentAdmins: 'Current Admins',
     adminRemoveBtn: 'Remove',
     adminRemoved: 'Admin removed',
+    adminRemoveConfirm: 'Are you sure you want to remove this admin?',
+    adminNoAdmins: 'No admins found',
+    adminYou: 'you',
 
     // Ethical Perspectives Manager
     ethicalPerspectivesTitle: 'Ethical Perspectives',
@@ -673,6 +676,9 @@ export const translations = {
     adminCurrentAdmins: 'Aktuelle Admins',
     adminRemoveBtn: 'Entfernen',
     adminRemoved: 'Admin entfernt',
+    adminRemoveConfirm: 'Möchten Sie diesen Admin wirklich entfernen?',
+    adminNoAdmins: 'Keine Admins gefunden',
+    adminYou: 'Sie',
 
     // Ethical Perspectives Manager
     ethicalPerspectivesTitle: 'Ethische Perspektiven',
