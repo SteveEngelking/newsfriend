@@ -270,6 +270,7 @@ export function CmsPageManager() {
                 <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
+                    <span className="text-base">{page.icon}</span>
                     <span className="font-medium text-sm truncate">{page.title_en}</span>
                     {page.is_system && <Badge variant="secondary" className="text-[10px]">System</Badge>}
                     {!page.published && (

@@ -79,6 +79,22 @@ export function AppSidebar() {
     </SidebarMenuItem>
   );
 
+  const renderEmojiItem = (url: string, label: string, emoji: string) => (
+    <SidebarMenuItem key={url}>
+      <SidebarMenuButton asChild>
+        <NavLink
+          to={url}
+          className="hover:bg-muted/50"
+          activeClassName="bg-muted text-primary font-medium"
+          onClick={handleClick}
+        >
+          <span className="mr-2 text-base leading-none">{emoji}</span>
+          {!collapsed && <span>{label}</span>}
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -89,8 +105,12 @@ export function AppSidebar() {
                 renderItem(item.url, t(item.titleKey), item.icon, item.url === '/')
               )}
               {cmsPages.map((page) => {
-                const Icon = iconMap[page.icon] || FileText;
                 const label = language === 'de' ? (page.title_de || page.title_en) : page.title_en;
+                const isEmoji = !iconMap[page.icon];
+                if (isEmoji) {
+                  return renderEmojiItem(`/page/${page.slug}`, label, page.icon || '📄');
+                }
+                const Icon = iconMap[page.icon];
                 return renderItem(`/page/${page.slug}`, label, Icon);
               })}
               {bottomItems.map((item) =>
