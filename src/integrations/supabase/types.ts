@@ -493,6 +493,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_comments: {
+        Row: {
+          admin_reply: string | null
+          admin_reply_sent: boolean
+          ai_response: string | null
+          created_at: string
+          id: string
+          question: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_reply?: string | null
+          admin_reply_sent?: boolean
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_reply?: string | null
+          admin_reply_sent?: boolean
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
