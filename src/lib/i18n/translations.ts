@@ -826,6 +826,19 @@ export const translations = {
     accountSaved: 'Einstellungen gespeichert',
     accountSaveFailed: 'Einstellungen konnten nicht gespeichert werden',
 
+    // Announcements (Admin)
+    announcementsTitle: 'Ankündigungen',
+    announcementsDesc: 'Ankündigungen erstellen und E-Mail-Benachrichtigungen an Abonnenten senden.',
+    announcementTitlePlaceholder: 'Titel der Ankündigung',
+    announcementContentPlaceholder: 'Inhalt der Ankündigung (optional)',
+    announcementCreateBtn: 'Ankündigung erstellen',
+    announcementCreated: 'Ankündigung erstellt',
+    announcementSendBtn: 'Benachrichtigen',
+    announcementSent: 'Benachrichtigung gesendet',
+    announcementRecipients: 'Abonnenten benachrichtigt',
+    announcementNone: 'Noch keine Ankündigungen.',
+    adminTabAnnouncements: 'Ankündigungen',
+
     language: 'Sprache',
     languageEnglish: 'Englisch',
     languageGerman: 'Deutsch',
