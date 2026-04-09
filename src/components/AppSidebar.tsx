@@ -40,6 +40,7 @@ export function AppSidebar() {
   const { t, language } = useLanguage();
   const [cmsPages, setCmsPages] = useState<CmsNavPage[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
