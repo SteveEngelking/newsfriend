@@ -191,26 +191,36 @@ Deno.serve(async (req) => {
         `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
       ).join('\n\n---\n\n');
 
-      // Generate reports in BOTH languages
+      const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
+      // Generate the schedule's selected language first so immediate runs always prioritize what the user asked for.
       const languages = [
         { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
         { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
-      ];
+      ].sort((a, b) => {
+        if (a.code === preferredLanguage) return -1;
+        if (b.code === preferredLanguage) return 1;
+        return 0;
+      });
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
       const ethicalPerspectives = schweitzerEnabled ? allEthicalPerspectives : [];
+      const prioritizedEthicalPerspectives = preferredLanguage === 'de'
+        ? ethicalPerspectives.slice(0, 8)
+        : ethicalPerspectives;
 
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
 
+      const generatedLanguages: string[] = [];
+
       const generateForLang = async (lang: typeof languages[0]) => {
         // Build ethical instruction dynamically
         let ethicalInstruction = '';
-        if (ethicalPerspectives.length > 0) {
+        if (prioritizedEthicalPerspectives.length > 0) {
           ethicalInstruction = `\n\nETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):\n\n`;
-          ethicalPerspectives.forEach((p, i) => {
+          prioritizedEthicalPerspectives.forEach((p, i) => {
             const key = toFieldKey(p.name);
             ethicalInstruction += `${i + 1}. "${key}" — ${p.prompt_instruction}\n\n`;
           });
@@ -219,7 +229,7 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
         // Build ethical tool schema properties dynamically
         const ethicalProperties: Record<string, any> = {};
         const ethicalRequired: string[] = [];
-        for (const p of ethicalPerspectives) {
+        for (const p of prioritizedEthicalPerspectives) {
           const key = toFieldKey(p.name);
           ethicalProperties[key] = { type: 'string', description: `${p.name} — ethical analysis` };
           ethicalRequired.push(key);
@@ -239,7 +249,7 @@ CRITICAL RULES:
 - You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${ethicalPerspectives.length > 0 ? ` Include ethical considerations from ${ethicalPerspectives.length} perspectives at the end.` : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
+        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${prioritizedEthicalPerspectives.length > 0 ? ` Include ethical considerations from ${prioritizedEthicalPerspectives.length} perspectives at the end.` : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
         const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -338,7 +348,7 @@ CRITICAL RULES:
         // Build ethical considerations array dynamically
         const ethicalConsiderations: any[] = [];
         const legacyFields: Record<string, any> = {};
-        for (const p of ethicalPerspectives) {
+        for (const p of prioritizedEthicalPerspectives) {
           const key = toFieldKey(p.name);
           if (parsed[key]) {
             ethicalConsiderations.push({ id: p.id, name: p.name, content: parsed[key] });
@@ -368,6 +378,7 @@ CRITICAL RULES:
         if (insertErr) {
           console.error(`Failed to store ${lang.code} report:`, insertErr);
         } else {
+          generatedLanguages.push(lang.code);
           console.log(`Schedule ${schedule.id}: ${lang.code} report stored`);
         }
       };
@@ -381,13 +392,20 @@ CRITICAL RULES:
         }
       }
 
-      // Update last_run_at
-      await supabase
-        .from('report_schedules')
-        .update({ last_run_at: now.toISOString() })
-        .eq('id', schedule.id);
+      if (generatedLanguages.includes(preferredLanguage)) {
+        await supabase
+          .from('report_schedules')
+          .update({ last_run_at: now.toISOString() })
+          .eq('id', schedule.id);
+      } else {
+        console.error(`Schedule ${schedule.id}: preferred language ${preferredLanguage} was not generated`);
+      }
 
-      results.push(`Schedule ${schedule.id}: reports generated in EN+DE`);
+      if (generatedLanguages.length > 0) {
+        results.push(`Schedule ${schedule.id}: generated ${generatedLanguages.join('+')}`);
+      } else {
+        results.push(`Schedule ${schedule.id}: no reports generated`);
+      }
     }
 
     return new Response(
