@@ -116,6 +116,10 @@ const Account = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>{t('accountEmailLabel')}</Label>
+            <Input value={session.user.email} disabled className="bg-muted" />
+          </div>
+          <div className="space-y-2">
             <Label>{t('registerNamePlaceholder')}</Label>
             <Input value={displayName} onChange={e => setDisplayName(e.target.value)} />
           </div>
