@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
+import { Home, Settings, Building2, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,37 +21,41 @@ interface CmsNavPage {
   title_en: string;
   title_de: string;
   icon: string;
-  nav_order: number;
 }
 
-const staticItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
-  { titleKey: 'navLatestNews', url: '/', icon: Home },
-  { titleKey: 'navSupportUs', url: '/support', icon: Heart },
-];
+interface NavOrderItem {
+  item_key: string;
+  sort_order: number;
+  visible: boolean;
+}
 
-const bottomItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
-  { titleKey: 'navAdmin', url: '/admin', icon: Settings },
-  { titleKey: 'navImpressum', url: '/impressum', icon: Building2 },
-];
+const STATIC_CONFIG: Record<string, { titleKey: TranslationKey; url: string; icon: typeof Home; end?: boolean }> = {
+  home: { titleKey: 'navLatestNews', url: '/', icon: Home, end: true },
+  support: { titleKey: 'navSupportUs', url: '/support', icon: Heart },
+  comments: { titleKey: 'navComments', url: '/comments', icon: MessageSquare },
+  admin: { titleKey: 'navAdmin', url: '/admin', icon: Settings },
+  impressum: { titleKey: 'navImpressum', url: '/impressum', icon: Building2 },
+};
 
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { t, language } = useLanguage();
-  const [cmsPages, setCmsPages] = useState<CmsNavPage[]>([]);
+  const [cmsPages, setCmsPages] = useState<Record<string, CmsNavPage>>({});
+  const [navOrder, setNavOrder] = useState<NavOrderItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from('cms_pages')
-      .select('slug, title_en, title_de, icon, nav_order')
-      .eq('published', true)
-      .eq('show_in_nav', true)
-      .order('nav_order', { ascending: true })
-      .then(({ data }) => {
-        if (data) setCmsPages(data as unknown as CmsNavPage[]);
-      });
+    Promise.all([
+      supabase.from('nav_menu_order').select('item_key, sort_order, visible').order('sort_order'),
+      supabase.from('cms_pages').select('slug, title_en, title_de, icon').eq('published', true).eq('show_in_nav', true),
+    ]).then(([navRes, cmsRes]) => {
+      if (navRes.data) setNavOrder(navRes.data as unknown as NavOrderItem[]);
+      const map: Record<string, CmsNavPage> = {};
+      (cmsRes.data ?? []).forEach((p: any) => { map[`cms:${p.slug}`] = p; });
+      setCmsPages(map);
+    });
   }, []);
 
   useEffect(() => {
@@ -78,13 +82,7 @@ export function AppSidebar() {
   const renderItem = (url: string, label: string, Icon: typeof Home, end?: boolean) => (
     <SidebarMenuItem key={url}>
       <SidebarMenuButton asChild>
-        <NavLink
-          to={url}
-          end={end}
-          className="hover:bg-muted/50"
-          activeClassName="bg-muted text-primary font-medium"
-          onClick={handleClick}
-        >
+        <NavLink to={url} end={end} className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium" onClick={handleClick}>
           <Icon className="mr-2 h-4 w-4" />
           {!collapsed && <span>{label}</span>}
         </NavLink>
@@ -95,12 +93,7 @@ export function AppSidebar() {
   const renderEmojiItem = (url: string, label: string, iconValue: string) => (
     <SidebarMenuItem key={url}>
       <SidebarMenuButton asChild>
-        <NavLink
-          to={url}
-          className="hover:bg-muted/50"
-          activeClassName="bg-muted text-primary font-medium"
-          onClick={handleClick}
-        >
+        <NavLink to={url} className="hover:bg-muted/50" activeClassName="bg-muted text-primary font-medium" onClick={handleClick}>
           <span className="mr-2"><RenderIcon value={iconValue} className="h-4 w-4" /></span>
           {!collapsed && <span>{label}</span>}
         </NavLink>
@@ -108,30 +101,64 @@ export function AppSidebar() {
     </SidebarMenuItem>
   );
 
+  const renderNavItem = (item: NavOrderItem) => {
+    if (!item.visible) return null;
+
+    // Account item - special handling for login state
+    if (item.item_key === 'account') {
+      if (isLoggedIn) {
+        return renderItem('/account', displayName || t('navAccount'), User);
+      } else {
+        return (
+          <>
+            {renderItem('/register', t('navRegister'), UserPlus)}
+            {renderItem('/login', t('navLogin'), LogIn)}
+          </>
+        );
+      }
+    }
+
+    // Static items
+    const config = STATIC_CONFIG[item.item_key];
+    if (config) {
+      return renderItem(config.url, t(config.titleKey), config.icon, config.end);
+    }
+
+    // CMS pages
+    const page = cmsPages[item.item_key];
+    if (page) {
+      const label = language === 'de' ? (page.title_de || page.title_en) : page.title_en;
+      return renderEmojiItem(`/page/${page.slug}`, label, page.icon || '📄');
+    }
+
+    return null;
+  };
+
+  // Fallback if nav_menu_order is empty (first load before seeding)
+  const hasOrder = navOrder.length > 0;
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {staticItems.map((item) =>
-                renderItem(item.url, t(item.titleKey), item.icon, item.url === '/')
-              )}
-              {cmsPages.map((page) => {
-                const label = language === 'de' ? (page.title_de || page.title_en) : page.title_en;
-                return renderEmojiItem(`/page/${page.slug}`, label, page.icon || '📄');
-              })}
-              {renderItem('/comments', t('navComments'), MessageSquare)}
-              {isLoggedIn
-                ? renderItem('/account', displayName || t('navAccount'), User)
-                : <>
-                    {renderItem('/register', t('navRegister'), UserPlus)}
-                    {renderItem('/login', t('navLogin'), LogIn)}
+              {hasOrder
+                ? navOrder.map((item) => <span key={item.item_key}>{renderNavItem(item)}</span>)
+                : (
+                  <>
+                    {renderItem('/', t('navLatestNews'), Home, true)}
+                    {renderItem('/support', t('navSupportUs'), Heart)}
+                    {renderItem('/comments', t('navComments'), MessageSquare)}
+                    {isLoggedIn
+                      ? renderItem('/account', displayName || t('navAccount'), User)
+                      : <>{renderItem('/register', t('navRegister'), UserPlus)}{renderItem('/login', t('navLogin'), LogIn)}</>
+                    }
+                    {renderItem('/admin', t('navAdmin'), Settings)}
+                    {renderItem('/impressum', t('navImpressum'), Building2)}
                   </>
+                )
               }
-              {bottomItems.map((item) =>
-                renderItem(item.url, t(item.titleKey), item.icon)
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

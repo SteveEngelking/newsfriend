@@ -198,15 +198,6 @@ export function CmsPageManager() {
               />
               <Label>{t('cmsShowInNav')}</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Label>{t('cmsNavOrder')}</Label>
-              <Input
-                type="number"
-                className="w-20"
-                value={editingPage.nav_order}
-                onChange={e => setEditingPage({ ...editingPage, nav_order: parseInt(e.target.value) || 0 })}
-              />
-            </div>
           </div>
 
           <Tabs defaultValue="en">
