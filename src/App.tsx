@@ -15,6 +15,9 @@ import Impressum from "./pages/Impressum";
 import CmsPage from "./pages/CmsPage";
 import SupportUs from "./pages/SupportUs";
 import DonationThankYou from "./pages/DonationThankYou";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -39,6 +42,9 @@ const App = () => (
               <Route path="/impressum" element={<Impressum />} />
               <Route path="/support" element={<SupportUs />} />
               <Route path="/donation-thank-you" element={<DonationThankYou />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/page/:slug" element={<CmsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
