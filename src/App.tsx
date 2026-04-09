@@ -14,6 +14,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import Impressum from "./pages/Impressum";
 import CmsPage from "./pages/CmsPage";
 import SupportUs from "./pages/SupportUs";
+import DonationThankYou from "./pages/DonationThankYou";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/impressum" element={<Impressum />} />
               <Route path="/support" element={<SupportUs />} />
+              <Route path="/donation-thank-you" element={<DonationThankYou />} />
               <Route path="/page/:slug" element={<CmsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
