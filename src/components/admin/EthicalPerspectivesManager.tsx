@@ -33,7 +33,7 @@ export function EthicalPerspectivesManager() {
   const [editData, setEditData] = useState<Partial<EthicalPerspective>>({});
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newIcon, setNewIcon] = useState('🌿');
+  const [newIcon, setNewIcon] = useState('Leaf');
   const [newDescription, setNewDescription] = useState('');
   const [newPrompt, setNewPrompt] = useState('');
   const { toast } = useToast();
@@ -88,7 +88,7 @@ export function EthicalPerspectivesManager() {
     try {
       const { error } = await supabase.from('ethical_perspectives').insert({
         name: newName.trim(),
-        icon: newIcon.trim() || '🌿',
+        icon: newIcon.trim() || 'Leaf',
         description: newDescription.trim(),
         prompt_instruction: newPrompt.trim(),
         sort_order: perspectives.length,
@@ -97,7 +97,7 @@ export function EthicalPerspectivesManager() {
         toast({ title: t('adminError'), description: error.message, variant: 'destructive' });
       } else {
         setNewName('');
-        setNewIcon('🌿');
+        setNewIcon('Leaf');
         setNewDescription('');
         setNewPrompt('');
         await loadPerspectives();
