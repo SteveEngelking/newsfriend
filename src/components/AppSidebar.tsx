@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart, UserPlus, LogIn, User } from 'lucide-react';
+import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,6 +117,7 @@ export function AppSidebar() {
                 const label = language === 'de' ? (page.title_de || page.title_en) : page.title_en;
                 return renderEmojiItem(`/page/${page.slug}`, label, page.icon || '📄');
               })}
+              {renderItem('/comments', t('navComments'), MessageSquare)}
               {isLoggedIn
                 ? renderItem('/account', t('navAccount'), User)
                 : <>
