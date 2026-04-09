@@ -27,7 +27,7 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_CHECKOUT_KEY");
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || Deno.env.get("STRIPE_CHECKOUT_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_CHECKOUT_KEY is not configured");
     }
