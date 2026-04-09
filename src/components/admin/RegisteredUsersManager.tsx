@@ -72,8 +72,8 @@ export function RegisteredUsersManager() {
     setDeletingId(userId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('remove-admin', {
-        body: { userId, deleteAuthUser: true },
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (error) throw error;
