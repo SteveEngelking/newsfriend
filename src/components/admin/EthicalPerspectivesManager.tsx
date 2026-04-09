@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { IconPicker, getIconComponent } from '@/components/IconPicker';
+import { IconPicker } from '@/components/IconPicker';
 
 interface EthicalPerspective {
   id: string;
@@ -33,7 +33,7 @@ export function EthicalPerspectivesManager() {
   const [editData, setEditData] = useState<Partial<EthicalPerspective>>({});
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newIcon, setNewIcon] = useState('Leaf');
+  const [newIcon, setNewIcon] = useState('🌿');
   const [newDescription, setNewDescription] = useState('');
   const [newPrompt, setNewPrompt] = useState('');
   const { toast } = useToast();
@@ -88,7 +88,7 @@ export function EthicalPerspectivesManager() {
     try {
       const { error } = await supabase.from('ethical_perspectives').insert({
         name: newName.trim(),
-        icon: newIcon.trim() || 'Leaf',
+        icon: newIcon.trim() || '🌿',
         description: newDescription.trim(),
         prompt_instruction: newPrompt.trim(),
         sort_order: perspectives.length,
@@ -97,7 +97,7 @@ export function EthicalPerspectivesManager() {
         toast({ title: t('adminError'), description: error.message, variant: 'destructive' });
       } else {
         setNewName('');
-        setNewIcon('Leaf');
+        setNewIcon('🌿');
         setNewDescription('');
         setNewPrompt('');
         await loadPerspectives();
@@ -210,7 +210,7 @@ export function EthicalPerspectivesManager() {
                     <>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate flex items-center gap-1.5">
-                          {(() => { const IC = getIconComponent(p.icon); return <IC className="h-4 w-4 text-primary shrink-0" />; })()}
+                          <span className="text-base shrink-0">{p.icon}</span>
                           {p.name}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{p.description}</p>

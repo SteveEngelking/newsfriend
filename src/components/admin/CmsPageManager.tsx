@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { IconPicker, getIconComponent } from '@/components/IconPicker';
+import { IconPicker } from '@/components/IconPicker';
 
 interface CmsPage {
   id: string;
