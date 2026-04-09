@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { IconPicker, getIconComponent } from '@/components/IconPicker';
+import { IconPicker } from '@/components/IconPicker';
 
 interface EthicalPerspective {
   id: string;
