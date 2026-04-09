@@ -349,6 +349,30 @@ export type Database = {
         }
         Relationships: []
       }
+      nav_menu_order: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          sort_order: number
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          sort_order?: number
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          sort_order?: number
+          visible?: boolean
+        }
+        Relationships: []
+      }
       news_sources: {
         Row: {
           created_at: string
