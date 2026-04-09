@@ -372,8 +372,14 @@ CRITICAL RULES:
         }
       };
 
-      // Run both languages in parallel
-      await Promise.allSettled(languages.map(lang => generateForLang(lang)));
+      // Run languages sequentially to avoid timeout under heavy ethical perspectives load
+      for (const lang of languages) {
+        try {
+          await generateForLang(lang);
+        } catch (langErr) {
+          console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr);
+        }
+      }
 
       // Update last_run_at
       await supabase
