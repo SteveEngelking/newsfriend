@@ -88,9 +88,9 @@ Deno.serve(async (req) => {
       await adminClient.from('admin_invites').delete().eq('email', targetEmail.toLowerCase())
     }
 
-    // Delete the auth user
+    // Delete the auth user (may already be gone for orphaned profiles)
     const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(targetUserId)
-    if (authDeleteError) {
+    if (authDeleteError && !authDeleteError.message.includes('not found')) {
       console.error('Failed to delete auth user:', authDeleteError.message)
       return new Response(JSON.stringify({ error: 'Failed to delete user: ' + authDeleteError.message }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
