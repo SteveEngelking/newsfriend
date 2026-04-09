@@ -130,14 +130,14 @@ export function RegisteredUsersManager() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         {user.notify_daily_reports ? (
-                          <Bell className="h-3.5 w-3.5 text-primary" title="Daily reports" />
+                          <Bell className="h-3.5 w-3.5 text-primary" />
                         ) : (
-                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" title="Daily reports off" />
+                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />
                         )}
                         {user.notify_announcements ? (
-                          <Bell className="h-3.5 w-3.5 text-primary" title="Announcements" />
+                          <Bell className="h-3.5 w-3.5 text-primary" />
                         ) : (
-                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" title="Announcements off" />
+                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />
                         )}
                       </div>
                     </TableCell>
