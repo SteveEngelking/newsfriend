@@ -37,7 +37,7 @@ const SupportUs = () => {
           amount: numAmount,
           currency,
           recurring,
-          successUrl: `${window.location.origin}/support?success=true`,
+          successUrl: `${window.location.origin}/donation-thank-you`,
           cancelUrl: `${window.location.origin}/support?cancelled=true`,
         },
       });
