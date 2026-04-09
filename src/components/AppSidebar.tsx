@@ -40,6 +40,7 @@ export function AppSidebar() {
   const { t, language } = useLanguage();
   const [cmsPages, setCmsPages] = useState<CmsNavPage[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -54,11 +55,18 @@ export function AppSidebar() {
   }, []);
 
   useEffect(() => {
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase.from('profiles').select('display_name').eq('user_id', userId).maybeSingle();
+      setDisplayName(data?.display_name || null);
+    };
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
+      if (session?.user?.id) fetchProfile(session.user.id);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
+      if (session?.user?.id) fetchProfile(session.user.id);
+      else setDisplayName(null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -115,7 +123,7 @@ export function AppSidebar() {
               })}
               {renderItem('/comments', t('navComments'), MessageSquare)}
               {isLoggedIn
-                ? renderItem('/account', t('navAccount'), User)
+                ? renderItem('/account', displayName || t('navAccount'), User)
                 : <>
                     {renderItem('/register', t('navRegister'), UserPlus)}
                     {renderItem('/login', t('navLogin'), LogIn)}
