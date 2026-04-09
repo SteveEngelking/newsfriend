@@ -172,12 +172,12 @@ export function EthicalPerspectivesManager() {
                   {editingId === p.id ? (
                     <div className="flex-1 space-y-2 min-w-0">
                       <div className="flex gap-2">
-                        <Input
-                          value={editData.icon || ''}
-                          onChange={e => setEditData(d => ({ ...d, icon: e.target.value }))}
-                          className="w-16 text-sm h-8"
-                          placeholder="Icon"
-                        />
+                        <div className="w-36">
+                          <IconPicker
+                            value={editData.icon || ''}
+                            onChange={v => setEditData(d => ({ ...d, icon: v }))}
+                          />
+                        </div>
                         <Input
                           value={editData.name || ''}
                           onChange={e => setEditData(d => ({ ...d, name: e.target.value }))}
@@ -209,8 +209,9 @@ export function EthicalPerspectivesManager() {
                   ) : (
                     <>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {p.icon} {p.name}
+                        <p className="text-sm font-medium truncate flex items-center gap-1.5">
+                          {(() => { const IC = getIconComponent(p.icon); return <IC className="h-4 w-4 text-primary shrink-0" />; })()}
+                          {p.name}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{p.description}</p>
                       </div>
@@ -237,7 +238,9 @@ export function EthicalPerspectivesManager() {
             <div className="border rounded-md p-3 space-y-2 bg-muted/20">
               <p className="text-sm font-medium">{t('ethicalAddNew')}</p>
               <div className="flex gap-2">
-                <Input placeholder="Icon (emoji)" value={newIcon} onChange={e => setNewIcon(e.target.value)} className="w-20 text-sm" />
+                <div className="w-36">
+                  <IconPicker value={newIcon} onChange={setNewIcon} />
+                </div>
                 <Input placeholder={t('ethicalNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 text-sm" />
               </div>
               <Input placeholder={t('ethicalDescPlaceholder')} value={newDescription} onChange={e => setNewDescription(e.target.value)} className="text-sm" />
