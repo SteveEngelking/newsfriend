@@ -13,9 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const stripeKey = Deno.env.get("STRIPE_CHECKOUT_KEY");
+    console.log("STRIPE_CHECKOUT_KEY prefix:", stripeKey?.substring(0, 12), "length:", stripeKey?.length);
     if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY is not configured");
+      throw new Error("STRIPE_CHECKOUT_KEY is not configured");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
