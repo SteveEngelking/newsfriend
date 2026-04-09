@@ -103,7 +103,6 @@ export function CmsPageManager() {
   };
 
   const handleDelete = async (page: CmsPage) => {
-    if (page.is_system) return;
     if (!confirm(t('cmsDeleteConfirm'))) return;
     const { error } = await supabase.from('cms_pages').delete().eq('id', page.id);
     if (error) {
@@ -285,11 +284,9 @@ export function CmsPageManager() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingPage(page); setIsNew(false); }}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  {!page.is_system && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(page)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(page)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </div>
             ))}
