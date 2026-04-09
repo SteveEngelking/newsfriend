@@ -9,7 +9,8 @@ import { CmsPageManager } from '@/components/admin/CmsPageManager';
 import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
 import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManager';
 import { CommentsManager } from '@/components/admin/CommentsManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare } from 'lucide-react';
+import { NavOrderManager } from '@/components/admin/NavOrderManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -22,7 +23,7 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-9">
+      <TabsList className="grid w-full grid-cols-10">
         <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
@@ -30,6 +31,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <TabsTrigger value="registered" className="gap-1.5 text-xs sm:text-sm">
           <UserCheck className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabRegistered')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="navigation" className="gap-1.5 text-xs sm:text-sm">
+          <Menu className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabNavigation') || 'Menu'}</span>
         </TabsTrigger>
         <TabsTrigger value="pages" className="gap-1.5 text-xs sm:text-sm">
           <Layout className="h-3.5 w-3.5" />
@@ -67,6 +72,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="registered">
         <RegisteredUsersManager />
+      </TabsContent>
+
+      <TabsContent value="navigation">
+        <NavOrderManager />
       </TabsContent>
 
       <TabsContent value="pages">
