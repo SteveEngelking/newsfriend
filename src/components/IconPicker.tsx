@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { icons } from 'lucide-react';
+import React from 'react';
 
 const EMOJI_ICONS = [
   '🌿', '✝', '🧭', '☸', '🪷', '☪', '✡', '⛩', '🙏', '☮',
@@ -9,7 +11,13 @@ const EMOJI_ICONS = [
   '✨', '🌟', '🌙', '☀', '🏛', '🎓', '🤝', '👁', '🗝', '🧘',
   '🌺', '🌸', '⚡', '🦋', '🐚', '🏔', '🌊', '🍃', '💎', '🔔',
   '📜', '🪶', '🎭', '🎵', '🌈', '🕯', '⭐', '🧿', '🫂', '💫',
+  '📄', '🌐', '🛡', '🍪', '🏢', 'ℹ', '⚙', '💬', '🎯', '📰',
 ];
+
+// Check if a string is a Lucide icon name
+function isLucideIconName(value: string): boolean {
+  return value in icons;
+}
 
 interface IconPickerProps {
   value: string;
@@ -24,7 +32,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="h-9 w-full justify-start gap-2 text-sm font-normal">
-          <span className="text-lg">{value || '🌿'}</span>
+          <RenderIcon value={value} className="h-4 w-4" />
           <span className="text-muted-foreground text-xs">Change icon</span>
         </Button>
       </PopoverTrigger>
@@ -61,4 +69,16 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       </PopoverContent>
     </Popover>
   );
+}
+
+/** Renders an icon - handles both emoji strings and Lucide icon names */
+export function RenderIcon({ value, className }: { value: string; className?: string }) {
+  if (!value) return <span className="text-base">📄</span>;
+  
+  if (isLucideIconName(value)) {
+    const LucideIcon = icons[value as keyof typeof icons];
+    return <LucideIcon className={className || "h-4 w-4"} />;
+  }
+  
+  return <span className="text-base leading-none">{value}</span>;
 }
