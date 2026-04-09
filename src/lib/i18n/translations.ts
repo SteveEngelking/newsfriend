@@ -253,6 +253,7 @@ export const translations = {
 
     // Schweitzer / Ethical
     schweitzerLabel: 'Ethical Considerations',
+    ethicalConsiderationsHeading: 'Ethical Considerations',
     schweitzerDesc: 'Include ethical considerations based on the teachings of major thinkers and traditions.',
     schweitzerEthicalTitle: 'Ethical Consideration — Albert Schweitzer',
     ethicalJesusTitle: 'Ethical Consideration — Jesus of Nazareth',
@@ -605,6 +606,7 @@ export const translations = {
     mondcivitanReflectionTitle: 'Mondcivitan-Reflexion',
 
     schweitzerLabel: 'Ethische Betrachtungen',
+    ethicalConsiderationsHeading: 'Ethische Betrachtungen',
     schweitzerDesc: 'Ethische Betrachtungen basierend auf den Lehren bedeutender Denker und Traditionen hinzufügen.',
     schweitzerEthicalTitle: 'Ethische Betrachtung — Albert Schweitzer',
     ethicalJesusTitle: 'Ethische Betrachtung — Jesus von Nazareth',

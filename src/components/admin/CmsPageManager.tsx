@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { IconPicker, getIconComponent } from '@/components/IconPicker';
 
 interface CmsPage {
   id: string;
@@ -159,10 +160,9 @@ export function CmsPageManager() {
             </div>
             <div className="space-y-2">
               <Label>{t('cmsIcon')}</Label>
-              <Input
+              <IconPicker
                 value={editingPage.icon}
-                onChange={e => setEditingPage({ ...editingPage, icon: e.target.value })}
-                placeholder="FileText"
+                onChange={icon => setEditingPage({ ...editingPage, icon })}
               />
             </div>
           </div>

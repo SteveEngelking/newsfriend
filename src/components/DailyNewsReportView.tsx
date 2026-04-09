@@ -186,19 +186,24 @@ export function DailyNewsReportView({ report }: Props) {
           <p className="text-base leading-relaxed whitespace-pre-line">{report.conclusion}</p>
         </section>
 
-        {ethicalItems.map((item, idx) => (
-          <section key={idx} className={`${item.customBg ? '' : item.bgClass} rounded-lg p-6 mt-4 border ${item.customBorder ? '' : item.borderClass}`}
-            style={item.customBg ? { backgroundColor: item.customBg, borderColor: item.customBorder } : undefined}>
-            <h2 className={`text-lg font-bold mb-3 ${item.customHeading ? '' : item.headingClass}`}
-              style={item.customHeading ? { color: item.customHeading } : undefined}>
-              {item.icon} Ethical Consideration — {item.name}
-            </h2>
-            <p className={`text-base leading-relaxed whitespace-pre-line ${item.customText ? '' : item.textClass}`}
-              style={item.customText ? { color: item.customText } : undefined}>
-              {item.content}
-            </p>
-          </section>
-        ))}
+        {ethicalItems.length > 0 && (
+          <>
+            <h2 className="text-xl font-bold mt-8 mb-2">{t('ethicalConsiderationsHeading')}</h2>
+            {ethicalItems.map((item, idx) => (
+              <section key={idx} className={`${item.customBg ? '' : item.bgClass} rounded-lg p-6 mt-4 border ${item.customBorder ? '' : item.borderClass}`}
+                style={item.customBg ? { backgroundColor: item.customBg, borderColor: item.customBorder } : undefined}>
+                <h3 className={`text-lg font-bold mb-3 ${item.customHeading ? '' : item.headingClass}`}
+                  style={item.customHeading ? { color: item.customHeading } : undefined}>
+                  {item.icon} {item.name}
+                </h3>
+                <p className={`text-base leading-relaxed whitespace-pre-line ${item.customText ? '' : item.textClass}`}
+                  style={item.customText ? { color: item.customText } : undefined}>
+                  {item.content}
+                </p>
+              </section>
+            ))}
+          </>
+        )}
 
         <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p>{t('dailyFooter1')}</p>
