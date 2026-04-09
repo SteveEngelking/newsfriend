@@ -392,13 +392,18 @@ CRITICAL RULES:
         }
       }
 
-      if (generatedLanguages.includes(preferredLanguage)) {
-        await supabase
+      if (generatedLanguages.length > 0) {
+        const { error: updateErr } = await supabase
           .from('report_schedules')
           .update({ last_run_at: now.toISOString() })
           .eq('id', schedule.id);
+        if (updateErr) {
+          console.error(`Schedule ${schedule.id}: failed to update last_run_at:`, updateErr);
+        } else {
+          console.log(`Schedule ${schedule.id}: last_run_at updated to ${now.toISOString()}`);
+        }
       } else {
-        console.error(`Schedule ${schedule.id}: preferred language ${preferredLanguage} was not generated`);
+        console.error(`Schedule ${schedule.id}: no reports generated at all`);
       }
 
       if (generatedLanguages.length > 0) {
