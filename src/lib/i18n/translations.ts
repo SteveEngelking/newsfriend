@@ -416,6 +416,19 @@ export const translations = {
     accountSaved: 'Settings saved',
     accountSaveFailed: 'Failed to save settings',
 
+    // Announcements (Admin)
+    announcementsTitle: 'Announcements',
+    announcementsDesc: 'Create announcements and send email notifications to subscribed users.',
+    announcementTitlePlaceholder: 'Announcement title',
+    announcementContentPlaceholder: 'Announcement content (optional)',
+    announcementCreateBtn: 'Create Announcement',
+    announcementCreated: 'Announcement created',
+    announcementSendBtn: 'Notify',
+    announcementSent: 'Notification sent',
+    announcementRecipients: 'subscribers notified',
+    announcementNone: 'No announcements yet.',
+    adminTabAnnouncements: 'Announcements',
+
     language: 'Language',
     languageEnglish: 'English',
     languageGerman: 'German',
