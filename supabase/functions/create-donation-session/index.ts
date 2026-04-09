@@ -16,6 +16,10 @@ serve(async (req) => {
     if (!STRIPE_SECRET_KEY) {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
+    if (!STRIPE_SECRET_KEY.startsWith("sk_live_") && !STRIPE_SECRET_KEY.startsWith("sk_test_")) {
+      console.error("Invalid key prefix:", STRIPE_SECRET_KEY.substring(0, 8));
+      throw new Error("STRIPE_SECRET_KEY has invalid format — must start with sk_live_ or sk_test_");
+    }
 
     const { amount, currency, recurring, successUrl, cancelUrl } = await req.json();
 
