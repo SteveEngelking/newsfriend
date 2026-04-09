@@ -65,7 +65,7 @@ serve(async (req) => {
       ],
       mode: isRecurring ? "subscription" : "payment",
       ...(!isRecurring ? { submit_type: "donate" } : {}),
-      success_url: successUrl || "https://newsfriend.lovable.app/support?success=true",
+      success_url: successUrl || "https://newsfriend.lovable.app/donation-thank-you",
       cancel_url: cancelUrl || "https://newsfriend.lovable.app/support?cancelled=true",
     });
 
