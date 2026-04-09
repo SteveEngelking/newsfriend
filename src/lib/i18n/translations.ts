@@ -485,6 +485,10 @@ export const translations = {
     commentReplySentLabel: 'Reply sent ✓',
     adminTabComments: 'Comments',
     navComments: 'Comments',
+    adminTabNavigation: 'Menu',
+    navOrderTitle: 'Menu Order',
+    navOrderDesc: 'Drag items to reorder the sidebar navigation.',
+    navOrderSaved: 'Menu order saved',
 
     language: 'Language',
     languageEnglish: 'English',
@@ -951,6 +955,10 @@ export const translations = {
     commentReplySentLabel: 'Antwort gesendet ✓',
     adminTabComments: 'Kommentare',
     navComments: 'Kommentare',
+    adminTabNavigation: 'Menü',
+    navOrderTitle: 'Menüreihenfolge',
+    navOrderDesc: 'Elemente ziehen, um die Seitenleistennavigation neu zu ordnen.',
+    navOrderSaved: 'Menüreihenfolge gespeichert',
 
     language: 'Sprache',
     languageEnglish: 'Englisch',
