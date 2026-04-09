@@ -8,7 +8,8 @@ import { EthicalPerspectivesManager } from '@/components/admin/EthicalPerspectiv
 import { CmsPageManager } from '@/components/admin/CmsPageManager';
 import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
 import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck } from 'lucide-react';
+import { CommentsManager } from '@/components/admin/CommentsManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -21,7 +22,7 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-8">
+      <TabsList className="grid w-full grid-cols-9">
         <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
@@ -49,6 +50,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <TabsTrigger value="announcements" className="gap-1.5 text-xs sm:text-sm">
           <Megaphone className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabAnnouncements')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="comments" className="gap-1.5 text-xs sm:text-sm">
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabComments')}</span>
         </TabsTrigger>
         <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm">
           <FileText className="h-3.5 w-3.5" />
@@ -82,6 +87,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="announcements">
         <AnnouncementsManager />
+      </TabsContent>
+
+      <TabsContent value="comments">
+        <CommentsManager />
       </TabsContent>
 
       <TabsContent value="impressum">
