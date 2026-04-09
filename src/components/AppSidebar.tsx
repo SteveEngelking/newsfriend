@@ -26,15 +26,11 @@ interface CmsNavPage {
 
 const staticItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
   { titleKey: 'navLatestNews', url: '/', icon: Home },
-  { titleKey: 'navAbout', url: '/about', icon: Info },
-  { titleKey: 'navMondcivitanHistory', url: '/mondcivitan-history', icon: Globe },
   { titleKey: 'navSupportUs', url: '/support', icon: Heart },
 ];
 
 const bottomItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
   { titleKey: 'navAdmin', url: '/admin', icon: Settings },
-  { titleKey: 'navPrivacyPolicy', url: '/privacy-policy', icon: Shield },
-  { titleKey: 'navCookiePolicy', url: '/cookie-policy', icon: Cookie },
   { titleKey: 'navImpressum', url: '/impressum', icon: Building2 },
 ];
 
