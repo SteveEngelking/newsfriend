@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { LogOut, User, Bell, Loader2, Save } from 'lucide-react';
+import { LogOut, User, Bell, Loader2, Save, KeyRound, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,10 @@ const Account = () => {
   const [displayName, setDisplayName] = useState('');
   const [notifyDailyReports, setNotifyDailyReports] = useState(true);
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -78,6 +82,49 @@ const Account = () => {
       toast({ title: t('accountSaveFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast({ title: t('accountPasswordTooShort'), variant: 'destructive' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: t('accountPasswordMismatch'), variant: 'destructive' });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: t('accountPasswordChanged') });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast({ title: t('accountPasswordChangeFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm(t('accountDeleteConfirm'))) return;
+    setDeletingAccount(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: {},
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: t('accountDeleted') });
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (err: any) {
+      toast({ title: t('accountDeleteFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -149,6 +196,48 @@ const Account = () => {
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         {t('accountSaveBtn')}
       </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <KeyRound className="h-5 w-5" /> {t('accountPasswordTitle')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('accountNewPassword')}</Label>
+            <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('accountConfirmPassword')}</Label>
+            <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+          </div>
+          <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword} className="w-full gap-2">
+            {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            {t('accountChangePasswordBtn')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-destructive">
+            <Trash2 className="h-5 w-5" /> {t('accountDeleteTitle')}
+          </CardTitle>
+          <CardDescription>{t('accountDeleteDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteAccount}
+            disabled={deletingAccount}
+            className="w-full gap-2"
+          >
+            {deletingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {t('accountDeleteBtn')}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
