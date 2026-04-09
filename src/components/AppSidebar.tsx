@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText } from 'lucide-react';
+import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,7 @@ const staticItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[
   { titleKey: 'navLatestNews', url: '/', icon: Home },
   { titleKey: 'navAbout', url: '/about', icon: Info },
   { titleKey: 'navMondcivitanHistory', url: '/mondcivitan-history', icon: Globe },
+  { titleKey: 'navSupportUs', url: '/support', icon: Heart },
 ];
 
 const bottomItems: { titleKey: TranslationKey; url: string; icon: typeof Home }[] = [
