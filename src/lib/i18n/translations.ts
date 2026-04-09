@@ -388,6 +388,8 @@ export const translations = {
     supportThankYouDesc: 'Your generous donation helps us continue providing independent, AI-powered news analysis for everyone.',
     supportBackBtn: 'Back to Support',
     supportCancelled: 'Donation was cancelled. You can try again whenever you\'re ready.',
+    donationImpactMessage: 'Your support makes a real difference',
+    backToHome: 'Back to Home',
 
     language: 'Language',
     languageEnglish: 'English',
@@ -758,6 +760,8 @@ export const translations = {
     supportThankYouDesc: 'Ihre großzügige Spende hilft uns, weiterhin unabhängige, KI-gestützte Nachrichtenanalysen für alle bereitzustellen.',
     supportBackBtn: 'Zurück zur Unterstützung',
     supportCancelled: 'Die Spende wurde abgebrochen. Sie können es jederzeit erneut versuchen.',
+    donationImpactMessage: 'Ihre Unterstützung macht einen echten Unterschied',
+    backToHome: 'Zurück zur Startseite',
 
     language: 'Sprache',
     languageEnglish: 'Englisch',
