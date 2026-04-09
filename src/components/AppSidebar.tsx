@@ -123,7 +123,7 @@ export function AppSidebar() {
               })}
               {renderItem('/comments', t('navComments'), MessageSquare)}
               {isLoggedIn
-                ? renderItem('/account', t('navAccount'), User)
+                ? renderItem('/account', displayName || t('navAccount'), User)
                 : <>
                     {renderItem('/register', t('navRegister'), UserPlus)}
                     {renderItem('/login', t('navLogin'), LogIn)}
