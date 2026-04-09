@@ -1,19 +1,18 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -27,21 +26,25 @@ serve(async (req) => {
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await callerClient.auth.getUser();
-    if (userError || !user) {
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userId = claimsData.claims.sub;
+    const userEmail = claimsData.claims.email;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     // Check if this user is already admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
 
@@ -55,14 +58,12 @@ serve(async (req) => {
     const { data: invite } = await adminClient
       .from("admin_invites")
       .select("id")
-      .eq("email", user.email)
+      .eq("email", userEmail)
       .is("used_at", null)
       .maybeSingle();
 
     if (invite) {
-      // Grant admin role
-      await adminClient.from("user_roles").insert({ user_id: user.id, role: "admin" });
-      // Mark invite as used
+      await adminClient.from("user_roles").insert({ user_id: userId, role: "admin" });
       await adminClient.from("admin_invites").update({ used_at: new Date().toISOString() }).eq("id", invite.id);
       
       return new Response(JSON.stringify({ isAdmin: true, noAdminsExist: false }), {
