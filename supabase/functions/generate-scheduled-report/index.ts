@@ -191,11 +191,16 @@ Deno.serve(async (req) => {
         `[Article ${i + 1}] Source: ${a.sourceName}\nTitle: ${a.title}\nURL: ${a.url}\nContent:\n${a.content}`
       ).join('\n\n---\n\n');
 
-      // Generate reports in BOTH languages
+      const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
+      // Generate the schedule's selected language first so immediate runs always prioritize what the user asked for.
       const languages = [
         { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
         { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
-      ];
+      ].sort((a, b) => {
+        if (a.code === preferredLanguage) return -1;
+        if (b.code === preferredLanguage) return 1;
+        return 0;
+      });
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
@@ -204,6 +209,8 @@ Deno.serve(async (req) => {
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
 MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
+
+      const generatedLanguages: string[] = [];
 
       const generateForLang = async (lang: typeof languages[0]) => {
         // Build ethical instruction dynamically
@@ -368,6 +375,7 @@ CRITICAL RULES:
         if (insertErr) {
           console.error(`Failed to store ${lang.code} report:`, insertErr);
         } else {
+          generatedLanguages.push(lang.code);
           console.log(`Schedule ${schedule.id}: ${lang.code} report stored`);
         }
       };
@@ -381,13 +389,20 @@ CRITICAL RULES:
         }
       }
 
-      // Update last_run_at
-      await supabase
-        .from('report_schedules')
-        .update({ last_run_at: now.toISOString() })
-        .eq('id', schedule.id);
+      if (generatedLanguages.includes(preferredLanguage)) {
+        await supabase
+          .from('report_schedules')
+          .update({ last_run_at: now.toISOString() })
+          .eq('id', schedule.id);
+      } else {
+        console.error(`Schedule ${schedule.id}: preferred language ${preferredLanguage} was not generated`);
+      }
 
-      results.push(`Schedule ${schedule.id}: reports generated in EN+DE`);
+      if (generatedLanguages.length > 0) {
+        results.push(`Schedule ${schedule.id}: generated ${generatedLanguages.join('+')}`);
+      } else {
+        results.push(`Schedule ${schedule.id}: no reports generated`);
+      }
     }
 
     return new Response(
