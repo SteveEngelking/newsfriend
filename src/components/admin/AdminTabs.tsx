@@ -51,6 +51,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
           <Megaphone className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabAnnouncements')}</span>
         </TabsTrigger>
+        <TabsTrigger value="comments" className="gap-1.5 text-xs sm:text-sm">
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabComments')}</span>
+        </TabsTrigger>
         <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm">
           <FileText className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabImpressum')}</span>
@@ -83,6 +87,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="announcements">
         <AnnouncementsManager />
+      </TabsContent>
+
+      <TabsContent value="comments">
+        <CommentsManager />
       </TabsContent>
 
       <TabsContent value="impressum">
