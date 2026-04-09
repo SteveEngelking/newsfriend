@@ -63,7 +63,7 @@ const Unsubscribe = () => {
           <CardHeader>
             {status === 'loading' && <Loader2 className="h-10 w-10 text-muted-foreground mx-auto mb-2 animate-spin" />}
             {status === 'valid' && <MailX className="h-10 w-10 text-primary mx-auto mb-2" />}
-            {status === 'success' && <CheckCircle className="h-10 w-10 text-green-600 mx-auto mb-2" />}
+            {status === 'success' && <CheckCircle className="h-10 w-10 text-primary mx-auto mb-2" />}
             {status === 'already' && <CheckCircle className="h-10 w-10 text-muted-foreground mx-auto mb-2" />}
             {(status === 'invalid' || status === 'error') && <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-2" />}
 

@@ -7,7 +7,8 @@ import { AdminUsersManager } from '@/components/admin/AdminUsersManager';
 import { EthicalPerspectivesManager } from '@/components/admin/EthicalPerspectivesManager';
 import { CmsPageManager } from '@/components/admin/CmsPageManager';
 import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone } from 'lucide-react';
+import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -20,10 +21,14 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-7">
+      <TabsList className="grid w-full grid-cols-8">
         <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="registered" className="gap-1.5 text-xs sm:text-sm">
+          <UserCheck className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabRegistered')}</span>
         </TabsTrigger>
         <TabsTrigger value="pages" className="gap-1.5 text-xs sm:text-sm">
           <Layout className="h-3.5 w-3.5" />
@@ -53,6 +58,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="users">
         <AdminUsersManager />
+      </TabsContent>
+
+      <TabsContent value="registered">
+        <RegisteredUsersManager />
       </TabsContent>
 
       <TabsContent value="pages">
