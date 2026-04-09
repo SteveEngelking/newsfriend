@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart } from 'lucide-react';
+import { Home, Settings, Shield, Cookie, Building2, Info, Globe, FileText, Heart, UserPlus, LogIn, User } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +43,7 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
   const { t, language } = useLanguage();
   const [cmsPages, setCmsPages] = useState<CmsNavPage[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     supabase
@@ -54,6 +55,16 @@ export function AppSidebar() {
       .then(({ data }) => {
         if (data) setCmsPages(data as unknown as CmsNavPage[]);
       });
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleClick = () => {
@@ -106,6 +117,13 @@ export function AppSidebar() {
                 const label = language === 'de' ? (page.title_de || page.title_en) : page.title_en;
                 return renderEmojiItem(`/page/${page.slug}`, label, page.icon || '📄');
               })}
+              {isLoggedIn
+                ? renderItem('/account', t('navAccount'), User)
+                : <>
+                    {renderItem('/register', t('navRegister'), UserPlus)}
+                    {renderItem('/login', t('navLogin'), LogIn)}
+                  </>
+              }
               {bottomItems.map((item) =>
                 renderItem(item.url, t(item.titleKey), item.icon)
               )}
