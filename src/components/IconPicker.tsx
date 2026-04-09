@@ -2,28 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import {
-  FileText, Globe, Shield, Scale, BookOpen, Heart, Star, Home,
-  Users, Settings, Info, HelpCircle, Mail, Phone, MapPin, Calendar,
-  Clock, Bell, Search, Eye, Lock, Unlock, Award, Flag, Bookmark,
-  Newspaper, Megaphone, Lightbulb, Compass, Zap, Coffee, Music,
-  Camera, Film, Palette, Briefcase, GraduationCap, Landmark, Building,
-  Church, Leaf, Sun, Moon, Cloud, Flame, Droplets, Wind, Mountain,
-  TreePine, Anchor, Plane, Ship, Car, Train, Bike,
-} from 'lucide-react';
-import React from 'react';
 
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
-  FileText, Globe, Shield, Scale, BookOpen, Heart, Star, Home,
-  Users, Settings, Info, HelpCircle, Mail, Phone, MapPin, Calendar,
-  Clock, Bell, Search, Eye, Lock, Unlock, Award, Flag, Bookmark,
-  Newspaper, Megaphone, Lightbulb, Compass, Zap, Coffee, Music,
-  Camera, Film, Palette, Briefcase, GraduationCap, Landmark, Building,
-  Church, Leaf, Sun, Moon, Cloud, Flame, Droplets, Wind, Mountain,
-  TreePine, Anchor, Plane, Ship, Car, Train, Bike,
-};
-
-const ICON_NAMES = Object.keys(ICON_MAP);
+const EMOJI_ICONS = [
+  '🌿', '✝', '🧭', '☸', '🪷', '☪', '✡', '⛩', '🙏', '☮',
+  '🕊', '⚖', '🔥', '💡', '📖', '🌍', '🌏', '🌎', '❤', '🕉',
+  '✨', '🌟', '🌙', '☀', '🏛', '🎓', '🤝', '👁', '🗝', '🧘',
+  '🌺', '🌸', '⚡', '🦋', '🐚', '🏔', '🌊', '🍃', '💎', '🔔',
+  '📜', '🪶', '🎭', '🎵', '🌈', '🕯', '⭐', '🧿', '🫂', '💫',
+];
 
 interface IconPickerProps {
   value: string;
@@ -32,54 +18,47 @@ interface IconPickerProps {
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState('');
-
-  const filtered = filter
-    ? ICON_NAMES.filter(n => n.toLowerCase().includes(filter.toLowerCase()))
-    : ICON_NAMES;
-
-  const SelectedIcon = ICON_MAP[value];
+  const [custom, setCustom] = useState('');
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="h-9 w-full justify-start gap-2 text-sm font-normal">
-          {SelectedIcon ? <SelectedIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-          {value || 'Select icon'}
+          <span className="text-lg">{value || '🌿'}</span>
+          <span className="text-muted-foreground text-xs">Change icon</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-2" align="start">
-        <Input
-          placeholder="Search icons..."
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          className="mb-2 h-8 text-sm"
-        />
-        <div className="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto">
-          {filtered.map(name => {
-            const Icon = ICON_MAP[name];
-            return (
-              <Button
-                key={name}
-                variant={value === name ? 'default' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                title={name}
-                onClick={() => { onChange(name); setOpen(false); }}
-              >
-                <Icon className="h-4 w-4" />
-              </Button>
-            );
-          })}
+        <div className="grid grid-cols-10 gap-1 mb-2">
+          {EMOJI_ICONS.map(emoji => (
+            <Button
+              key={emoji}
+              variant={value === emoji ? 'default' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 text-lg"
+              onClick={() => { onChange(emoji); setOpen(false); }}
+            >
+              {emoji}
+            </Button>
+          ))}
         </div>
-        {filtered.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-2">No icons found</p>
-        )}
+        <div className="flex gap-2 border-t pt-2">
+          <Input
+            placeholder="Custom emoji..."
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            className="h-8 text-sm"
+          />
+          <Button
+            size="sm"
+            className="h-8"
+            disabled={!custom.trim()}
+            onClick={() => { onChange(custom.trim()); setCustom(''); setOpen(false); }}
+          >
+            Use
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
-}
-
-export function getIconComponent(name: string): React.ComponentType<any> {
-  return ICON_MAP[name] || FileText;
 }

@@ -63,7 +63,7 @@ export function RichTextEditor({ content, onChange }: Props) {
 
   return (
     <div className="border border-input rounded-md">
-      <div className="flex flex-wrap gap-1 p-2 bg-muted/30 border-b border-input sticky top-0 z-10 rounded-t-md">
+      <div className="flex flex-wrap gap-1 p-2 bg-muted/30 border-b border-input sticky top-14 z-10 rounded-t-md backdrop-blur-sm bg-muted/80">
         <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
           <Bold className="h-4 w-4" />
         </ToolBtn>
