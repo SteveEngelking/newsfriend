@@ -59,8 +59,8 @@ const SupportUs = () => {
   if (success) {
     return (
       <div className="max-w-lg mx-auto text-center space-y-6 py-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30">
-          <Heart className="h-8 w-8 text-green-600 dark:text-green-400" fill="currentColor" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+          <Heart className="h-8 w-8 text-primary" fill="currentColor" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">{t('supportThankYou')}</h1>
         <p className="text-muted-foreground text-lg">{t('supportThankYouDesc')}</p>
