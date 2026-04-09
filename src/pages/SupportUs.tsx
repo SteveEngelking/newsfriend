@@ -42,12 +42,16 @@ const SupportUs = () => {
         },
       });
 
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
+      if (error) throw new Error(error.message || t('supportError'));
+
+      const checkoutUrl = data?.data?.url ?? data?.url;
+      if (data?.ok === false) {
+        throw new Error(data.error || t('supportError'));
       }
+
+      if (!checkoutUrl) throw new Error('No checkout URL returned');
+
+      window.location.href = checkoutUrl;
     } catch (err: any) {
       console.error('Donation error:', err);
       toast.error(err.message || t('supportError'));
