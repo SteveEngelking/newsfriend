@@ -205,6 +205,9 @@ Deno.serve(async (req) => {
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
       const ethicalPerspectives = schweitzerEnabled ? allEthicalPerspectives : [];
+      const prioritizedEthicalPerspectives = preferredLanguage === 'de'
+        ? ethicalPerspectives.slice(0, 8)
+        : ethicalPerspectives;
 
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
@@ -215,9 +218,9 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
       const generateForLang = async (lang: typeof languages[0]) => {
         // Build ethical instruction dynamically
         let ethicalInstruction = '';
-        if (ethicalPerspectives.length > 0) {
+        if (prioritizedEthicalPerspectives.length > 0) {
           ethicalInstruction = `\n\nETHICAL CONSIDERATIONS: At the END of the report, write SEPARATE ethical consideration fields for EACH of the following thinkers/traditions (2-3 paragraphs each, in ${lang.outputLang}):\n\n`;
-          ethicalPerspectives.forEach((p, i) => {
+          prioritizedEthicalPerspectives.forEach((p, i) => {
             const key = toFieldKey(p.name);
             ethicalInstruction += `${i + 1}. "${key}" — ${p.prompt_instruction}\n\n`;
           });
@@ -226,7 +229,7 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
         // Build ethical tool schema properties dynamically
         const ethicalProperties: Record<string, any> = {};
         const ethicalRequired: string[] = [];
-        for (const p of ethicalPerspectives) {
+        for (const p of prioritizedEthicalPerspectives) {
           const key = toFieldKey(p.name);
           ethicalProperties[key] = { type: 'string', description: `${p.name} — ethical analysis` };
           ethicalRequired.push(key);
@@ -246,7 +249,7 @@ CRITICAL RULES:
 - You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${ethicalPerspectives.length > 0 ? ` Include ethical considerations from ${ethicalPerspectives.length} perspectives at the end.` : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
+        const userPrompt = `TODAY'S DATE IS: ${todayUTC} (UTC). Use this exact date when referring to today in your report. Do NOT guess or use a different date.\n\nAnalyze these articles and produce a critical daily news briefing. ALL output text MUST be in ${lang.outputLang}.${mondcivitanEnabled ? ' Include a Mondcivitan Reflection for each theme.' : ''}${prioritizedEthicalPerspectives.length > 0 ? ` Include ethical considerations from ${prioritizedEthicalPerspectives.length} perspectives at the end.` : ''}\n\n${articlesSummary}\n\nSources: ${sourceNames.join(', ')}\n\nCreate ${themeCount} diverse themes. Translate any non-${lang.outputLang} content.`;
 
         const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -345,7 +348,7 @@ CRITICAL RULES:
         // Build ethical considerations array dynamically
         const ethicalConsiderations: any[] = [];
         const legacyFields: Record<string, any> = {};
-        for (const p of ethicalPerspectives) {
+        for (const p of prioritizedEthicalPerspectives) {
           const key = toFieldKey(p.name);
           if (parsed[key]) {
             ethicalConsiderations.push({ id: p.id, name: p.name, content: parsed[key] });
