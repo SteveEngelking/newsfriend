@@ -15,15 +15,18 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [humanCheck, setHumanCheck] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  const canSubmit = humanCheck && gdprConsent && email && password;
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!humanCheck) return;
+    if (!canSubmit) return;
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
@@ -82,7 +85,7 @@ const Register = () => {
               />
               <Input
                 type="email"
-                placeholder={t('adminEmailPlaceholder')}
+                placeholder={t('registerEmailPlaceholder')}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -95,6 +98,19 @@ const Register = () => {
                 required
                 minLength={6}
               />
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="gdpr-consent"
+                  checked={gdprConsent}
+                  onCheckedChange={(checked) => setGdprConsent(checked === true)}
+                />
+                <label htmlFor="gdpr-consent" className="text-sm leading-tight cursor-pointer select-none">
+                  {t('registerGdprConsent')}{' '}
+                  <Link to="/privacy-policy" className="text-primary underline" target="_blank">
+                    {t('registerGdprLink')}
+                  </Link>.
+                </label>
+              </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="human-check-register"
@@ -105,7 +121,7 @@ const Register = () => {
                   {t('registerCaptcha')}
                 </label>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading || !humanCheck}>
+              <Button type="submit" className="w-full" disabled={isLoading || !canSubmit}>
                 {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('registerSigningUp')}</> : t('registerBtn')}
               </Button>
             </form>
