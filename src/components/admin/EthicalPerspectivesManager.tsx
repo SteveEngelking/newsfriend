@@ -210,7 +210,7 @@ export function EthicalPerspectivesManager() {
                     <>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate flex items-center gap-1.5">
-                          {(() => { const IC = getIconComponent(p.icon); return <IC className="h-4 w-4 text-primary shrink-0" />; })()}
+                          <span className="text-base shrink-0">{p.icon}</span>
                           {p.name}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{p.description}</p>
