@@ -6,7 +6,8 @@ import { ImpressumEditor } from '@/components/ImpressumEditor';
 import { AdminUsersManager } from '@/components/admin/AdminUsersManager';
 import { EthicalPerspectivesManager } from '@/components/admin/EthicalPerspectivesManager';
 import { CmsPageManager } from '@/components/admin/CmsPageManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout } from 'lucide-react';
+import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -19,7 +20,7 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-7">
         <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
@@ -39,6 +40,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <TabsTrigger value="ethics" className="gap-1.5 text-xs sm:text-sm">
           <Scale className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabEthics')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="announcements" className="gap-1.5 text-xs sm:text-sm">
+          <Megaphone className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabAnnouncements')}</span>
         </TabsTrigger>
         <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm">
           <FileText className="h-3.5 w-3.5" />
@@ -64,6 +69,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="ethics">
         <EthicalPerspectivesManager />
+      </TabsContent>
+
+      <TabsContent value="announcements">
+        <AnnouncementsManager />
       </TabsContent>
 
       <TabsContent value="impressum">
