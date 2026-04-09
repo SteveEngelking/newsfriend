@@ -34,6 +34,7 @@ const Register = () => {
         password,
         options: {
           data: { display_name: displayName },
+          emailRedirectTo: 'https://newsfriend.lovable.app',
         },
       });
       if (error) throw error;
