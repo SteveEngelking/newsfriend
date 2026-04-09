@@ -4,8 +4,22 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+interface DonationSessionResponse {
+  ok: boolean;
+  data?: {
+    url: string;
+  };
+  error?: string;
+}
+
+const respond = (payload: DonationSessionResponse) =>
+  new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,21 +28,22 @@ serve(async (req) => {
 
   try {
     const stripeKey = Deno.env.get("STRIPE_CHECKOUT_KEY");
-    console.log("STRIPE_CHECKOUT_KEY prefix:", stripeKey?.substring(0, 12), "length:", stripeKey?.length);
     if (!stripeKey) {
       throw new Error("STRIPE_CHECKOUT_KEY is not configured");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    const { amount, currency, recurring, successUrl, cancelUrl } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return respond({ ok: false, error: "Invalid request body" });
+    }
+
+    const { amount, currency, recurring, successUrl, cancelUrl } = body;
 
     const cents = Math.round(Number(amount) * 100);
     if (!cents || cents < 100) {
-      return new Response(JSON.stringify({ error: "Minimum donation is 1.00" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond({ ok: false, error: "Minimum donation is 1.00" });
     }
 
     const cur = (currency || "eur").toLowerCase();
@@ -54,15 +69,15 @@ serve(async (req) => {
       cancel_url: cancelUrl || "https://newsfriend.lovable.app/support?cancelled=true",
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (!session.url) {
+      return respond({ ok: false, error: "No checkout URL returned by Stripe" });
+    }
+
+    return respond({ ok: true, data: { url: session.url } });
   } catch (err) {
     console.error("Error creating donation session:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    return respond({ ok: false, error: errorMessage });
   }
 });
