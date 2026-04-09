@@ -18,6 +18,7 @@ import DonationThankYou from "./pages/DonationThankYou";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
               <Route path="/account" element={<Account />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/page/:slug" element={<CmsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
