@@ -20,6 +20,7 @@ import {
   Image as ImageIcon, Undo, Redo, Quote, Minus,
   Table as TableIcon, Plus, Trash2, ArrowUp, ArrowDown,
   ArrowLeft, ArrowRight, ExternalLink, Settings,
+  Columns, Rows, Merge, Split, Grid3X3, Maximize2,
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -179,7 +180,15 @@ export function RichTextEditor({ content, onChange }: Props) {
         <ImageBubbleSettings editor={editor} />
       </BubbleMenu>
 
-      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold [&_img]:cursor-pointer [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.ProseMirror-selectednode]:ring-offset-2" />
+      {/* Bubble menu that appears when cursor is in a table */}
+      <BubbleMenu
+        editor={editor}
+        shouldShow={({ editor }) => editor.isActive('table') && !editor.isActive('image')}
+      >
+        <TableBubbleMenu editor={editor} />
+      </BubbleMenu>
+
+      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold [&_img]:cursor-pointer [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.ProseMirror-selectednode]:ring-offset-2 [&_.column-resize-handle]:bg-primary/50 [&_.column-resize-handle]:w-[3px] [&_.selectedCell]:bg-primary/10" />
     </div>
   );
 }
@@ -425,11 +434,86 @@ function ImagePopover({ editor }: { editor: any }) {
   );
 }
 
+function TableBubbleMenu({ editor }: { editor: any }) {
+  const SmBtn = ({ onClick, children, title, destructive }: { onClick: () => void; children: React.ReactNode; title: string; destructive?: boolean }) => (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className={`h-7 text-xs gap-1 ${destructive ? 'text-destructive hover:text-destructive' : ''}`}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </Button>
+  );
+
+  return (
+    <div className="bg-popover border border-border rounded-lg shadow-lg p-2 space-y-2 min-w-[340px]">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <Grid3X3 className="h-3.5 w-3.5" />
+        Table Settings
+      </div>
+
+      {/* Row & Column operations */}
+      <div className="grid grid-cols-4 gap-1">
+        <SmBtn onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column before">
+          <ArrowLeft className="h-3 w-3" /> Col
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column after">
+          Col <ArrowRight className="h-3 w-3" />
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row before">
+          <ArrowUp className="h-3 w-3" /> Row
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row after">
+          Row <ArrowDown className="h-3 w-3" />
+        </SmBtn>
+      </div>
+
+      {/* Delete operations */}
+      <div className="grid grid-cols-3 gap-1">
+        <SmBtn onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column" destructive>
+          <Trash2 className="h-3 w-3" /> Column
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row" destructive>
+          <Trash2 className="h-3 w-3" /> Row
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table" destructive>
+          <Trash2 className="h-3 w-3" /> Table
+        </SmBtn>
+      </div>
+
+      {/* Merge / Split / Header */}
+      <div className="grid grid-cols-3 gap-1">
+        <SmBtn onClick={() => editor.chain().focus().mergeCells().run()} title="Merge selected cells">
+          <Merge className="h-3 w-3" /> Merge
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().splitCell().run()} title="Split cell">
+          <Split className="h-3 w-3" /> Split
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()} title="Toggle header row">
+          <Rows className="h-3 w-3" /> Header
+        </SmBtn>
+      </div>
+
+      {/* Header column and fix column widths */}
+      <div className="grid grid-cols-2 gap-1">
+        <SmBtn onClick={() => editor.chain().focus().toggleHeaderColumn().run()} title="Toggle header column">
+          <Columns className="h-3 w-3" /> Header Col
+        </SmBtn>
+        <SmBtn onClick={() => editor.chain().focus().fixTables().run()} title="Fix/balance table layout">
+          <Maximize2 className="h-3 w-3" /> Balance
+        </SmBtn>
+      </div>
+    </div>
+  );
+}
+
 function TablePopover({ editor }: { editor: any }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState('3');
   const [cols, setCols] = useState('3');
-  const isInTable = editor.isActive('table');
 
   const insertTable = () => {
     editor.chain().focus().insertTable({ rows: parseInt(rows) || 3, cols: parseInt(cols) || 3, withHeaderRow: true }).run();
@@ -439,56 +523,27 @@ function TablePopover({ editor }: { editor: any }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant={isInTable ? 'default' : 'outline'} size="icon" className="h-8 w-8" title="Table">
+        <Button type="button" variant={editor.isActive('table') ? 'default' : 'outline'} size="icon" className="h-8 w-8" title="Table">
           <TableIcon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 space-y-3">
-        {isInTable ? (
-          <div className="space-y-2">
-            <p className="text-xs font-medium">Edit Table</p>
-            <div className="grid grid-cols-2 gap-1">
-              <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => { editor.chain().focus().addColumnBefore().run(); }}>
-                <ArrowLeft className="h-3 w-3" /> Col Before
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => { editor.chain().focus().addColumnAfter().run(); }}>
-                Col After <ArrowRight className="h-3 w-3" />
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => { editor.chain().focus().addRowBefore().run(); }}>
-                <ArrowUp className="h-3 w-3" /> Row Before
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => { editor.chain().focus().addRowAfter().run(); }}>
-                Row After <ArrowDown className="h-3 w-3" />
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs text-destructive gap-1" onClick={() => { editor.chain().focus().deleteColumn().run(); }}>
-                <Trash2 className="h-3 w-3" /> Del Col
-              </Button>
-              <Button size="sm" variant="outline" className="text-xs text-destructive gap-1" onClick={() => { editor.chain().focus().deleteRow().run(); }}>
-                <Trash2 className="h-3 w-3" /> Del Row
-              </Button>
+        <div className="space-y-2">
+          <p className="text-xs font-medium">Insert Table</p>
+          <div className="flex gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Rows</Label>
+              <Input type="number" min="1" max="20" value={rows} onChange={e => setRows(e.target.value)} className="h-8 w-16 text-sm" />
             </div>
-            <Button size="sm" variant="destructive" className="w-full text-xs" onClick={() => { editor.chain().focus().deleteTable().run(); setOpen(false); }}>
-              Delete Table
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-xs font-medium">Insert Table</p>
-            <div className="flex gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Rows</Label>
-                <Input type="number" min="1" max="20" value={rows} onChange={e => setRows(e.target.value)} className="h-8 w-16 text-sm" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Columns</Label>
-                <Input type="number" min="1" max="10" value={cols} onChange={e => setCols(e.target.value)} className="h-8 w-16 text-sm" />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Columns</Label>
+              <Input type="number" min="1" max="10" value={cols} onChange={e => setCols(e.target.value)} className="h-8 w-16 text-sm" />
             </div>
-            <Button size="sm" onClick={insertTable} className="w-full">
-              <Plus className="h-3 w-3 mr-1" /> Insert Table
-            </Button>
           </div>
-        )}
+          <Button size="sm" onClick={insertTable} className="w-full">
+            <Plus className="h-3 w-3 mr-1" /> Insert Table
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
