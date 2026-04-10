@@ -24,7 +24,7 @@ const Home = () => {
   const { t, language } = useLanguage();
 
   // Lightweight list fetch — no report_data
-  const fetchList = useCallback(async () => {
+  const fetchList = useCallback(async (preserveSelection = true) => {
     try {
       const { data, error } = await supabase
         .from('generated_reports')
@@ -33,18 +33,10 @@ const Home = () => {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error || !data || data.length === 0) {
-        const fallback = await supabase
-          .from('generated_reports')
-          .select('id, title, created_at')
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (fallback.data && fallback.data.length > 0) {
-          setReportList(fallback.data.map((r: any) => ({ id: r.id, title: r.title, created_at: r.created_at })));
-          setSelectedId(prev => prev || fallback.data[0].id);
-        } else {
-          setReportList([]);
-        }
+      if (error || !data) {
+        setReportList([]);
+        setSelectedId(null);
+        setSelectedReport(null);
         return;
       }
 
@@ -55,9 +47,24 @@ const Home = () => {
       }));
 
       setReportList(list);
-      setSelectedId(prev => prev || list[0].id);
+      if (list.length === 0) {
+        setSelectedId(null);
+        setSelectedReport(null);
+        return;
+      }
+
+      setSelectedId(prev => {
+        if (preserveSelection && prev && list.some((report) => report.id === prev)) {
+          return prev;
+        }
+
+        return list[0].id;
+      });
     } catch (err) {
       console.error('Error fetching report list:', err);
+      setReportList([]);
+      setSelectedId(null);
+      setSelectedReport(null);
     } finally {
       setIsLoading(false);
     }
@@ -84,15 +91,14 @@ const Home = () => {
   }, []);
 
   // Auto-fetch list on mount
-  useEffect(() => { fetchList(); }, []);
+  useEffect(() => { fetchList(); }, [fetchList]);
 
   // Re-fetch list when language changes — reset selection so new language's report loads
   useEffect(() => {
-    setSelectedId(null);
     setSelectedReport(null);
     setIsLoading(true);
-    fetchList();
-  }, [language]);
+    fetchList(false);
+  }, [language, fetchList]);
 
   // Fetch full report when selection changes
   useEffect(() => {
