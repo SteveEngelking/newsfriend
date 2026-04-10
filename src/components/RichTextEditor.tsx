@@ -184,7 +184,6 @@ export function RichTextEditor({ content, onChange }: Props) {
       <BubbleMenu
         editor={editor}
         shouldShow={({ editor }) => editor.isActive('table') && !editor.isActive('image')}
-        tippyOptions={{ maxWidth: 420, placement: 'top' }}
       >
         <TableBubbleMenu editor={editor} />
       </BubbleMenu>
