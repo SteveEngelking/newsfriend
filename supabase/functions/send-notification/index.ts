@@ -82,18 +82,29 @@ Deno.serve(async (req) => {
 
     // Send email to each subscriber via send-transactional-email
     let sentCount = 0
+    const fnUrl = `${supabaseUrl}/functions/v1/send-transactional-email`
     for (const email of emails) {
       try {
-        const { error } = await supabase.functions.invoke('send-transactional-email', {
-          body: {
+        const res = await fetch(fnUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${serviceKey}`,
+            'apikey': serviceKey,
+          },
+          body: JSON.stringify({
             templateName,
             recipientEmail: email,
             idempotencyKey: `${templateName}-${announcementId || 'daily'}-${email}-${new Date().toISOString().slice(0, 10)}`,
             templateData,
-          },
+          }),
         })
-        if (!error) sentCount++
-        else console.error(`Failed to send to ${email}:`, error)
+        if (res.ok) {
+          sentCount++
+        } else {
+          const errBody = await res.text()
+          console.error(`Failed to send to ${email}: ${res.status} ${errBody}`)
+        }
       } catch (err) {
         console.error(`Error sending to ${email}:`, err)
       }
