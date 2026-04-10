@@ -134,7 +134,7 @@ const Home = () => {
           <Newspaper className="h-12 w-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-semibold">{t('homeNoReports')}</h2>
           <p className="text-muted-foreground">{t('homeNoReportsDesc')}</p>
-          <Button variant="outline" onClick={fetchList}>{t('homeTryAgain')}</Button>
+          <Button variant="outline" onClick={() => fetchList(false)}>{t('homeTryAgain')}</Button>
         </motion.div>
       )}
 
@@ -157,7 +157,7 @@ const Home = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={fetchList} className="gap-2" size="sm">
+            <Button variant="outline" onClick={() => fetchList(false)} className="gap-2" size="sm">
               <Newspaper className="h-4 w-4" />
               {t('homeRefresh')}
             </Button>
