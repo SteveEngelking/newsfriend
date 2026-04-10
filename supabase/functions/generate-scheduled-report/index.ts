@@ -192,15 +192,12 @@ Deno.serve(async (req) => {
       ).join('\n\n---\n\n');
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      // Generate the schedule's selected language first so immediate runs always prioritize what the user asked for.
-      const languages = [
+      // Only generate the schedule's own language to avoid timeouts
+      const allLangs = [
         { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
         { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
-      ].sort((a, b) => {
-        if (a.code === preferredLanguage) return -1;
-        if (b.code === preferredLanguage) return 1;
-        return 0;
-      });
+      ];
+      const languages = allLangs.filter(l => l.code === preferredLanguage);
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
