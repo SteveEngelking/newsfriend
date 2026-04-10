@@ -20,6 +20,7 @@ import {
   Image as ImageIcon, Undo, Redo, Quote, Minus,
   Table as TableIcon, Plus, Trash2, ArrowUp, ArrowDown,
   ArrowLeft, ArrowRight, ExternalLink, Settings,
+  Columns, Rows, Merge, Split, Grid3X3, Maximize2,
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
