@@ -390,6 +390,11 @@ export const translations = {
     supportCancelled: 'Donation was cancelled. You can try again whenever you\'re ready.',
     donationImpactMessage: 'Your support makes a real difference',
     backToHome: 'Back to Home',
+    supportManageTitle: 'Already a monthly supporter?',
+    supportManageDesc: 'Manage or cancel your recurring donation here.',
+    supportManageBtn: 'Manage Subscription',
+    supportManageNoEmail: 'Please enter your email to manage your subscription.',
+    supportManageError: 'Could not open subscription management. Please ensure you have an active subscription.',
 
     // Registration & Account
     registerTitle: 'Create Account',
@@ -861,6 +866,11 @@ export const translations = {
     supportCancelled: 'Die Spende wurde abgebrochen. Sie können es jederzeit erneut versuchen.',
     donationImpactMessage: 'Ihre Unterstützung macht einen echten Unterschied',
     backToHome: 'Zurück zur Startseite',
+    supportManageTitle: 'Bereits monatlicher Unterstützer?',
+    supportManageDesc: 'Verwalten oder kündigen Sie Ihre wiederkehrende Spende hier.',
+    supportManageBtn: 'Abonnement verwalten',
+    supportManageNoEmail: 'Bitte geben Sie Ihre E-Mail-Adresse ein, um Ihr Abonnement zu verwalten.',
+    supportManageError: 'Abonnementverwaltung konnte nicht geöffnet werden. Bitte stellen Sie sicher, dass Sie ein aktives Abonnement haben.',
 
     // Registration & Account
     registerTitle: 'Konto erstellen',
