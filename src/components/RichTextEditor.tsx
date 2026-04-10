@@ -174,7 +174,6 @@ export function RichTextEditor({ content, onChange }: Props) {
       {/* Bubble menu that appears when an image is selected */}
       <BubbleMenu
         editor={editor}
-        tippyOptions={{ duration: 150, placement: 'bottom' }}
         shouldShow={({ editor }) => editor.isActive('image')}
       >
         <ImageBubbleSettings editor={editor} />
