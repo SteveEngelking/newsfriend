@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,9 +16,10 @@ const SupportUs = () => {
   const [amount, setAmount] = useState('10');
   const [recurring, setRecurring] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [manageEmail, setManageEmail] = useState('');
+  const [manageLoading, setManageLoading] = useState(false);
   const [currency] = useState('eur');
 
-  // Check for success/cancelled query params
   const params = new URLSearchParams(window.location.search);
   const success = params.get('success') === 'true';
   const cancelled = params.get('cancelled') === 'true';
@@ -60,6 +61,31 @@ const SupportUs = () => {
     }
   };
 
+  const handleManageSubscription = async () => {
+    if (!manageEmail.trim()) {
+      toast.error(t('supportManageNoEmail'));
+      return;
+    }
+
+    setManageLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        body: { email: manageEmail.trim() },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error('No portal URL returned');
+
+      window.open(data.url, '_blank');
+    } catch (err: any) {
+      console.error('Manage subscription error:', err);
+      toast.error(t('supportManageError'));
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
   if (success) {
     return (
       <div className="max-w-lg mx-auto text-center space-y-6 py-12">
@@ -97,7 +123,6 @@ const SupportUs = () => {
           <CardDescription>{t('supportChooseAmountDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Preset amounts */}
           <div className="flex flex-wrap gap-2">
             {PRESET_AMOUNTS.map((preset) => (
               <Button
@@ -112,7 +137,6 @@ const SupportUs = () => {
             ))}
           </div>
 
-          {/* Custom amount */}
           <div className="space-y-2">
             <Label>{t('supportCustomAmount')}</Label>
             <div className="relative">
@@ -129,7 +153,6 @@ const SupportUs = () => {
             </div>
           </div>
 
-          {/* Recurring toggle */}
           <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
             <div>
               <Label className="text-base font-medium">{t('supportMonthly')}</Label>
@@ -138,7 +161,6 @@ const SupportUs = () => {
             <Switch checked={recurring} onCheckedChange={setRecurring} />
           </div>
 
-          {/* Donate button */}
           <Button
             size="lg"
             className="w-full text-lg gap-2"
@@ -158,6 +180,41 @@ const SupportUs = () => {
           <p className="text-xs text-center text-muted-foreground">
             {t('supportSecure')}
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Manage existing subscription */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            {t('supportManageTitle')}
+          </CardTitle>
+          <CardDescription>{t('supportManageDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={manageEmail}
+              onChange={(e) => setManageEmail(e.target.value)}
+              placeholder="your@email.com"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleManageSubscription}
+            disabled={manageLoading || !manageEmail.trim()}
+            className="w-full gap-2"
+          >
+            {manageLoading ? t('supportProcessing') : (
+              <>
+                <Settings className="h-4 w-4" />
+                {t('supportManageBtn')}
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>
