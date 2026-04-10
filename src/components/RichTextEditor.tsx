@@ -1,8 +1,9 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
+import ImageExt from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
@@ -11,17 +12,52 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon,
   Image as ImageIcon, Undo, Redo, Quote, Minus,
   Table as TableIcon, Plus, Trash2, ArrowUp, ArrowDown,
-  ArrowLeft, ArrowRight, ExternalLink,
+  ArrowLeft, ArrowRight, ExternalLink, Settings,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
+import { Node, mergeAttributes } from '@tiptap/core';
+
+// Custom Image extension with width/height/style support
+const ResizableImage = ImageExt.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (el) => el.getAttribute('width') || el.style.width || null,
+        renderHTML: (attrs) => {
+          if (!attrs.width) return {};
+          return { width: attrs.width };
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: (el) => el.getAttribute('height') || el.style.height || null,
+        renderHTML: (attrs) => {
+          if (!attrs.height) return {};
+          return { height: attrs.height };
+        },
+      },
+      style: {
+        default: null,
+        parseHTML: (el) => el.getAttribute('style') || null,
+        renderHTML: (attrs) => {
+          if (!attrs.style) return {};
+          return { style: attrs.style };
+        },
+      },
+    };
+  },
+});
 
 interface Props {
   content: string;
@@ -34,7 +70,10 @@ export function RichTextEditor({ content, onChange }: Props) {
       StarterKit,
       Underline,
       Link.configure({ openOnClick: false, HTMLAttributes: { class: 'text-primary underline' } }),
-      Image.configure({ HTMLAttributes: { class: 'max-w-full rounded' } }),
+      ResizableImage.configure({
+        HTMLAttributes: { class: 'rounded cursor-pointer' },
+        allowBase64: true,
+      }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Table.configure({ resizable: true, HTMLAttributes: { class: 'border-collapse w-full' } }),
       TableRow,
@@ -132,7 +171,141 @@ export function RichTextEditor({ content, onChange }: Props) {
         </ToolBtn>
       </div>
 
-      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold" />
+      {/* Bubble menu that appears when an image is selected */}
+      <BubbleMenu
+        editor={editor}
+        shouldShow={({ editor }) => editor.isActive('image')}
+      >
+        <ImageBubbleSettings editor={editor} />
+      </BubbleMenu>
+
+      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold [&_img]:cursor-pointer [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.ProseMirror-selectednode]:ring-offset-2" />
+    </div>
+  );
+}
+
+function ImageBubbleSettings({ editor }: { editor: any }) {
+  const attrs = editor.getAttributes('image');
+  const [width, setWidth] = useState(attrs.width || '');
+  const [height, setHeight] = useState(attrs.height || '');
+  const [alt, setAlt] = useState(attrs.alt || '');
+  const [sliderVal, setSliderVal] = useState(100);
+
+  useEffect(() => {
+    const a = editor.getAttributes('image');
+    setWidth(a.width || '');
+    setHeight(a.height || '');
+    setAlt(a.alt || '');
+    // Parse percentage from width if possible
+    const w = a.width || '';
+    const match = String(w).match(/^(\d+)%$/);
+    if (match) setSliderVal(parseInt(match[1]));
+    else setSliderVal(100);
+  }, [editor.state.selection]);
+
+  const applyWidth = (val: string) => {
+    setWidth(val);
+    editor.chain().focus().updateAttributes('image', {
+      width: val || null,
+      height: null, // auto height to maintain ratio
+      style: val ? `width: ${val}; height: auto;` : null,
+    }).run();
+  };
+
+  const applySlider = (vals: number[]) => {
+    const pct = vals[0];
+    setSliderVal(pct);
+    applyWidth(`${pct}%`);
+  };
+
+  const applyAlt = () => {
+    editor.chain().focus().updateAttributes('image', { alt }).run();
+  };
+
+  const deleteImage = () => {
+    editor.chain().focus().deleteSelection().run();
+  };
+
+  return (
+    <div className="bg-popover border border-border rounded-lg shadow-lg p-3 space-y-3 min-w-[280px]">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <Settings className="h-3.5 w-3.5" />
+        Image Settings
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs">Size</Label>
+        <div className="flex items-center gap-3">
+          <Slider
+            value={[sliderVal]}
+            onValueChange={applySlider}
+            min={10}
+            max={100}
+            step={5}
+            className="flex-1"
+          />
+          <span className="text-xs font-mono w-10 text-right">{sliderVal}%</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Width</Label>
+          <Input
+            className="h-7 text-xs"
+            placeholder="e.g. 300px, 50%"
+            value={width}
+            onChange={e => setWidth(e.target.value)}
+            onBlur={() => applyWidth(width)}
+            onKeyDown={e => e.key === 'Enter' && applyWidth(width)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Height</Label>
+          <Input
+            className="h-7 text-xs"
+            placeholder="auto"
+            value={height}
+            onChange={e => setHeight(e.target.value)}
+            onBlur={() => {
+              editor.chain().focus().updateAttributes('image', {
+                height: height || null,
+                style: `width: ${width || 'auto'}; height: ${height || 'auto'};`,
+              }).run();
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                editor.chain().focus().updateAttributes('image', {
+                  height: height || null,
+                  style: `width: ${width || 'auto'}; height: ${height || 'auto'};`,
+                }).run();
+              }
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Alt text</Label>
+        <Input
+          className="h-7 text-xs"
+          placeholder="Image description..."
+          value={alt}
+          onChange={e => setAlt(e.target.value)}
+          onBlur={applyAlt}
+          onKeyDown={e => e.key === 'Enter' && applyAlt()}
+        />
+      </div>
+
+      <div className="flex gap-1">
+        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs gap-1" onClick={() => applyWidth('25%')}>25%</Button>
+        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs gap-1" onClick={() => applyWidth('50%')}>50%</Button>
+        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs gap-1" onClick={() => applyWidth('75%')}>75%</Button>
+        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs gap-1" onClick={() => applyWidth('100%')}>100%</Button>
+        <Button size="sm" variant="destructive" className="h-7 text-xs px-2" onClick={deleteImage} title="Delete image">
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -214,7 +387,10 @@ function ImagePopover({ editor }: { editor: any }) {
     if (url) {
       const attrs: any = { src: url };
       if (alt) attrs.alt = alt;
-      if (width) attrs.style = `width: ${width}`;
+      if (width) {
+        attrs.width = width;
+        attrs.style = `width: ${width}; height: auto;`;
+      }
       editor.chain().focus().setImage(attrs).run();
     }
     setOpen(false);
