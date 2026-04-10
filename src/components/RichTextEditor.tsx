@@ -180,7 +180,16 @@ export function RichTextEditor({ content, onChange }: Props) {
         <ImageBubbleSettings editor={editor} />
       </BubbleMenu>
 
-      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold [&_img]:cursor-pointer [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.ProseMirror-selectednode]:ring-offset-2" />
+      {/* Bubble menu that appears when cursor is in a table */}
+      <BubbleMenu
+        editor={editor}
+        shouldShow={({ editor }) => editor.isActive('table') && !editor.isActive('image')}
+        tippyOptions={{ maxWidth: 420, placement: 'top' }}
+      >
+        <TableBubbleMenu editor={editor} />
+      </BubbleMenu>
+
+      <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-4 min-h-[200px] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[180px] [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted [&_th]:font-semibold [&_img]:cursor-pointer [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.ProseMirror-selectednode]:ring-offset-2 [&_.column-resize-handle]:bg-primary/50 [&_.column-resize-handle]:w-[3px] [&_.selectedCell]:bg-primary/10" />
     </div>
   );
 }
