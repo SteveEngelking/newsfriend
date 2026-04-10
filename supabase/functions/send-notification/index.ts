@@ -1,6 +1,6 @@
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
 
     const { type, announcementId } = await req.json()
 
-    // Validate type
     if (!['daily_report', 'announcement'].includes(type)) {
       return new Response(JSON.stringify({ error: 'Invalid notification type' }), {
         status: 400,
@@ -54,20 +53,12 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Build email content
-    let subject = ''
-    let htmlBody = ''
-    const siteUrl = 'https://newsfriend.lovable.app'
+    // Build template info
+    let templateName = ''
+    let templateData: Record<string, any> = {}
 
     if (type === 'daily_report') {
-      subject = 'NewsFriend — New Daily News Report Available'
-      htmlBody = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <h1 style="color:#1d4ed8;font-size:22px;">📰 New Daily News Report</h1>
-          <p style="color:#333;line-height:1.6;">A new AI-powered daily news report has been generated on NewsFriend. Visit the site to read the latest analysis.</p>
-          <a href="${siteUrl}" style="display:inline-block;background:#1d4ed8;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0;">Read Now</a>
-          <p style="color:#999;font-size:12px;margin-top:24px;">You're receiving this because you subscribed to daily report notifications on NewsFriend. Update your preferences in your <a href="${siteUrl}/account">account settings</a>.</p>
-        </div>`
+      templateName = 'daily-report-notification'
     } else if (type === 'announcement' && announcementId) {
       const { data: announcement } = await supabase
         .from('admin_announcements')
@@ -82,26 +73,36 @@ Deno.serve(async (req) => {
         })
       }
 
-      subject = `NewsFriend — ${announcement.title}`
-      htmlBody = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <h1 style="color:#1d4ed8;font-size:22px;">📢 ${announcement.title}</h1>
-          <div style="color:#333;line-height:1.6;">${announcement.content}</div>
-          <a href="${siteUrl}" style="display:inline-block;background:#1d4ed8;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0;">Visit NewsFriend</a>
-          <p style="color:#999;font-size:12px;margin-top:24px;">You're receiving this because you subscribed to announcement notifications on NewsFriend. Update your preferences in your <a href="${siteUrl}/account">account settings</a>.</p>
-        </div>`
+      templateName = 'announcement-notification'
+      templateData = { title: announcement.title, content: announcement.content }
     }
 
-    // Use Lovable AI Gateway to send — actually we'll use a simple approach:
-    // Log notification intent. For actual email delivery, the project would need
-    // email infrastructure. For now, log recipients and return count.
-    console.log(`Sending notification to ${emails.length} recipients: ${subject}`)
+    console.log(`Sending ${templateName} to ${emails.length} recipients`)
     console.log(`Recipients: ${emails.join(', ')}`)
 
+    // Send email to each subscriber via send-transactional-email
+    let sentCount = 0
+    for (const email of emails) {
+      try {
+        const { error } = await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName,
+            recipientEmail: email,
+            idempotencyKey: `${templateName}-${announcementId || 'daily'}-${email}-${new Date().toISOString().slice(0, 10)}`,
+            templateData,
+          },
+        })
+        if (!error) sentCount++
+        else console.error(`Failed to send to ${email}:`, error)
+      } catch (err) {
+        console.error(`Error sending to ${email}:`, err)
+      }
+    }
+
     return new Response(JSON.stringify({ 
-      sent: emails.length, 
-      subject,
-      message: `Notification queued for ${emails.length} subscribers` 
+      sent: sentCount, 
+      total: emails.length,
+      message: `Notification sent to ${sentCount}/${emails.length} subscribers` 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
