@@ -71,10 +71,14 @@ const Account = () => {
 
   const handleSave = async () => {
     if (!session) return;
+    if (!displayName.trim()) {
+      toast({ title: t('accountDisplayNameRequired'), variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     try {
       const [profileRes, prefsRes] = await Promise.all([
-        supabase.from('profiles').update({ display_name: displayName, preferred_language: preferredLanguage } as any).eq('user_id', session.user.id),
+        supabase.from('profiles').update({ display_name: displayName.trim(), preferred_language: preferredLanguage } as any).eq('user_id', session.user.id),
         supabase.from('notification_preferences').update({
           notify_daily_reports: notifyDailyReports,
           notify_announcements: notifyAnnouncements,
@@ -172,8 +176,9 @@ const Account = () => {
             <Input value={session.user.email} disabled className="bg-muted" />
           </div>
           <div className="space-y-2">
-            <Label>{t('registerNamePlaceholder')}</Label>
-            <Input value={displayName} onChange={e => setDisplayName(e.target.value)} />
+            <Label>{t('registerNamePlaceholder')} <span className="text-destructive">*</span></Label>
+            <Input value={displayName} onChange={e => setDisplayName(e.target.value)} required />
+            {!displayName.trim() && <p className="text-xs text-destructive">{t('accountDisplayNameRequired')}</p>}
           </div>
         </CardContent>
       </Card>
