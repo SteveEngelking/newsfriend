@@ -400,6 +400,16 @@ CRITICAL RULES:
         } else {
           console.log(`Schedule ${schedule.id}: last_run_at updated to ${now.toISOString()}`);
         }
+
+        // Trigger notification to subscribers
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { type: 'daily_report' },
+          });
+          console.log(`Schedule ${schedule.id}: notification triggered`);
+        } catch (notifErr) {
+          console.error(`Schedule ${schedule.id}: notification failed:`, notifErr);
+        }
       } else {
         console.error(`Schedule ${schedule.id}: no reports generated at all`);
       }
