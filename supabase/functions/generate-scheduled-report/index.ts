@@ -238,6 +238,7 @@ LANGUAGE: You MUST write the ENTIRE report in ${lang.outputLang}. Every single w
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
+- ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
 - For EVERY theme, include source analysis from AS MANY different sources as possible (3-5+ per theme)
 - If source material is in another language, you MUST translate it into ${lang.outputLang}
 - Be skeptical — note contradictions, sensationalism, and potential spin
