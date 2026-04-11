@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LogOut, User, Bell, Loader2, Save, KeyRound, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,7 @@ const Account = () => {
   const [displayName, setDisplayName] = useState('');
   const [notifyDailyReports, setNotifyDailyReports] = useState(true);
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
+  const [preferredLanguage, setPreferredLanguage] = useState('en');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
@@ -51,10 +53,13 @@ const Account = () => {
     const load = async () => {
       setLoading(true);
       const [profileRes, prefsRes] = await Promise.all([
-        supabase.from('profiles').select('display_name').eq('user_id', session.user.id).single(),
+        supabase.from('profiles').select('display_name, preferred_language').eq('user_id', session.user.id).single(),
         supabase.from('notification_preferences').select('notify_daily_reports, notify_announcements').eq('user_id', session.user.id).single(),
       ]);
-      if (profileRes.data) setDisplayName(profileRes.data.display_name || '');
+      if (profileRes.data) {
+        setDisplayName(profileRes.data.display_name || '');
+        setPreferredLanguage((profileRes.data as any).preferred_language || 'en');
+      }
       if (prefsRes.data) {
         setNotifyDailyReports(prefsRes.data.notify_daily_reports);
         setNotifyAnnouncements(prefsRes.data.notify_announcements);
@@ -69,7 +74,7 @@ const Account = () => {
     setSaving(true);
     try {
       const [profileRes, prefsRes] = await Promise.all([
-        supabase.from('profiles').update({ display_name: displayName }).eq('user_id', session.user.id),
+        supabase.from('profiles').update({ display_name: displayName, preferred_language: preferredLanguage } as any).eq('user_id', session.user.id),
         supabase.from('notification_preferences').update({
           notify_daily_reports: notifyDailyReports,
           notify_announcements: notifyAnnouncements,
@@ -188,6 +193,19 @@ const Account = () => {
           <div className="flex items-center justify-between">
             <Label htmlFor="notify-announcements">{t('accountNotifyAnnouncements')}</Label>
             <Switch id="notify-announcements" checked={notifyAnnouncements} onCheckedChange={setNotifyAnnouncements} />
+          </div>
+          <div className="space-y-2 pt-2">
+            <Label>{t('accountPreferredLanguage')}</Label>
+            <p className="text-xs text-muted-foreground">{t('accountPreferredLanguageDesc')}</p>
+            <Select value={preferredLanguage} onValueChange={setPreferredLanguage}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">{t('accountLangEnglish')}</SelectItem>
+                <SelectItem value="de">{t('accountLangGerman')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
