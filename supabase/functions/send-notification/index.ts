@@ -3,7 +3,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
-const SITE_NAME = "newsfriend"
+const SITE_NAME = "NewsFriend"
 const SENDER_DOMAIN = "notify.schonfield.org"
 const FROM_DOMAIN = "notify.schonfield.org"
 
@@ -37,7 +37,38 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get users who want this notification type
+    // For daily_report, fetch the latest report data per language
+    let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[] }> = {}
+    if (type === 'daily_report') {
+      for (const lang of ['en', 'de']) {
+        const { data: latestReport } = await supabase
+          .from('generated_reports')
+          .select('report_data')
+          .eq('language', lang)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (latestReport?.report_data) {
+          const rd = latestReport.report_data as any
+          reportsByLanguage[lang] = {
+            introduction: (rd.introduction || '').slice(0, 500),
+            themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+          }
+        }
+      }
+      // Fallback: if only one language exists, use it for both
+      if (!reportsByLanguage['en'] && reportsByLanguage['de']) reportsByLanguage['en'] = reportsByLanguage['de']
+      if (!reportsByLanguage['de'] && reportsByLanguage['en']) reportsByLanguage['de'] = reportsByLanguage['en']
+
+      if (Object.keys(reportsByLanguage).length === 0) {
+        return new Response(JSON.stringify({ sent: 0, message: 'No recent reports found' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // Get subscribers with their profile info (email + preferred language)
     const column = type === 'daily_report' ? 'notify_daily_reports' : 'notify_announcements'
     const { data: prefs, error: prefsError } = await supabase
       .from('notification_preferences')
@@ -54,77 +85,56 @@ Deno.serve(async (req) => {
     const userIds = prefs.map(p => p.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, preferred_language, user_id')
       .in('user_id', userIds)
 
     if (profilesError) throw profilesError
-    const emails = profiles?.map(p => p.email).filter(Boolean) || []
-    if (emails.length === 0) {
+    const validProfiles = profiles?.filter(p => p.email) || []
+    if (validProfiles.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: 'No valid emails' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Build template info
-    let templateName = ''
-    let templateData: Record<string, any> = {}
-
-    if (type === 'daily_report') {
-      templateName = 'daily-report-notification'
-    } else if (type === 'announcement' && announcementId) {
+    // For announcements, fetch data once
+    let announcementData: { title: string; content: string } | null = null
+    if (type === 'announcement' && announcementId) {
       const { data: announcement } = await supabase
         .from('admin_announcements')
         .select('title, content')
         .eq('id', announcementId)
         .single()
-
       if (!announcement) {
         return new Response(JSON.stringify({ error: 'Announcement not found' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      templateName = 'announcement-notification'
-      templateData = { title: announcement.title, content: announcement.content }
+      announcementData = announcement
     }
 
-    const template = TEMPLATES[templateName]
-    if (!template) {
-      return new Response(JSON.stringify({ error: `Template '${templateName}' not found` }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Pre-render the template once (same content for all recipients)
-    const html = await renderAsync(React.createElement(template.component, templateData))
-    const plainText = await renderAsync(React.createElement(template.component, templateData), { plainText: true })
-    const resolvedSubject = typeof template.subject === 'function' ? template.subject(templateData) : template.subject
-
-    console.log(`Sending ${templateName} to ${emails.length} recipients`)
-    console.log(`Recipients: ${emails.join(', ')}`)
-
-    // Enqueue an email for each subscriber directly
-    let sentCount = 0
+    // Group profiles by language for efficient rendering
     const dateKey = new Date().toISOString().slice(0, 10)
+    let sentCount = 0
 
-    for (const email of emails) {
+    // Pre-render templates per language
+    const renderedByLang: Record<string, { html: string; plainText: string; subject: string }> = {}
+
+    for (const profile of validProfiles) {
+      const lang = (profile as any).preferred_language || 'en'
+      const email = profile.email!
+      const normalizedEmail = email.toLowerCase()
+
       try {
-        const normalizedEmail = email.toLowerCase()
-
         // Check suppression
         const { data: suppressed } = await supabase
           .from('suppressed_emails')
           .select('id')
           .eq('email', normalizedEmail)
           .maybeSingle()
+        if (suppressed) { console.log(`Skipping suppressed: ${email}`); continue }
 
-        if (suppressed) {
-          console.log(`Skipping suppressed: ${email}`)
-          continue
-        }
-
-        // Get or create unsubscribe token
+        // Check/create unsubscribe token
         let unsubscribeToken: string
         const { data: existingToken } = await supabase
           .from('email_unsubscribe_tokens')
@@ -132,12 +142,9 @@ Deno.serve(async (req) => {
           .eq('email', normalizedEmail)
           .maybeSingle()
 
-        if (existingToken && existingToken.used_at) {
-          console.log(`Skipping unsubscribed: ${email}`)
-          continue
-        } else if (existingToken) {
-          unsubscribeToken = existingToken.token
-        } else {
+        if (existingToken && existingToken.used_at) { console.log(`Skipping unsubscribed: ${email}`); continue }
+        else if (existingToken) { unsubscribeToken = existingToken.token }
+        else {
           unsubscribeToken = generateToken()
           await supabase.from('email_unsubscribe_tokens').upsert(
             { token: unsubscribeToken, email: normalizedEmail },
@@ -151,10 +158,34 @@ Deno.serve(async (req) => {
           if (storedToken) unsubscribeToken = storedToken.token
         }
 
+        // Build template data based on type and language
+        let templateName: string
+        let templateData: Record<string, any>
+
+        if (type === 'daily_report') {
+          templateName = 'daily-report-notification'
+          const reportData = reportsByLanguage[lang] || reportsByLanguage['en'] || Object.values(reportsByLanguage)[0]
+          templateData = { ...reportData, language: lang }
+        } else {
+          templateName = 'announcement-notification'
+          templateData = { title: announcementData!.title, content: announcementData!.content }
+        }
+
+        // Render per-language (with caching)
+        const cacheKey = `${templateName}-${lang}`
+        if (!renderedByLang[cacheKey]) {
+          const template = TEMPLATES[templateName]
+          if (!template) { console.error(`Template '${templateName}' not found`); continue }
+          const html = await renderAsync(React.createElement(template.component, templateData))
+          const plainText = await renderAsync(React.createElement(template.component, templateData), { plainText: true })
+          const resolvedSubject = typeof template.subject === 'function' ? template.subject(templateData) : template.subject
+          renderedByLang[cacheKey] = { html, plainText, subject: resolvedSubject }
+        }
+
+        const { html, plainText, subject } = renderedByLang[cacheKey]
         const messageId = crypto.randomUUID()
         const idempotencyKey = `${templateName}-${announcementId || 'daily'}-${normalizedEmail}-${dateKey}`
 
-        // Log pending
         await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: templateName,
@@ -162,7 +193,6 @@ Deno.serve(async (req) => {
           status: 'pending',
         })
 
-        // Enqueue
         const { error: enqueueError } = await supabase.rpc('enqueue_email', {
           queue_name: 'transactional_emails',
           payload: {
@@ -170,7 +200,7 @@ Deno.serve(async (req) => {
             to: email,
             from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
-            subject: resolvedSubject,
+            subject,
             html,
             text: plainText,
             purpose: 'transactional',
@@ -193,8 +223,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       sent: sentCount,
-      total: emails.length,
-      message: `Notification queued for ${sentCount}/${emails.length} subscribers`,
+      total: validProfiles.length,
+      message: `Notification queued for ${sentCount}/${validProfiles.length} subscribers`,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
