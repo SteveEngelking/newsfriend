@@ -166,6 +166,7 @@ STYLE GUIDELINES:
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
+- ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
 - For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available.
 - Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
 - Be skeptical — note contradictions, sensationalism, and potential spin
