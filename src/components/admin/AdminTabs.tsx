@@ -23,44 +23,44 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
   return (
     <Tabs defaultValue="users" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-10">
-        <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm">
+      <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+        <TabsTrigger value="users" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Users className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabUsers')}</span>
         </TabsTrigger>
-        <TabsTrigger value="registered" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="registered" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <UserCheck className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabRegistered')}</span>
         </TabsTrigger>
-        <TabsTrigger value="navigation" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="navigation" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Menu className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabNavigation') || 'Menu'}</span>
         </TabsTrigger>
-        <TabsTrigger value="pages" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="pages" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Layout className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabPages')}</span>
         </TabsTrigger>
-        <TabsTrigger value="sources" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="sources" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Newspaper className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabSources')}</span>
         </TabsTrigger>
-        <TabsTrigger value="schedule" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="schedule" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <CalendarClock className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabSchedule')}</span>
         </TabsTrigger>
-        <TabsTrigger value="ethics" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="ethics" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Scale className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabEthics')}</span>
         </TabsTrigger>
-        <TabsTrigger value="announcements" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="announcements" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Megaphone className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabAnnouncements')}</span>
         </TabsTrigger>
-        <TabsTrigger value="comments" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="comments" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <MessageSquare className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabComments')}</span>
         </TabsTrigger>
-        <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <FileText className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabImpressum')}</span>
         </TabsTrigger>

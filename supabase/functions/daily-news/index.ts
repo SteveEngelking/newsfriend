@@ -214,6 +214,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       },
       body: JSON.stringify({
         model: 'google/gemini-3-flash-preview',
+        max_tokens: 8192,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
