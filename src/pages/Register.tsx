@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput, validatePassword } from '@/components/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserPlus, Loader2, Mail } from 'lucide-react';
@@ -22,7 +23,8 @@ const Register = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const canSubmit = humanCheck && gdprConsent && email && password;
+  const passwordValid = validatePassword(password).valid;
+  const canSubmit = humanCheck && gdprConsent && email && password && passwordValid;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +93,12 @@ const Register = () => {
                 onChange={e => setEmail(e.target.value)}
                 required
               />
-              <Input
-                type="password"
-                placeholder={t('adminPasswordPlaceholder')}
+              <PasswordInput
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
+                onChange={setPassword}
+                placeholder={t('adminPasswordPlaceholder')}
+                showGenerator
+                showRequirements
               />
               <div className="flex items-start space-x-2">
                 <Checkbox

@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LogOut, User, Bell, Loader2, Save, KeyRound, Trash2 } from 'lucide-react';
+import { PasswordInput, validatePassword } from '@/components/PasswordInput';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -95,7 +96,8 @@ const Account = () => {
   };
 
   const handleChangePassword = async () => {
-    if (newPassword.length < 6) {
+    const { valid } = validatePassword(newPassword);
+    if (!valid) {
       toast({ title: t('accountPasswordTooShort'), variant: 'destructive' });
       return;
     }
@@ -229,11 +231,19 @@ const Account = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>{t('accountNewPassword')}</Label>
-            <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+            <PasswordInput
+              value={newPassword}
+              onChange={setNewPassword}
+              showGenerator
+              showRequirements
+            />
           </div>
           <div className="space-y-2">
             <Label>{t('accountConfirmPassword')}</Label>
-            <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <PasswordInput
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+            />
           </div>
           <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword} className="w-full gap-2">
             {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
