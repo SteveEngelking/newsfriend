@@ -257,6 +257,7 @@ CRITICAL RULES:
           },
           body: JSON.stringify({
             model: 'google/gemini-3-flash-preview',
+            max_tokens: 8192,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
