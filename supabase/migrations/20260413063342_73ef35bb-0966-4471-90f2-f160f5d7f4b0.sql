@@ -1,0 +1,1 @@
+UPDATE public.report_schedules SET last_run_at = now() - interval '25 hours' WHERE enabled = true;
