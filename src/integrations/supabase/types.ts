@@ -456,6 +456,7 @@ export type Database = {
       }
       report_schedules: {
         Row: {
+          ai_model: string
           articles_per_source: number
           created_at: string
           enabled: boolean
@@ -470,6 +471,7 @@ export type Database = {
           target_themes: number
         }
         Insert: {
+          ai_model?: string
           articles_per_source?: number
           created_at?: string
           enabled?: boolean
@@ -484,6 +486,7 @@ export type Database = {
           target_themes?: number
         }
         Update: {
+          ai_model?: string
           articles_per_source?: number
           created_at?: string
           enabled?: boolean

@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN ai_model text NOT NULL DEFAULT 'openai/gpt-5-mini';
