@@ -357,6 +357,13 @@ CRITICAL RULES:
           return;
         }
 
+        if (!Array.isArray(parsed.themes) || parsed.themes.length !== themeCount) {
+          console.error(
+            `Schedule ${schedule.id}: expected ${themeCount} themes for ${lang.code}, got ${Array.isArray(parsed.themes) ? parsed.themes.length : 'invalid'}`,
+          );
+          return;
+        }
+
         // Build ethical considerations array dynamically
         const ethicalConsiderations: any[] = [];
         const legacyFields: Record<string, any> = {};
