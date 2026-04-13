@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80);
+      const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 40) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
