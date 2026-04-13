@@ -46,6 +46,7 @@ export function ScheduleManager({ sources }: Props) {
   const [mondcivitanEnabled, setMondcivitanEnabled] = useState(false);
   const [schweitzerEnabled, setSchweitzerEnabled] = useState(false);
   const [maxArticles, setMaxArticles] = useState(80);
+  const [targetThemes, setTargetThemes] = useState(0);
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
