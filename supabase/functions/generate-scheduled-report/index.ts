@@ -228,7 +228,7 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
       // Helper: make a single AI call for N themes
       const callAI = async (lang: typeof languages[0], batchThemeCount: number, batchArticles: string, batchLabel: string, includeEthical: boolean) => {
         const ethicalInstruction = includeEthical && prioritizedEthicalPerspectives.length > 0
-          ? `\n\nETHICAL CONSIDERATIONS: Write SEPARATE fields for each:\n${prioritizedEthicalPerspectives.map((p, i) => `${i+1}. "${toFieldKey(p.name)}" — ${p.prompt_instruction}`).join('\n')}`
+          ? `\n\nETHICAL CONSIDERATIONS: Write a thoughtful, detailed paragraph (at least 4-6 sentences) for EACH perspective below. Provide genuine philosophical depth, not brief summaries:\n${prioritizedEthicalPerspectives.map((p, i) => `${i+1}. "${toFieldKey(p.name)}" — ${p.prompt_instruction}`).join('\n')}`
           : '';
         const ethicalProperties: Record<string, any> = {};
         const ethicalRequired: string[] = [];
