@@ -83,9 +83,14 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const isImmediateRun = schedule.frequency === 'immediate';
+
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
-      const queries = [
+      const queries = isImmediateRun ? [
+        'latest news today breaking',
+        'world politics economy technology health science',
+      ] : [
         'latest news today breaking',
         'world politics economy technology health science',
         'aktuelle nachrichten heute eilmeldung',
@@ -133,7 +138,7 @@ Deno.serve(async (req) => {
           sourceName: task.source.name,
           title: item.title || 'Untitled',
           url: item.url,
-          content: (item.markdown || item.description || '').slice(0, 500),
+          content: (item.markdown || item.description || '').slice(0, isImmediateRun ? 220 : 500),
         }));
       }));
 
@@ -170,7 +175,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = schedule.max_articles || 80;
+      const maxTotal = isImmediateRun ? Math.min(schedule.max_articles || 80, 18) : (schedule.max_articles || 80);
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
@@ -185,7 +190,9 @@ Deno.serve(async (req) => {
       }
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const themeCount = Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
+      const themeCount = isImmediateRun
+        ? Math.min(4, Math.max(3, Math.round(balanced.length / 6)))
+        : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const sourcesPerTheme = Math.min(3, Math.max(2, Math.ceil(sourceNames.length / Math.max(themeCount * 3, 1))));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
