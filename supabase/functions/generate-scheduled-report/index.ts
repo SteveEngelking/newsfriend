@@ -87,10 +87,7 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
-      const queries = isImmediateRun ? [
-        'latest news today breaking',
-        'world politics economy technology health science',
-      ] : [
+      const queries = [
         'latest news today breaking',
         'world politics economy technology health science',
         'aktuelle nachrichten heute eilmeldung',
