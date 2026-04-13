@@ -240,7 +240,8 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
           }
         }
 
-        const sysPrompt = `You are a senior investigative journalist writing a daily news briefing in ${lang.outputLang}. ALL output in ${lang.outputLang}.
+        const sysPrompt = `You are a senior investigative journalist writing a daily news briefing in ${lang.outputLang}. ALL output MUST be in ${lang.outputLang}.
+CRITICAL TRANSLATION RULE: Even when quoting or paraphrasing articles originally written in other languages (e.g. Spanish, French, German, etc.), you MUST translate ALL quotes, key quotes, bias indicators, stances, summaries, and commentary into ${lang.outputLang}. Never leave foreign-language text untranslated. If a source is in a foreign language, translate the relevant excerpts into ${lang.outputLang}.
 RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source analyses per theme. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
