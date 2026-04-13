@@ -245,7 +245,7 @@ const Account = () => {
               onChange={setConfirmPassword}
             />
           </div>
-          <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword} className="w-full gap-2">
+          <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword || !validatePassword(newPassword).valid || newPassword !== confirmPassword} className="w-full gap-2">
             {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
             {t('accountChangePasswordBtn')}
           </Button>
