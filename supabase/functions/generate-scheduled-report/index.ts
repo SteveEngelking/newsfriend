@@ -187,7 +187,9 @@ Deno.serve(async (req) => {
       }
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const themeCount = Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
+      const themeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 12)
+        ? schedule.target_themes
+        : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const sourcesPerTheme = Math.min(3, Math.max(2, Math.ceil(sourceNames.length / Math.max(themeCount * 3, 1))));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
