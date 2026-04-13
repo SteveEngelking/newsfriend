@@ -1,0 +1,1 @@
+UPDATE report_schedules SET last_run_at = NULL WHERE id = '4ee46c34-fc1d-4ae5-bfcf-83dd6830d741';
