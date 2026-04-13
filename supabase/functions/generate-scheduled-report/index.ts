@@ -257,12 +257,12 @@ CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
 - Never return fewer or more than ${themeCount} themes; if broad stories overlap, split them into distinct current-event themes instead of merging them
 - ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
-- For EVERY theme, include source analysis from ${sourcesPerTheme}-${Math.min(3, sourcesPerTheme + 1)} different sources and keep each item concise
+- For EVERY theme, include source analysis from ${isHighThemes ? 2 : sourcesPerTheme}-${isHighThemes ? 2 : Math.min(3, sourcesPerTheme + 1)} different sources and keep each item concise
 - If source material is in another language, you MUST translate it into ${lang.outputLang}
 - Be skeptical — note contradictions, sensationalism, and potential spin
 - Include the articleUrl from the provided articles for each source
 - Do NOT mention interactive features
-- Keep the introduction, theme summaries, commentary, and conclusion compact and information-dense
+- Keep ALL text SHORT and CONCISE${isHighThemes ? ' — each theme summary max 3 sentences, commentary max 2 sentences' : '. Keep introduction, theme summaries, commentary, and conclusion compact and information-dense'}
 - You MUST respond with a valid JSON object using tool calling${mondcivitanInstruction}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
