@@ -190,9 +190,7 @@ Deno.serve(async (req) => {
       }
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const themeCount = isImmediateRun
-        ? Math.min(4, Math.max(3, Math.round(balanced.length / 6)))
-        : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
+      const themeCount = Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const sourcesPerTheme = Math.min(3, Math.max(2, Math.ceil(sourceNames.length / Math.max(themeCount * 3, 1))));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
