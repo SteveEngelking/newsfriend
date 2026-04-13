@@ -84,10 +84,21 @@ Deno.serve(async (req) => {
       }
 
       const isImmediateRun = schedule.frequency === 'immediate';
+      const themeCountEarly = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
+        ? schedule.target_themes : 8;
+      const isHighThemes = themeCountEarly > 10;
 
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
-      const queries = [
+      // For high theme counts, use more diverse queries but fewer results each
+      const queries = isHighThemes ? [
+        'latest news today breaking',
+        'world politics economy technology',
+        'health science environment culture',
+        'aktuelle nachrichten heute eilmeldung',
+        'welt politik wirtschaft technologie',
+        'gesundheit wissenschaft umwelt kultur',
+      ] : [
         'latest news today breaking',
         'world politics economy technology health science',
         'aktuelle nachrichten heute eilmeldung',
@@ -96,7 +107,7 @@ Deno.serve(async (req) => {
 
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
-        const perQuery = Math.max(3, Math.ceil(schedule.articles_per_source / queries.length));
+        const perQuery = Math.max(2, Math.ceil(schedule.articles_per_source / queries.length));
         for (const q of queries) {
           fetchTasks.push({ source, query: q, perQuery });
         }
