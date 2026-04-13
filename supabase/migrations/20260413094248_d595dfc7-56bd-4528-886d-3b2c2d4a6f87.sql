@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN target_themes integer NOT NULL DEFAULT 0;
