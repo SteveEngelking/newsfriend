@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
           sourceName: task.source.name,
           title: item.title || 'Untitled',
           url: item.url,
-          content: (item.markdown || item.description || '').slice(0, isImmediateRun ? 220 : 500),
+          content: (item.markdown || item.description || '').slice(0, isImmediateRun ? 320 : 500),
         }));
       }));
 
