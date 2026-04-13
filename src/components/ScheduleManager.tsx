@@ -227,6 +227,7 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectItem value="conversational">{language === 'de' ? '💬 Konversationell' : '💬 Conversational / Blog'}</SelectItem>
                 <SelectItem value="philosophical">{language === 'de' ? '🤔 Philosophisch' : '🤔 Philosophical'}</SelectItem>
               </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-medium">{language === 'de' ? 'Themen pro Bericht' : 'Themes per report'}</label>
