@@ -240,7 +240,18 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
           }
         }
 
+        const styleInstructions: Record<string, string> = {
+          newspaper: 'WRITING STYLE: Write in a formal newspaper editorial style — authoritative, measured tone. Use proper journalistic structure with inverted pyramid. Maintain objectivity while offering sharp analysis.',
+          brief: 'WRITING STYLE: Write in an executive briefing style — concise, bullet-point-friendly, action-oriented. Prioritize key facts and implications. Keep summaries tight and commentary focused.',
+          analytical: 'WRITING STYLE: Write in a detailed analytical style — thorough examination of causes, context, and consequences. Draw connections between events. Provide in-depth critical analysis.',
+          conversational: 'WRITING STYLE: Write in a conversational, accessible blog style — engaging, relatable tone. Explain complex topics simply. Use rhetorical questions and vivid examples to draw readers in.',
+          philosophical: 'WRITING STYLE: Write in a philosophical, reflective style — explore deeper meaning, ethical dimensions, and historical parallels. Question assumptions. Consider multiple philosophical frameworks and their implications for humanity.',
+        };
+        const reportStyle = schedule.report_style || 'analytical';
+        const styleInstruction = styleInstructions[reportStyle] || styleInstructions.analytical;
+
         const sysPrompt = `You are a senior investigative journalist writing a daily news briefing in ${lang.outputLang}. ALL output MUST be in ${lang.outputLang}.
+${styleInstruction}
 CRITICAL TRANSLATION RULE: Even when quoting or paraphrasing articles originally written in other languages (e.g. Spanish, French, German, etc.), you MUST translate ALL quotes, key quotes, bias indicators, stances, summaries, and commentary into ${lang.outputLang}. Never leave foreign-language text untranslated. If a source is in a foreign language, translate the relevant excerpts into ${lang.outputLang}.
 RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source analyses per theme. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 

@@ -27,6 +27,7 @@ interface Schedule {
   mondcivitan_enabled: boolean;
   schweitzer_enabled: boolean;
   target_themes: number;
+  report_style: string;
   last_run_at: string | null;
   created_at: string;
 }
