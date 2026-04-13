@@ -198,6 +198,18 @@ export function ScheduleManager({ sources }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{language === 'de' ? 'Themen pro Bericht' : 'Themes per report'}</label>
+            <Select value={String(targetThemes)} onValueChange={(v) => setTargetThemes(Number(v))}>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">{language === 'de' ? 'Auto' : 'Auto'}</SelectItem>
+                {[4, 5, 6, 7, 8, 10, 12].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-2">
             <Checkbox id="mondcivitan" checked={mondcivitanEnabled} onCheckedChange={(checked) => setMondcivitanEnabled(checked === true)} />
             <label htmlFor="mondcivitan" className="text-sm cursor-pointer">
