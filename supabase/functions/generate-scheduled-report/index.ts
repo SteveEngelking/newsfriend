@@ -258,8 +258,8 @@ CRITICAL RULES:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            max_tokens: 16384,
+            model: 'openai/gpt-5-mini',
+            max_completion_tokens: 16384,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
