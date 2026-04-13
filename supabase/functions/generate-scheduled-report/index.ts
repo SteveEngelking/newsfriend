@@ -252,7 +252,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'openai/gpt-5-mini',
+            model: schedule.ai_model || 'openai/gpt-5-mini',
             max_completion_tokens: 16384,
             messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
             tools: [{
