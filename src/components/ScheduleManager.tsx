@@ -204,7 +204,7 @@ export function ScheduleManager({ sources }: Props) {
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">{language === 'de' ? 'Auto' : 'Auto'}</SelectItem>
-                {[4, 5, 6, 7, 8, 10, 12].map(n => (
+                {[4, 5, 6, 7, 8, 10, 12, 15, 20].map(n => (
                   <SelectItem key={n} value={String(n)}>{n}</SelectItem>
                 ))}
               </SelectContent>
