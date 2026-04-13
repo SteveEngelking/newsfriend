@@ -267,7 +267,7 @@ CRITICAL RULES:
           },
           body: JSON.stringify({
             model: 'openai/gpt-5-mini',
-            max_completion_tokens: 8192,
+            max_completion_tokens: isImmediateRun ? 4096 : 8192,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
@@ -280,7 +280,7 @@ CRITICAL RULES:
                 parameters: {
                   type: 'object',
                   properties: {
-                    introduction: { type: 'string', maxLength: 1200 },
+                    introduction: { type: 'string', maxLength: isImmediateRun ? 700 : 1200 },
                     themes: {
                       type: 'array',
                       minItems: themeCount,
@@ -289,7 +289,7 @@ CRITICAL RULES:
                         type: 'object',
                         properties: {
                           headline: { type: 'string', maxLength: 220 },
-                          summary: { type: 'string', maxLength: 1600 },
+                          summary: { type: 'string', maxLength: isImmediateRun ? 900 : 1600 },
                           sourceAnalysis: {
                             type: 'array',
                             minItems: sourcesPerTheme,
@@ -298,7 +298,7 @@ CRITICAL RULES:
                               type: 'object',
                               properties: {
                                 sourceName: { type: 'string', maxLength: 120 },
-                                stance: { type: 'string', maxLength: 500 },
+                                stance: { type: 'string', maxLength: isImmediateRun ? 320 : 500 },
                                 keyQuotes: { type: 'array', minItems: 1, maxItems: 2, items: { type: 'string', maxLength: 240 } },
                                 biasIndicators: { type: 'array', minItems: 1, maxItems: 2, items: { type: 'string', maxLength: 180 } },
                                 articleUrl: { type: 'string' },
@@ -306,11 +306,11 @@ CRITICAL RULES:
                               required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                             },
                           },
-                          criticalCommentary: { type: 'string', maxLength: 1400 },
+                          criticalCommentary: { type: 'string', maxLength: isImmediateRun ? 900 : 1400 },
                           ...(mondcivitanEnabled ? {
                             mondcivitanReflection: {
                               type: 'string',
-                              maxLength: 1400,
+                              maxLength: isImmediateRun ? 900 : 1400,
                               description: 'Reflection through Mondcivitan Republic principles.',
                             },
                           } : {}),
@@ -319,7 +319,7 @@ CRITICAL RULES:
                         required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
                     },
-                    conclusion: { type: 'string', maxLength: 1200 },
+                    conclusion: { type: 'string', maxLength: isImmediateRun ? 700 : 1200 },
                     ...ethicalProperties,
                   },
                   required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
