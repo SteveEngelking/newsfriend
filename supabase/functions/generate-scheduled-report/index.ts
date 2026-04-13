@@ -289,7 +289,7 @@ CRITICAL RULES:
                 parameters: {
                   type: 'object',
                   properties: {
-                    introduction: { type: 'string', maxLength: isImmediateRun ? 700 : 1200 },
+                    introduction: { type: 'string', maxLength: isHighThemes ? 500 : (isImmediateRun ? 700 : 1200) },
                     themes: {
                       type: 'array',
                       minItems: themeCount,
@@ -297,29 +297,29 @@ CRITICAL RULES:
                       items: {
                         type: 'object',
                         properties: {
-                          headline: { type: 'string', maxLength: 220 },
-                          summary: { type: 'string', maxLength: isImmediateRun ? 900 : 1600 },
+                          headline: { type: 'string', maxLength: 180 },
+                          summary: { type: 'string', maxLength: isHighThemes ? 500 : (isImmediateRun ? 900 : 1600) },
                           sourceAnalysis: {
                             type: 'array',
-                            minItems: sourcesPerTheme,
-                            maxItems: Math.min(3, sourcesPerTheme + 1),
+                            minItems: isHighThemes ? 2 : sourcesPerTheme,
+                            maxItems: isHighThemes ? 2 : Math.min(3, sourcesPerTheme + 1),
                             items: {
                               type: 'object',
                               properties: {
                                 sourceName: { type: 'string', maxLength: 120 },
-                                stance: { type: 'string', maxLength: isImmediateRun ? 320 : 500 },
-                                keyQuotes: { type: 'array', minItems: 1, maxItems: 2, items: { type: 'string', maxLength: 240 } },
-                                biasIndicators: { type: 'array', minItems: 1, maxItems: 2, items: { type: 'string', maxLength: 180 } },
+                                stance: { type: 'string', maxLength: isHighThemes ? 200 : (isImmediateRun ? 320 : 500) },
+                                keyQuotes: { type: 'array', minItems: 1, maxItems: isHighThemes ? 1 : 2, items: { type: 'string', maxLength: 200 } },
+                                biasIndicators: { type: 'array', minItems: 1, maxItems: 1, items: { type: 'string', maxLength: 150 } },
                                 articleUrl: { type: 'string' },
                               },
                               required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                             },
                           },
-                          criticalCommentary: { type: 'string', maxLength: isImmediateRun ? 900 : 1400 },
+                          criticalCommentary: { type: 'string', maxLength: isHighThemes ? 400 : (isImmediateRun ? 900 : 1400) },
                           ...(mondcivitanEnabled ? {
                             mondcivitanReflection: {
                               type: 'string',
-                              maxLength: isImmediateRun ? 900 : 1400,
+                              maxLength: isHighThemes ? 400 : (isImmediateRun ? 900 : 1400),
                               description: 'Reflection through Mondcivitan Republic principles.',
                             },
                           } : {}),
@@ -328,7 +328,7 @@ CRITICAL RULES:
                         required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
                     },
-                    conclusion: { type: 'string', maxLength: isImmediateRun ? 700 : 1200 },
+                    conclusion: { type: 'string', maxLength: isHighThemes ? 400 : (isImmediateRun ? 700 : 1200) },
                     ...ethicalProperties,
                   },
                   required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
