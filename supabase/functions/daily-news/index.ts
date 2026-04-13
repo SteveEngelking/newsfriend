@@ -213,7 +213,7 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'openai/gpt-5-mini',
         max_tokens: 16384,
         messages: [
           { role: 'system', content: systemPrompt },
