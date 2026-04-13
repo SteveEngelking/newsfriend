@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN report_style text NOT NULL DEFAULT 'analytical';

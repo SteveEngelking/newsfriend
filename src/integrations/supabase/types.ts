@@ -466,6 +466,7 @@ export type Database = {
           last_run_at: string | null
           max_articles: number
           mondcivitan_enabled: boolean
+          report_style: string
           schweitzer_enabled: boolean
           source_ids: string[]
           target_themes: number
@@ -481,6 +482,7 @@ export type Database = {
           last_run_at?: string | null
           max_articles?: number
           mondcivitan_enabled?: boolean
+          report_style?: string
           schweitzer_enabled?: boolean
           source_ids?: string[]
           target_themes?: number
@@ -496,6 +498,7 @@ export type Database = {
           last_run_at?: string | null
           max_articles?: number
           mondcivitan_enabled?: boolean
+          report_style?: string
           schweitzer_enabled?: boolean
           source_ids?: string[]
           target_themes?: number

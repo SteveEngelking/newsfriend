@@ -27,6 +27,7 @@ interface Schedule {
   mondcivitan_enabled: boolean;
   schweitzer_enabled: boolean;
   target_themes: number;
+  report_style: string;
   last_run_at: string | null;
   created_at: string;
 }
@@ -48,6 +49,7 @@ export function ScheduleManager({ sources }: Props) {
   const [maxArticles, setMaxArticles] = useState(80);
   const [targetThemes, setTargetThemes] = useState(0);
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
+  const [reportStyle, setReportStyle] = useState('analytical');
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -68,6 +70,7 @@ export function ScheduleManager({ sources }: Props) {
       setMaxArticles((sched as any).max_articles ?? 80);
       setTargetThemes((sched as any).target_themes ?? 0);
       setAiModel((sched as any).ai_model || 'openai/gpt-5-mini');
+      setReportStyle((sched as any).report_style || 'analytical');
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
@@ -97,7 +100,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle };
       if (frequency === 'immediate') updateData.last_run_at = null;
       const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
@@ -108,7 +111,7 @@ export function ScheduleManager({ sources }: Props) {
         loadData();
       }
     } else {
-      const { error } = await supabase.from('report_schedules').insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel } as any);
+      const { error } = await supabase.from('report_schedules').insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle } as any);
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
@@ -210,6 +213,19 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectItem value="google/gemini-3-flash-preview">Gemini 3 Flash (fast)</SelectItem>
                 <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (quality)</SelectItem>
                 <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{language === 'de' ? 'Berichtsstil' : 'Report Style'}</label>
+            <Select value={reportStyle} onValueChange={setReportStyle}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newspaper">{language === 'de' ? '📰 Zeitung / Editorial' : '📰 Newspaper / Editorial'}</SelectItem>
+                <SelectItem value="brief">{language === 'de' ? '📋 Kurzbericht' : '📋 Brief / Executive Summary'}</SelectItem>
+                <SelectItem value="analytical">{language === 'de' ? '🔍 Analytisch' : '🔍 Analytical / Deep Dive'}</SelectItem>
+                <SelectItem value="conversational">{language === 'de' ? '💬 Konversationell' : '💬 Conversational / Blog'}</SelectItem>
+                <SelectItem value="philosophical">{language === 'de' ? '🤔 Philosophisch' : '🤔 Philosophical'}</SelectItem>
               </SelectContent>
             </Select>
           </div>
