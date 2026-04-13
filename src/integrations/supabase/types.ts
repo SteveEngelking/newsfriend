@@ -467,6 +467,7 @@ export type Database = {
           mondcivitan_enabled: boolean
           schweitzer_enabled: boolean
           source_ids: string[]
+          target_themes: number
         }
         Insert: {
           articles_per_source?: number
@@ -480,6 +481,7 @@ export type Database = {
           mondcivitan_enabled?: boolean
           schweitzer_enabled?: boolean
           source_ids?: string[]
+          target_themes?: number
         }
         Update: {
           articles_per_source?: number
@@ -493,6 +495,7 @@ export type Database = {
           mondcivitan_enabled?: boolean
           schweitzer_enabled?: boolean
           source_ids?: string[]
+          target_themes?: number
         }
         Relationships: []
       }
