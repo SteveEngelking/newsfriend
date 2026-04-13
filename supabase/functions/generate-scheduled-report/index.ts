@@ -265,7 +265,7 @@ CRITICAL RULES:
           },
           body: JSON.stringify({
             model: 'openai/gpt-5-mini',
-            max_completion_tokens: 16384,
+            max_completion_tokens: themeCount > 8 ? 32768 : 16384,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
@@ -357,9 +357,9 @@ CRITICAL RULES:
           return;
         }
 
-        if (!Array.isArray(parsed.themes) || parsed.themes.length !== themeCount) {
+        if (!Array.isArray(parsed.themes) || parsed.themes.length < Math.max(4, themeCount - 2)) {
           console.error(
-            `Schedule ${schedule.id}: expected ${themeCount} themes for ${lang.code}, got ${Array.isArray(parsed.themes) ? parsed.themes.length : 'invalid'}`,
+            `Schedule ${schedule.id}: expected ~${themeCount} themes for ${lang.code}, got ${Array.isArray(parsed.themes) ? parsed.themes.length : 'invalid'}`,
           );
           return;
         }
