@@ -267,7 +267,7 @@ CRITICAL RULES:
           },
           body: JSON.stringify({
             model: 'openai/gpt-5-mini',
-            max_completion_tokens: isImmediateRun ? 4096 : 8192,
+            max_completion_tokens: 16384,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
