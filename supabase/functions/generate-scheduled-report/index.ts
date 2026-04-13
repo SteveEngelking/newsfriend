@@ -264,7 +264,7 @@ CRITICAL RULES:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'openai/gpt-5-mini',
+            model: themeCount > 8 ? 'openai/gpt-5' : 'openai/gpt-5-mini',
             max_completion_tokens: themeCount > 8 ? 32768 : 16384,
             messages: [
               { role: 'system', content: systemPrompt },
