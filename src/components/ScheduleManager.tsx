@@ -217,6 +217,18 @@ export function ScheduleManager({ sources }: Props) {
             </Select>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{language === 'de' ? 'Berichtsstil' : 'Report Style'}</label>
+            <Select value={reportStyle} onValueChange={setReportStyle}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newspaper">{language === 'de' ? '📰 Zeitung / Editorial' : '📰 Newspaper / Editorial'}</SelectItem>
+                <SelectItem value="brief">{language === 'de' ? '📋 Kurzbericht' : '📋 Brief / Executive Summary'}</SelectItem>
+                <SelectItem value="analytical">{language === 'de' ? '🔍 Analytisch' : '🔍 Analytical / Deep Dive'}</SelectItem>
+                <SelectItem value="conversational">{language === 'de' ? '💬 Konversationell' : '💬 Conversational / Blog'}</SelectItem>
+                <SelectItem value="philosophical">{language === 'de' ? '🤔 Philosophisch' : '🤔 Philosophical'}</SelectItem>
+              </SelectContent>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-medium">{language === 'de' ? 'Themen pro Bericht' : 'Themes per report'}</label>
             <Select value={String(targetThemes)} onValueChange={(v) => setTargetThemes(Number(v))}>
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
