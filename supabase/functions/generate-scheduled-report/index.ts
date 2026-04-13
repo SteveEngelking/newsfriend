@@ -217,9 +217,7 @@ Deno.serve(async (req) => {
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
       const ethicalPerspectives = schweitzerEnabled ? allEthicalPerspectives : [];
-      const prioritizedEthicalPerspectives = preferredLanguage === 'de'
-        ? ethicalPerspectives.slice(0, 8)
-        : ethicalPerspectives;
+      const prioritizedEthicalPerspectives = ethicalPerspectives;
 
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
