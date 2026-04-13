@@ -65,6 +65,7 @@ export function ScheduleManager({ sources }: Props) {
       setMondcivitanEnabled(sched.mondcivitan_enabled ?? false);
       setSchweitzerEnabled(sched.schweitzer_enabled ?? false);
       setMaxArticles((sched as any).max_articles ?? 80);
+      setTargetThemes((sched as any).target_themes ?? 0);
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
