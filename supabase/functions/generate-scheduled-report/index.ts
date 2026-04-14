@@ -90,21 +90,11 @@ Deno.serve(async (req) => {
     const results: string[] = [];
 
     for (const schedule of schedules) {
-      // Check if it's time to run
-      if (schedule.last_run_at) {
-        const lastRun = new Date(schedule.last_run_at);
-        const hoursSince = (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60);
-        const requiredHours = schedule.frequency === 'immediate' ? 0
-          : schedule.frequency === 'hourly' ? 0.9
-          : schedule.frequency === 'every_6_hours' ? 5.5
-          : schedule.frequency === 'every_12_hours' ? 11.5
-          : schedule.frequency === 'daily' ? 23
-          : schedule.frequency === 'every_other_day' ? 47
-          : 167; // weekly
-        if (hoursSince < requiredHours) {
-          results.push(`Schedule ${schedule.id}: not due yet`);
-          continue;
-        }
+      // Use new time-of-day trigger logic
+      const languagesDue = getLanguagesDue(schedule);
+      if (languagesDue.length === 0) {
+        results.push(`Schedule ${schedule.id}: not due yet`);
+        continue;
       }
 
       // Get source details from DB
@@ -242,12 +232,8 @@ Deno.serve(async (req) => {
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
       ).join('\n\n');
 
-      // Only generate the schedule's own language to avoid timeouts
-      const allLangs = [
-        { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
-        { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
-      ];
-      const languages = allLangs.filter(l => l.code === preferredLanguage);
+      // Use languages determined by the time-of-day trigger
+      const languages = languagesDue;
 
       const mondcivitanEnabled = schedule.mondcivitan_enabled === true;
       const schweitzerEnabled = schedule.schweitzer_enabled === true;
