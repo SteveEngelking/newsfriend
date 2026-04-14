@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
 
     // Find due schedules
     const now = new Date();
+    const currentHour = now.getUTCHours();
     const { data: schedules, error: schedErr } = await supabase
       .from('report_schedules')
       .select('*')
@@ -44,6 +45,39 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Determine which languages are due for each schedule based on frequency + time-of-day
+    // EN triggers at specific hours, DE triggers 1 hour later
+    function getLanguagesDue(schedule: any): { code: string; outputLang: string; titlePrefix: string; dateLocale: string }[] {
+      const freq = schedule.frequency;
+      if (freq === 'immediate') {
+        // Immediate: run both languages now, but only if not already run
+        if (schedule.last_run_at) return [];
+        return [
+          { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
+          { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
+        ];
+      }
+
+      // Trigger hours: daily = [6], twice_daily = [6, 18]
+      const enHours = freq === 'twice_daily' ? [6, 18] : [6];
+      const deHours = enHours.map(h => h + 1); // DE is 1 hour later
+
+      const lastRun = schedule.last_run_at ? new Date(schedule.last_run_at) : null;
+      const hoursSinceLastRun = lastRun ? (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60) : 999;
+      // Minimum gap to prevent double-firing (must be at least 2 hours since last run)
+      if (hoursSinceLastRun < 2) return [];
+
+      const due: { code: string; outputLang: string; titlePrefix: string; dateLocale: string }[] = [];
+
+      if (enHours.includes(currentHour)) {
+        due.push({ code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' });
+      }
+      if (deHours.includes(currentHour)) {
+        due.push({ code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' });
+      }
+
+      return due;
+    }
     // Fetch enabled ethical perspectives once for all schedules
     const { data: ethicalPerspectivesData } = await supabase
       .from('ethical_perspectives')
