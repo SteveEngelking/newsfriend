@@ -152,9 +152,10 @@ export function ScheduleManager({ sources }: Props) {
     return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport, reportLanguage);
   };
 
-  const frequencyLabelKey: Record<string, string> = {
-    immediate: 'scheduleImmediate', hourly: 'scheduleHourly', every_6_hours: 'scheduleEvery6h',
-    every_12_hours: 'scheduleEvery12h', daily: 'scheduleDaily', every_other_day: 'scheduleEveryOtherDay', weekly: 'scheduleWeekly',
+  const frequencyLabels: Record<string, string> = {
+    immediate: language === 'de' ? '⚡ Sofort (einmalig)' : '⚡ Immediate (one-time)',
+    daily: language === 'de' ? '📅 Täglich (EN 06:00 · DE 07:00 UTC)' : '📅 Daily (EN 06:00 · DE 07:00 UTC)',
+    twice_daily: language === 'de' ? '🔄 Zweimal täglich (EN 06:00/18:00 · DE 07:00/19:00 UTC)' : '🔄 Twice daily (EN 06:00/18:00 · DE 07:00/19:00 UTC)',
   };
 
   return (
@@ -169,15 +170,11 @@ export function ScheduleManager({ sources }: Props) {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
             <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-auto min-w-[260px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="immediate">{t('scheduleImmediate')}</SelectItem>
-                <SelectItem value="hourly">{t('scheduleHourly')}</SelectItem>
-                <SelectItem value="every_6_hours">{t('scheduleEvery6h')}</SelectItem>
-                <SelectItem value="every_12_hours">{t('scheduleEvery12h')}</SelectItem>
-                <SelectItem value="daily">{t('scheduleDaily')}</SelectItem>
-                <SelectItem value="every_other_day">{t('scheduleEveryOtherDay')}</SelectItem>
-                <SelectItem value="weekly">{t('scheduleWeekly')}</SelectItem>
+                <SelectItem value="immediate">{frequencyLabels.immediate}</SelectItem>
+                <SelectItem value="daily">{frequencyLabels.daily}</SelectItem>
+                <SelectItem value="twice_daily">{frequencyLabels.twice_daily}</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={handleSaveSchedule} disabled={isLoading} size="sm">
@@ -258,7 +255,7 @@ export function ScheduleManager({ sources }: Props) {
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
-              {t((frequencyLabelKey[schedule.frequency] || 'scheduleDaily') as any)} • {t('scheduleUsingSources')} {schedule.source_ids.length} {t('scheduleSources')}
+              {frequencyLabels[schedule.frequency] || frequencyLabels.daily} • {t('scheduleUsingSources')} {schedule.source_ids.length} {t('scheduleSources')}
               {schedule.last_run_at && ` • ${t('scheduleLastRun')} ${new Date(schedule.last_run_at).toLocaleString()}`}
             </p>
           )}
