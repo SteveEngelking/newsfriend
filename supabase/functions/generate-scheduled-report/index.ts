@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
       }
       if (deHours.includes(currentHour)) {
         due.push({ code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' });
-      }
+    }
+
 
       return due;
     }
