@@ -207,9 +207,11 @@ export function ScheduleManager({ sources }: Props) {
               <SelectContent>
                 <SelectItem value="openai/gpt-5-mini">GPT-5 Mini (fast)</SelectItem>
                 <SelectItem value="openai/gpt-5">GPT-5 (quality)</SelectItem>
+                <SelectItem value="openai/gpt-5.2">GPT-5.2 (latest)</SelectItem>
                 <SelectItem value="google/gemini-3-flash-preview">Gemini 3 Flash (fast)</SelectItem>
                 <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (quality)</SelectItem>
                 <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                <SelectItem value="google/gemini-3.1-pro-preview">Z-AI (Gemini 3.1 Pro)</SelectItem>
               </SelectContent>
             </Select>
           </div>
