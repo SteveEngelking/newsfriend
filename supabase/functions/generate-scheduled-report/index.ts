@@ -395,9 +395,14 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           }
         }
 
-        if (allThemes.length < Math.max(4, themeCount - 4)) {
-          console.error(`Schedule ${schedule.id}: expected ~${themeCount} themes, got ${allThemes.length}`);
+        // Accept partial results: at least 4 themes or half the target
+        const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
+        if (allThemes.length < minAcceptable) {
+          console.error(`Schedule ${schedule.id}: expected ~${themeCount} themes, got ${allThemes.length} (min ${minAcceptable})`);
           return;
+        }
+        if (allThemes.length < themeCount) {
+          console.warn(`Schedule ${schedule.id}: partial result — ${allThemes.length}/${themeCount} themes, proceeding`);
         }
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
