@@ -468,14 +468,14 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         }
       };
 
-      // Run languages sequentially to avoid timeout under heavy ethical perspectives load
-      for (const lang of languages) {
+      // Run languages in parallel for speed (especially important for "both" immediate runs)
+      await Promise.all(languages.map(async (lang) => {
         try {
           await generateForLang(lang);
         } catch (langErr) {
           console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr);
         }
-      }
+      }));
 
       if (generatedLanguages.length > 0) {
         const { error: updateErr } = await supabase
