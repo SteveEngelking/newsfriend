@@ -51,6 +51,7 @@ export function ScheduleManager({ sources }: Props) {
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
   const [reportStyle, setReportStyle] = useState('analytical');
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
+  const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
@@ -107,30 +108,38 @@ export function ScheduleManager({ sources }: Props) {
         toast({ title: t('sourceError'), description: error.message || t('scheduleUpdateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleUpdated') });
-        if (frequency === 'immediate') await triggerImmediateGeneration();
+        if (frequency === 'immediate') await triggerImmediateGeneration(schedule.id);
         loadData();
       }
     } else {
-      const { error } = await supabase.from('report_schedules').insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle } as any);
+      const { data, error } = await supabase
+        .from('report_schedules')
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle } as any)
+        .select('id')
+        .single();
       if (error) {
         toast({ title: t('sourceError'), description: t('scheduleCreateFailed'), variant: 'destructive' });
       } else {
         toast({ title: t('scheduleCreated') });
-        if (frequency === 'immediate') await triggerImmediateGeneration();
+        if (frequency === 'immediate' && data?.id) await triggerImmediateGeneration(data.id);
         loadData();
       }
     }
     setIsLoading(false);
   };
 
-  const triggerImmediateGeneration = async () => {
-    toast({ title: language === 'de' ? 'Bericht wird im Hintergrund generiert… (2-3 Min.)' : 'Report generating in background… (2-3 min)' });
+  const triggerImmediateGeneration = async (scheduleId: string) => {
+    const languages = immediateLanguage === 'both' ? ['en', 'de'] : [immediateLanguage];
+    toast({ title: t('scheduleRunningNow') });
     // Fire and forget — don't await, the edge function can take 2-3 minutes
-    supabase.functions.invoke('generate-scheduled-report').then(({ error }) => {
+    supabase.functions.invoke('generate-scheduled-report', {
+      body: { forceImmediate: true, scheduleId, languages },
+    }).then(({ error }) => {
       if (error) {
         console.error('Background generation error:', error);
+        toast({ title: t('sourceError'), description: t('scheduleRunFailed'), variant: 'destructive' });
       } else {
-        toast({ title: language === 'de' ? 'Bericht erstellt — Seite neu laden' : 'Report generated — refresh page' });
+        toast({ title: t('scheduleRunReady') });
         loadData();
       }
     }).catch(e => console.error('Background generation error:', e));
@@ -177,6 +186,16 @@ export function ScheduleManager({ sources }: Props) {
                 <SelectItem value="twice_daily">{frequencyLabels.twice_daily}</SelectItem>
               </SelectContent>
             </Select>
+            {frequency === 'immediate' && (
+              <Select value={immediateLanguage} onValueChange={(value) => setImmediateLanguage(value as 'en' | 'de' | 'both')}>
+                <SelectTrigger className="w-auto min-w-[220px]"><SelectValue placeholder={t('scheduleImmediateLanguageLabel')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="both">{t('scheduleImmediateBoth')}</SelectItem>
+                  <SelectItem value="en">{t('scheduleImmediateEnglish')}</SelectItem>
+                  <SelectItem value="de">{t('scheduleImmediateGerman')}</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <Button onClick={handleSaveSchedule} disabled={isLoading} size="sm">
               {schedule ? t('scheduleUpdate') : t('scheduleCreate')}
             </Button>
