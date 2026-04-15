@@ -299,67 +299,94 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
 
-        console.log(`Schedule ${schedule.id}: AI call for ${batchThemeCount} themes (${batchLabel})`);
-        const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: schedule.ai_model || 'openai/gpt-5-mini',
-            max_completion_tokens: 16384,
-            messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
-            tools: [{
-              type: 'function',
-              function: {
-                name: 'generate_themes',
-                description: 'Generate news themes',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    ...(includeEthical ? { introduction: { type: 'string' } } : {}),
-                    themes: {
-                      type: 'array', minItems: batchThemeCount, maxItems: batchThemeCount,
-                      items: {
-                        type: 'object',
-                        properties: {
-                          headline: { type: 'string' },
-                          summary: { type: 'string' },
-                          sourceAnalysis: {
-                            type: 'array', minItems: 2, maxItems: 2,
-                            items: {
-                              type: 'object',
-                              properties: {
-                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
-                                keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
-                                biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
-                                articleUrl: { type: 'string' },
+        const primaryModel = schedule.ai_model || 'openai/gpt-5-mini';
+        const fallbackModel = 'openai/gpt-5-mini';
+
+        const makeAIRequest = async (model: string) => {
+          const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model,
+              max_completion_tokens: 16384,
+              messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
+              tools: [{
+                type: 'function',
+                function: {
+                  name: 'generate_themes',
+                  description: 'Generate news themes',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      ...(includeEthical ? { introduction: { type: 'string' } } : {}),
+                      themes: {
+                        type: 'array', minItems: batchThemeCount, maxItems: batchThemeCount,
+                        items: {
+                          type: 'object',
+                          properties: {
+                            headline: { type: 'string' },
+                            summary: { type: 'string' },
+                            sourceAnalysis: {
+                              type: 'array', minItems: 2, maxItems: 2,
+                              items: {
+                                type: 'object',
+                                properties: {
+                                  sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
+                                  keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
+                                  biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
+                                  articleUrl: { type: 'string' },
+                                },
+                                required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                               },
-                              required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                             },
+                            criticalCommentary: { type: 'string' },
+                            ...(mondcivitanEnabled ? { mondcivitanReflection: { type: 'string' } } : {}),
+                            significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                           },
-                          criticalCommentary: { type: 'string' },
-                          ...(mondcivitanEnabled ? { mondcivitanReflection: { type: 'string' } } : {}),
-                          significance: { type: 'string', enum: ['high', 'medium', 'low'] },
+                          required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                         },
-                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
+                      ...(includeEthical ? { conclusion: { type: 'string' }, ...ethicalProperties } : {}),
                     },
-                    ...(includeEthical ? { conclusion: { type: 'string' }, ...ethicalProperties } : {}),
+                    required: ['themes', ...(includeEthical ? ['introduction', 'conclusion', ...ethicalRequired] : [])],
                   },
-                  required: ['themes', ...(includeEthical ? ['introduction', 'conclusion', ...ethicalRequired] : [])],
                 },
-              },
-            }],
-            tool_choice: { type: 'function', function: { name: 'generate_themes' } },
-          }),
-        });
+              }],
+              tool_choice: { type: 'function', function: { name: 'generate_themes' } },
+            }),
+          });
+          return aiResp;
+        };
+
+        let aiResp = await makeAIRequest(primaryModel);
+
+        // Fallback to a reliable model on 400 errors (model may not support tool calling)
+        if (!aiResp.ok && aiResp.status === 400 && primaryModel !== fallbackModel) {
+          console.warn(`AI model ${primaryModel} returned 400, falling back to ${fallbackModel}`);
+          aiResp = await makeAIRequest(fallbackModel);
+        }
 
         if (!aiResp.ok) {
           const errText = await aiResp.text().catch(() => '');
           console.error(`AI failed (${aiResp.status}): ${errText.slice(0, 200)}`);
           return null;
         }
-        const aiData = await aiResp.json();
-        const args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        let aiData = await aiResp.json();
+        let args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+
+        // Fallback: if model returned 200 but no tool_call (some models ignore tool_choice)
+        if (!args && primaryModel !== fallbackModel) {
+          console.warn(`AI model ${primaryModel} returned no tool_call, falling back to ${fallbackModel}`);
+          const retryResp = await makeAIRequest(fallbackModel);
+          if (!retryResp.ok) {
+            const errText = await retryResp.text().catch(() => '');
+            console.error(`Fallback AI failed (${retryResp.status}): ${errText.slice(0, 200)}`);
+            return null;
+          }
+          aiData = await retryResp.json();
+          args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        }
+
         if (!args) { console.error('No tool_call in AI response'); return null; }
         try { return JSON.parse(args); } catch { console.error('Failed to parse tool_call args'); return null; }
       };
@@ -468,14 +495,14 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         }
       };
 
-      // Run languages sequentially to avoid timeout under heavy ethical perspectives load
-      for (const lang of languages) {
+      // Run languages in parallel for speed (especially important for "both" immediate runs)
+      await Promise.all(languages.map(async (lang) => {
         try {
           await generateForLang(lang);
         } catch (langErr) {
           console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr);
         }
-      }
+      }));
 
       if (generatedLanguages.length > 0) {
         const { error: updateErr } = await supabase
