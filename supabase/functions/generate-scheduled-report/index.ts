@@ -371,8 +371,22 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           console.error(`AI failed (${aiResp.status}): ${errText.slice(0, 200)}`);
           return null;
         }
-        const aiData = await aiResp.json();
-        const args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        let aiData = await aiResp.json();
+        let args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+
+        // Fallback: if model returned 200 but no tool_call (some models ignore tool_choice)
+        if (!args && primaryModel !== fallbackModel) {
+          console.warn(`AI model ${primaryModel} returned no tool_call, falling back to ${fallbackModel}`);
+          const retryResp = await makeAIRequest(fallbackModel);
+          if (!retryResp.ok) {
+            const errText = await retryResp.text().catch(() => '');
+            console.error(`Fallback AI failed (${retryResp.status}): ${errText.slice(0, 200)}`);
+            return null;
+          }
+          aiData = await retryResp.json();
+          args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        }
+
         if (!args) { console.error('No tool_call in AI response'); return null; }
         try { return JSON.parse(args); } catch { console.error('Failed to parse tool_call args'); return null; }
       };
