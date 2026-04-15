@@ -16,6 +16,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const requestBody = await req.json().catch(() => null);
+    const manualScheduleId = typeof requestBody?.scheduleId === 'string' ? requestBody.scheduleId : null;
+    const forceImmediate = requestBody?.forceImmediate === true;
+    const requestedLanguages = Array.isArray(requestBody?.languages)
+      ? requestBody.languages.filter((value: unknown): value is 'en' | 'de' => value === 'en' || value === 'de')
+      : [];
+
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
@@ -33,10 +40,16 @@ Deno.serve(async (req) => {
     // Find due schedules
     const now = new Date();
     const currentHour = now.getUTCHours();
-    const { data: schedules, error: schedErr } = await supabase
+    let schedulesQuery = supabase
       .from('report_schedules')
       .select('*')
       .eq('enabled', true);
+
+    if (manualScheduleId) {
+      schedulesQuery = schedulesQuery.eq('id', manualScheduleId);
+    }
+
+    const { data: schedules, error: schedErr } = await schedulesQuery;
 
     if (schedErr || !schedules?.length) {
       return new Response(
@@ -48,6 +61,13 @@ Deno.serve(async (req) => {
     // Determine which languages are due for each schedule based on frequency + time-of-day
     // EN triggers at specific hours, DE triggers 1 hour later
     function getLanguagesDue(schedule: any): { code: string; outputLang: string; titlePrefix: string; dateLocale: string }[] {
+      if (forceImmediate) {
+        const codes = requestedLanguages.length > 0 ? requestedLanguages : ['en', 'de'];
+        return codes.map((code) => code === 'de'
+          ? { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' }
+          : { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' });
+      }
+
       const freq = schedule.frequency;
       if (freq === 'immediate') {
         // Immediate: run both languages now, but only if not already run
@@ -171,7 +191,7 @@ Deno.serve(async (req) => {
           sourceName: task.source.name,
           title: item.title || 'Untitled',
           url: item.url,
-          content: (item.markdown || item.description || '').slice(0, isHighThemes ? 200 : (isImmediateRun ? 320 : 500)),
+          content: (item.markdown || item.description || '').slice(0, isHighThemes ? 320 : (isImmediateRun ? 320 : 500)),
         }));
       }));
 
@@ -208,7 +228,7 @@ Deno.serve(async (req) => {
         bySource[a.sourceName].push(a);
       }
       const sourceNames = Object.keys(bySource);
-      const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 40) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
+      const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 60) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
       const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
@@ -271,10 +291,10 @@ MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a th
         const reportStyle = schedule.report_style || 'analytical';
         const styleInstruction = styleInstructions[reportStyle] || styleInstructions.analytical;
 
-        const sysPrompt = `You are a senior investigative journalist writing a daily news briefing in ${lang.outputLang}. ALL output MUST be in ${lang.outputLang}.
+        const sysPrompt = `You are a senior investigative journalist writing a daily news briefing in ${lang.outputLang}. ALL report content MUST be in ${lang.outputLang}.
 ${styleInstruction}
-CRITICAL TRANSLATION RULE — ABSOLUTE, NO EXCEPTIONS: Every single word of your output MUST be in ${lang.outputLang}. This applies to ALL fields without exception: quotes, keyQuote, biasIndicators, stance, summary, sourceComparison, introduction, conclusion, mondcivitanReflection, and every other field. When a source article is in German, Spanish, French, or ANY other language, you MUST fully translate all excerpts, quotes, and descriptions into ${lang.outputLang}. Do NOT include any foreign-language text — not even a single phrase. If you catch yourself writing in another language, stop and translate it. Violation of this rule makes the report unusable.
-RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source analyses per theme. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Respond via tool calling. IMPORTANT: In the introduction, do NOT mention the number of themes or topics covered — write a natural editorial introduction.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
+CRITICAL TRANSLATION RULE — ABSOLUTE, NO EXCEPTIONS: Translate every narrative field into ${lang.outputLang}, including quotes, bias indicators, stance, summary, introduction, conclusion, critical commentary, and reflections. HOWEVER, source/publication names in sourceName MUST stay exactly as provided in the source list, in their original language and spelling. URLs must also remain unchanged. When a source article is in another language, translate the content but preserve the original source name exactly.
+RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source analyses per theme. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling. IMPORTANT: In the introduction, do NOT mention the number of themes or topics covered — write a natural editorial introduction.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
@@ -308,7 +328,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
                             items: {
                               type: 'object',
                               properties: {
-                                sourceName: { type: 'string' }, stance: { type: 'string' },
+                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
                                 keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
                                 biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
                                 articleUrl: { type: 'string' },
@@ -380,6 +400,15 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
               legacyFields[key] = r1[key];
             }
           }
+
+          if (allThemes.length < themeCount) {
+            const missingThemeCount = themeCount - allThemes.length;
+            console.warn(`Schedule ${schedule.id}: recovery pass for ${missingThemeCount} missing themes in ${lang.code}`);
+            const recovery = await callAI(lang, missingThemeCount, articlesSummary, `Recovery pass for ${missingThemeCount} remaining themes. Avoid duplicating these existing headlines: ${allThemes.map((theme: any) => theme?.headline || '').filter(Boolean).join(' | ')}`, false);
+            if (recovery?.themes?.length) {
+              allThemes.push(...recovery.themes);
+            }
+          }
         } else {
           const result = await callAI(lang, themeCount, articlesSummary, 'Full report', true);
           if (!result?.themes) return;
@@ -394,6 +423,14 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
             }
           }
         }
+
+        const seenHeadlines = new Set<string>();
+        allThemes = allThemes.filter((theme: any) => {
+          const key = String(theme?.headline || '').trim().toLowerCase();
+          if (!key || seenHeadlines.has(key)) return false;
+          seenHeadlines.add(key);
+          return true;
+        }).slice(0, themeCount);
 
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
