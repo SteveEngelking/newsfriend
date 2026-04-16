@@ -5,7 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { downloadAsHtml } from '@/lib/downloadHtml';
 import { generateDailyNewsHtml, openReportInNewTab } from '@/lib/generateReportHtml';
-import { Download, ExternalLink } from 'lucide-react';
+import { Download, ExternalLink, Share2 } from 'lucide-react';
+import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -205,9 +206,12 @@ export function DailyNewsReportView({ report }: Props) {
           </>
         )}
 
-        <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
+        <footer className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground space-y-3">
           <p>{t('dailyFooter1')}</p>
           <p>{t('dailyFooter2')}</p>
+          <div className="flex justify-center pt-2">
+            <ShareButtons title={report.title} url="https://newsfriend.org" />
+          </div>
         </footer>
       </div>
     </div>

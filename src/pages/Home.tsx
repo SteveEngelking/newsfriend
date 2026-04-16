@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { Newspaper, Loader2 } from 'lucide-react';
+import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
@@ -161,6 +162,9 @@ const Home = () => {
               <Newspaper className="h-4 w-4" />
               {t('homeRefresh')}
             </Button>
+          </div>
+          <div className="flex justify-center">
+            <ShareButtons url="https://newsfriend.org" />
           </div>
           {isLoadingReport ? (
             <div className="flex justify-center py-12">
