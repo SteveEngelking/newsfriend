@@ -165,6 +165,7 @@ const Home = () => {
           </div>
           <div className="flex justify-center">
             <ShareButtons url="https://newsfriend.org" />
+          </div>
           {isLoadingReport ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
