@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Mail, Link, MessageCircle } from 'lucide-react';
+import { Facebook, Twitter, Mail, Link, MessageCircle, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { toast } from '@/hooks/use-toast';
@@ -17,28 +17,43 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
     {
       name: 'WhatsApp',
       icon: MessageCircle,
-      href: `https://wa.me/?text=${encodeURIComponent(`${shareTitle}\n${shareUrl}`)}`,
+      getUrl: () => `https://wa.me/?text=${encodeURIComponent(`${shareTitle}\n${shareUrl}`)}`,
       className: 'hover:text-green-600',
     },
     {
       name: 'Facebook',
       icon: Facebook,
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      getUrl: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
       className: 'hover:text-blue-600',
     },
     {
       name: 'X',
       icon: Twitter,
-      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`,
+      getUrl: () => `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`,
       className: 'hover:text-foreground',
+    },
+    {
+      name: 'LinkedIn',
+      icon: Linkedin,
+      getUrl: () => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      className: 'hover:text-blue-700',
     },
     {
       name: 'Email',
       icon: Mail,
-      href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareTitle}\n\n${shareUrl}`)}`,
+      getUrl: () => `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareTitle}\n\n${shareUrl}`)}`,
       className: 'hover:text-red-500',
     },
   ];
+
+  const openShare = (getUrl: () => string, name: string) => {
+    const shareLink = getUrl();
+    if (name === 'Email') {
+      window.location.href = shareLink;
+    } else {
+      window.open(shareLink, '_blank', 'noopener,noreferrer,width=600,height=400');
+    }
+  };
 
   const copyLink = async () => {
     try {
@@ -58,11 +73,10 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
           variant="ghost"
           size="icon"
           className={`h-8 w-8 text-muted-foreground ${link.className}`}
-          asChild
+          onClick={() => openShare(link.getUrl, link.name)}
+          aria-label={`Share on ${link.name}`}
         >
-          <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${link.name}`}>
-            <link.icon className="h-4 w-4" />
-          </a>
+          <link.icon className="h-4 w-4" />
         </Button>
       ))}
       <Button
