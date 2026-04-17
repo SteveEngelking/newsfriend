@@ -543,6 +543,9 @@ export const translations = {
     homeTryAgain: 'Erneut versuchen',
     homeRefresh: 'Aktualisieren',
     homeGenerated: 'Erstellt',
+    homeSignupCtaTitle: 'Kostenlose Nachrichten-Benachrichtigungen erhalten',
+    homeSignupCtaDesc: 'Registrieren Sie sich kostenlos, um neue Berichte und Ankündigungen per E-Mail zu erhalten.',
+    homeSignupCtaButton: 'Kostenlos registrieren',
 
     searchPlaceholder: 'Nachrichtenthema eingeben...',
     searchAnalyze: 'Analysieren',
