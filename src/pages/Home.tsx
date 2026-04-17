@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
-import { Newspaper, Loader2 } from 'lucide-react';
+import { Newspaper, Loader2, Bell, ArrowRight } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,7 +23,18 @@ const Home = () => {
   const [selectedReport, setSelectedReport] = useState<DailyNewsReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t, language } = useLanguage();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Lightweight list fetch — no report_data
   const fetchList = useCallback(async (preserveSelection = true) => {
@@ -145,6 +157,31 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-4xl mx-auto space-y-4"
         >
+          {!isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-5 shadow-sm"
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-primary/15 p-2.5 shrink-0">
+                    <Bell className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base sm:text-lg leading-tight">{t('homeSignupCtaTitle')}</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">{t('homeSignupCtaDesc')}</p>
+                  </div>
+                </div>
+                <Button asChild size="lg" className="w-full sm:w-auto shrink-0 gap-2 font-semibold">
+                  <Link to="/register">
+                    {t('homeSignupCtaButton')}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+          )}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
             <Select value={selectedId || ''} onValueChange={handleSelectReport}>
               <SelectTrigger className="w-full sm:w-80">

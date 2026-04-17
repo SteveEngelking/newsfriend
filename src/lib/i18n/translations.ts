@@ -21,6 +21,9 @@ export const translations = {
     homeTryAgain: 'Try Again',
     homeRefresh: 'Refresh',
     homeGenerated: 'Generated',
+    homeSignupCtaTitle: 'Get free news notifications',
+    homeSignupCtaDesc: 'Sign up for free to receive new reports and announcements by email.',
+    homeSignupCtaButton: 'Sign up free',
 
     // SearchBar
     searchPlaceholder: 'Enter a news topic to fact-check...',
@@ -540,6 +543,9 @@ export const translations = {
     homeTryAgain: 'Erneut versuchen',
     homeRefresh: 'Aktualisieren',
     homeGenerated: 'Erstellt',
+    homeSignupCtaTitle: 'Kostenlose Nachrichten-Benachrichtigungen erhalten',
+    homeSignupCtaDesc: 'Registrieren Sie sich kostenlos, um neue Berichte und Ankündigungen per E-Mail zu erhalten.',
+    homeSignupCtaButton: 'Kostenlos registrieren',
 
     searchPlaceholder: 'Nachrichtenthema eingeben...',
     searchAnalyze: 'Analysieren',
