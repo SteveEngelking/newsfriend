@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Mail, Link, MessageCircle, Linkedin } from 'lucide-react';
+import { Facebook, Twitter, Mail, Link, MessageCircle, Linkedin, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { toast } from '@/hooks/use-toast';
