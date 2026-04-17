@@ -21,6 +21,9 @@ export const translations = {
     homeTryAgain: 'Try Again',
     homeRefresh: 'Refresh',
     homeGenerated: 'Generated',
+    homeSignupCtaTitle: 'Get free news notifications',
+    homeSignupCtaDesc: 'Sign up for free to receive new reports and announcements by email.',
+    homeSignupCtaButton: 'Sign up free',
 
     // SearchBar
     searchPlaceholder: 'Enter a news topic to fact-check...',
