@@ -23,7 +23,18 @@ const Home = () => {
   const [selectedReport, setSelectedReport] = useState<DailyNewsReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t, language } = useLanguage();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Lightweight list fetch — no report_data
   const fetchList = useCallback(async (preserveSelection = true) => {
