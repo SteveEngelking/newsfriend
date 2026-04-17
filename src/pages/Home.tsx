@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
-import { Newspaper, Loader2 } from 'lucide-react';
+import { Newspaper, Loader2, Bell, ArrowRight } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
