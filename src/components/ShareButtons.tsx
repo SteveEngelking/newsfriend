@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Mail, Link, MessageCircle, Linkedin } from 'lucide-react';
+import { Facebook, Twitter, Mail, Link, MessageCircle, Linkedin, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { toast } from '@/hooks/use-toast';
@@ -37,6 +37,12 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
       icon: Linkedin,
       getUrl: () => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
       className: 'hover:text-blue-700',
+    },
+    {
+      name: 'Telegram',
+      icon: Send,
+      getUrl: () => `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`,
+      className: 'hover:text-sky-500',
     },
     {
       name: 'Email',
