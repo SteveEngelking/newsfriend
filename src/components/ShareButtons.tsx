@@ -39,6 +39,12 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
       className: 'hover:text-blue-700',
     },
     {
+      name: 'Telegram',
+      icon: Send,
+      getUrl: () => `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`,
+      className: 'hover:text-sky-500',
+    },
+    {
       name: 'Email',
       icon: Mail,
       getUrl: () => `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareTitle}\n\n${shareUrl}`)}`,
