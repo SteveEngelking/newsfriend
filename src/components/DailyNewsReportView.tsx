@@ -53,7 +53,7 @@ const LEGACY_STYLES: Record<string, { icon: string; bg: string; border: string; 
   ethicalGita: { icon: '🙏', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', heading: 'text-amber-700 dark:text-amber-400', text: 'text-amber-900 dark:text-amber-200' },
 };
 
-export function DailyNewsReportView({ report }: Props) {
+export function DailyNewsReportView({ report, reportId }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
   const [perspectives, setPerspectives] = useState<EthicalPerspective[]>([]);
