@@ -9,9 +9,11 @@ import { Download, ExternalLink, Share2 } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { MondcivitanLikeButton } from '@/components/MondcivitanLikeButton';
 
 interface Props {
   report: DailyNewsReport;
+  reportId?: string;
 }
 
 interface EthicalPerspective {
