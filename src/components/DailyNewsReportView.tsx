@@ -9,9 +9,11 @@ import { Download, ExternalLink, Share2 } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { MondcivitanLikeButton } from '@/components/MondcivitanLikeButton';
 
 interface Props {
   report: DailyNewsReport;
+  reportId?: string;
 }
 
 interface EthicalPerspective {
@@ -51,7 +53,7 @@ const LEGACY_STYLES: Record<string, { icon: string; bg: string; border: string; 
   ethicalGita: { icon: '🙏', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', heading: 'text-amber-700 dark:text-amber-400', text: 'text-amber-900 dark:text-amber-200' },
 };
 
-export function DailyNewsReportView({ report }: Props) {
+export function DailyNewsReportView({ report, reportId }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
   const [perspectives, setPerspectives] = useState<EthicalPerspective[]>([]);
@@ -174,6 +176,7 @@ export function DailyNewsReportView({ report }: Props) {
               <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">☮ {t('mondcivitanReflectionTitle')}</h3>
                 <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">{theme.mondcivitanReflection}</p>
+                {reportId && <MondcivitanLikeButton reportId={reportId} themeId={theme.id} />}
               </div>
             )}
 

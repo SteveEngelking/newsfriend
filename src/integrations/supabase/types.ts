@@ -454,6 +454,30 @@ export type Database = {
         }
         Relationships: []
       }
+      reflection_likes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          report_id: string
+          theme_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          report_id: string
+          theme_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          report_id?: string
+          theme_id?: string
+        }
+        Relationships: []
+      }
       report_schedules: {
         Row: {
           ai_model: string
