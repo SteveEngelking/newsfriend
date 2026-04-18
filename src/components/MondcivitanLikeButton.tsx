@@ -77,7 +77,7 @@ export function MondcivitanLikeButton({ reportId, themeId }: Props) {
   };
 
   return (
-    <div className="mt-3 flex justify-end">
+    <div className="mt-3 flex justify-start">
       <Button
         type="button"
         variant="ghost"
