@@ -58,47 +58,69 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Determine which languages are due for each schedule based on frequency + time-of-day
-    // EN triggers at specific hours, DE triggers 1 hour later
-    function getLanguagesDue(schedule: any): { code: string; outputLang: string; titlePrefix: string; dateLocale: string }[] {
+    // UTC start of "today" — used to check what's already been generated this calendar day
+    const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+    const EN_LANG = { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' };
+    const DE_LANG = { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' };
+
+    // Determine which languages are due for each schedule based on frequency + time-of-day,
+    // PLUS catch-up: any language that hasn't been produced yet today (UTC) gets emitted on
+    // any eligible run. This prevents loss when cron fires off-hour.
+    async function getLanguagesDue(schedule: any): Promise<typeof EN_LANG[]> {
       if (forceImmediate) {
         const codes = requestedLanguages.length > 0 ? requestedLanguages : ['en', 'de'];
-        return codes.map((code) => code === 'de'
-          ? { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' }
-          : { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' });
+        return codes.map((code) => code === 'de' ? DE_LANG : EN_LANG);
       }
 
       const freq = schedule.frequency;
       if (freq === 'immediate') {
-        // Immediate: run both languages now, but only if not already run
         if (schedule.last_run_at) return [];
-        return [
-          { code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' },
-          { code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' },
-        ];
+        return [EN_LANG, DE_LANG];
       }
 
       // Trigger hours: daily = [6], twice_daily = [6, 18]
       const enHours = freq === 'twice_daily' ? [6, 18] : [6];
-      const deHours = enHours.map(h => h + 1); // DE is 1 hour later
+      const deHours = enHours.map(h => h + 1); // DE is nominally 1 hour later
 
       const lastRun = schedule.last_run_at ? new Date(schedule.last_run_at) : null;
       const hoursSinceLastRun = lastRun ? (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60) : 999;
-      // Minimum gap to prevent double-firing (must be at least 2 hours since last run)
+      // Minimum gap to prevent double-firing within the same window
       if (hoursSinceLastRun < 2) return [];
 
-      const due: { code: string; outputLang: string; titlePrefix: string; dateLocale: string }[] = [];
+      // Window is open once we've reached the earliest EN trigger hour for the day
+      const earliestHour = Math.min(...enHours);
+      if (currentHour < earliestHour) return [];
 
-      if (enHours.includes(currentHour)) {
-        due.push({ code: 'en', outputLang: 'English', titlePrefix: 'News of the Day', dateLocale: 'en-GB' });
+      // Check what was already produced today by this schedule
+      const { data: todays } = await supabase
+        .from('generated_reports')
+        .select('language')
+        .eq('schedule_id', schedule.id)
+        .gte('created_at', startOfTodayUtc.toISOString());
+      const producedToday = new Set((todays ?? []).map((r: any) => r.language));
+
+      const due: typeof EN_LANG[] = [];
+
+      // Nominal time-of-day trigger
+      if (enHours.includes(currentHour) && !producedToday.has('en')) due.push(EN_LANG);
+      if (deHours.includes(currentHour) && !producedToday.has('de')) due.push(DE_LANG);
+
+      // Catch-up: emit any language not yet produced today, regardless of hour
+      if (!producedToday.has('en') && !due.some(l => l.code === 'en')) due.push(EN_LANG);
+      if (!producedToday.has('de') && !due.some(l => l.code === 'de')) due.push(DE_LANG);
+
+      // For twice_daily, also catch up the 18:00 window if missed (allow second EN/DE per day)
+      if (freq === 'twice_daily' && currentHour >= 18) {
+        const eveningEn = (todays ?? []).filter((r: any) => r.language === 'en').length;
+        const eveningDe = (todays ?? []).filter((r: any) => r.language === 'de').length;
+        if (eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
+        if (eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
       }
-      if (deHours.includes(currentHour)) {
-        due.push({ code: 'de', outputLang: 'German', titlePrefix: 'Nachrichten des Tages', dateLocale: 'de-DE' });
-    }
-
 
       return due;
     }
+
     // Fetch enabled ethical perspectives once for all schedules
     const { data: ethicalPerspectivesData } = await supabase
       .from('ethical_perspectives')
