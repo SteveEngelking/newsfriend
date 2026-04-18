@@ -208,7 +208,7 @@ const Home = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : selectedReport ? (
-            <DailyNewsReportView report={selectedReport} />
+            <DailyNewsReportView report={selectedReport} reportId={selectedId ?? undefined} />
           ) : null}
         </motion.div>
       )}
