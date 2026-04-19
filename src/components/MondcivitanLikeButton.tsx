@@ -57,21 +57,45 @@ export function MondcivitanLikeButton({ reportId, themeId }: Props) {
       const prev = count;
       setLiked(false);
       setCount(c => Math.max(0, c - 1));
-      const { error } = await supabase
-        .from('reflection_likes')
-        .delete()
-        .eq('report_id', reportId)
-        .eq('theme_id', themeId)
-        .eq('client_id', clientId);
+      const { error } = await (supabase as any).rest
+        ? await supabase
+            .from('reflection_likes')
+            .delete()
+            .eq('report_id', reportId)
+            .eq('theme_id', themeId)
+            .eq('client_id', clientId)
+            .setHeader?.('x-client-id', clientId) ?? await fetch(
+              `${(supabase as any).supabaseUrl}/rest/v1/reflection_likes?report_id=eq.${reportId}&theme_id=eq.${encodeURIComponent(themeId)}&client_id=eq.${encodeURIComponent(clientId)}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  apikey: (supabase as any).supabaseKey,
+                  Authorization: `Bearer ${(supabase as any).supabaseKey}`,
+                  'x-client-id': clientId,
+                },
+              }
+            ).then(r => ({ error: r.ok ? null : new Error('delete failed') }))
+        : { error: null };
       if (error) { setLiked(true); setCount(prev); }
     } else {
       const prev = count;
       setLiked(true);
       setCount(c => c + 1);
-      const { error } = await supabase
-        .from('reflection_likes')
-        .insert({ report_id: reportId, theme_id: themeId, client_id: clientId });
-      if (error) { setLiked(false); setCount(prev); }
+      const res = await fetch(
+        `${(supabase as any).supabaseUrl}/rest/v1/reflection_likes`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: (supabase as any).supabaseKey,
+            Authorization: `Bearer ${(supabase as any).supabaseKey}`,
+            'Content-Type': 'application/json',
+            'x-client-id': clientId,
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ report_id: reportId, theme_id: themeId, client_id: clientId }),
+        }
+      );
+      if (!res.ok) { setLiked(false); setCount(prev); }
     }
     setBusy(false);
   };
