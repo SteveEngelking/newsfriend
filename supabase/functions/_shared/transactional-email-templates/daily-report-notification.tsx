@@ -96,20 +96,20 @@ export const template = {
 } satisfies TemplateEntry
 
 // Styles
-const main = { backgroundColor: '#f4f6f9', fontFamily: "'Space Grotesk', 'Segoe UI', Arial, sans-serif" }
-const container = { padding: '0', maxWidth: '600px', margin: '0 auto', backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden' as const, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }
+const main = { backgroundColor: '#f4f6f9', fontFamily: "'Space Grotesk', 'Segoe UI', Arial, sans-serif", width: '100%' as const, WebkitTextSizeAdjust: '100%' as const }
+const container = { padding: '0', maxWidth: '600px', width: '100%' as const, margin: '0 auto', backgroundColor: '#ffffff', borderRadius: '12px', overflow: 'hidden' as const, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }
 const headerSection = { padding: '28px 28px 12px', textAlign: 'center' as const }
 const logoStyle = { borderRadius: '10px', display: 'block' as const, margin: '0 auto 4px', maxWidth: '48px' }
 const brandName = { fontSize: '22px', fontWeight: '700' as const, color: '#1a1a2e', margin: '4px 0 0', letterSpacing: '-0.3px', textAlign: 'center' as const }
 const headerDivider = { borderColor: '#e5e7eb', margin: '0 28px 20px' }
-const badge = { fontSize: '11px', color: '#2563b3', fontWeight: '600' as const, textTransform: 'uppercase' as const, letterSpacing: '1px', margin: '0 0 8px', padding: '0 28px' }
-const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#1a1a2e', margin: '0 0 8px', lineHeight: '1.3', padding: '0 28px' }
-const subtitle = { fontSize: '15px', color: '#666', margin: '0 0 24px', padding: '0 28px' }
-const summaryBox = { backgroundColor: '#f0f4ff', borderLeft: '4px solid #2563b3', padding: '16px 20px', margin: '0 28px 24px', borderRadius: '0 8px 8px 0' }
-const summaryText = { fontSize: '14px', color: '#333', lineHeight: '1.65', margin: '0' }
-const themesSection = { padding: '0 28px 24px' }
+const badge = { fontSize: '11px', color: '#2563b3', fontWeight: '600' as const, textTransform: 'uppercase' as const, letterSpacing: '1px', margin: '0 0 8px', padding: '0 16px' }
+const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#1a1a2e', margin: '0 0 8px', lineHeight: '1.3', padding: '0 16px', wordBreak: 'break-word' as const, overflowWrap: 'break-word' as const }
+const subtitle = { fontSize: '15px', color: '#666', margin: '0 0 24px', padding: '0 16px', wordBreak: 'break-word' as const, overflowWrap: 'break-word' as const }
+const summaryBox = { backgroundColor: '#f0f4ff', borderLeft: '4px solid #2563b3', padding: '16px 20px', margin: '0 16px 24px', borderRadius: '0 8px 8px 0', wordBreak: 'break-word' as const, overflowWrap: 'break-word' as const }
+const summaryText = { fontSize: '14px', color: '#333', lineHeight: '1.65', margin: '0', wordBreak: 'break-word' as const, overflowWrap: 'break-word' as const, hyphens: 'auto' as const }
+const themesSection = { padding: '0 16px 24px' }
 const themesHeading = { fontSize: '13px', fontWeight: '600' as const, color: '#2563b3', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 12px' }
-const themeItem = { fontSize: '14px', color: '#333', lineHeight: '1.5', margin: '0 0 6px', paddingLeft: '4px' }
+const themeItem = { fontSize: '14px', color: '#333', lineHeight: '1.5', margin: '0 0 6px', paddingLeft: '4px', wordBreak: 'break-word' as const, overflowWrap: 'break-word' as const }
 const ctaSection = { padding: '0 28px 28px', textAlign: 'center' as const }
 const button = { display: 'inline-block', backgroundColor: '#2563b3', color: '#ffffff', padding: '14px 36px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' as const, fontSize: '15px' }
 const hr = { borderColor: '#e5e7eb', margin: '0 28px 16px' }
