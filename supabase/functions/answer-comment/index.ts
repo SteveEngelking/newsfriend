@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { callAIChatCompletion } from "../_shared/ai-gateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,31 +49,19 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    // Generate AI response
-    const aiResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
+    // Generate AI response — prefers free Google Gemini API, falls back to Lovable AI
+    const { response: aiResponse, provider } = await callAIChatCompletion({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are NewsFriend's helpful AI assistant. Answer user questions clearly and concisely about news, current events, fact-checking, and the NewsFriend platform. Keep responses informative but brief (2-4 paragraphs max). If you don't know something, say so honestly. Respond in the same language the user writes in.",
         },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are NewsFriend's helpful AI assistant. Answer user questions clearly and concisely about news, current events, fact-checking, and the NewsFriend platform. Keep responses informative but brief (2-4 paragraphs max). If you don't know something, say so honestly. Respond in the same language the user writes in.",
-            },
-            { role: "user", content: question.trim() },
-          ],
-        }),
-      }
-    );
+        { role: "user", content: question.trim() },
+      ],
+    });
+    console.log(`[answer-comment] AI provider used: ${provider}`);
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
