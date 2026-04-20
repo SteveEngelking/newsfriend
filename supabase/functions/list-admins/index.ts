@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -25,20 +25,22 @@ Deno.serve(async (req) => {
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await callerClient.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    const userId = claimsData.claims.sub;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify caller is admin
     const { data: roleData } = await adminClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('role', 'admin')
       .maybeSingle();
 
