@@ -4,6 +4,7 @@ const corsHeaders = {
 };
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { callAIChatCompletion } from '../_shared/ai-gateway.ts';
 
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -208,95 +209,89 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       ethicalRequired.push(key);
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-5-mini',
-        max_completion_tokens: 16384,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'generate_daily_news_report',
-            description: 'Generate a critical daily news briefing analyzing themes across sources',
-            parameters: {
-              type: 'object',
-              properties: {
-                introduction: { 
-                  type: 'string', 
-                  description: 'A 2-3 paragraph introduction setting the stage for today\'s news landscape.' 
-                },
-                themes: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      headline: { type: 'string', description: 'Punchy, journalistic headline for this theme' },
-                      summary: { type: 'string', description: '2-3 sentence summary of the story' },
-                      sourceAnalysis: {
-                        type: 'array',
-                        items: {
-                        type: 'object',
-                        properties: {
-                          sourceName: { type: 'string' },
-                          stance: { type: 'string', description: 'How this source framed/covered the story (1-2 sentences)' },
-                          keyQuotes: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            description: '1-2 notable quotes or phrases from this source',
-                          },
-                          biasIndicators: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            description: 'Specific examples of bias, framing choices, or omissions',
-                          },
-                          articleUrl: { type: 'string', description: 'Direct URL to the article from this source' },
-                        },
-                        required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
-                        additionalProperties: false,
-                      },
-                      },
-                      criticalCommentary: { 
-                        type: 'string', 
-                        description: '2-3 sentences of critical analysis on how this story is being covered overall' 
-                      },
-                      ...(mondcivitanEnabled ? {
-                        mondcivitanReflection: {
-                          type: 'string',
-                          description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles.',
-                        },
-                      } : {}),
-                      significance: { 
-                        type: 'string', 
-                        enum: ['high', 'medium', 'low'],
-                        description: 'How significant is this story?' 
-                      },
-                    },
-                    required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
-                    additionalProperties: false,
-                  },
-                },
-                conclusion: { 
-                  type: 'string', 
-                  description: '1-2 paragraphs summarizing key takeaways and what to watch for' 
-                },
-                ...ethicalProperties,
+    const { response, provider } = await callAIChatCompletion({
+      model: 'openai/gpt-5-mini',
+      max_completion_tokens: 16384,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'generate_daily_news_report',
+          description: 'Generate a critical daily news briefing analyzing themes across sources',
+          parameters: {
+            type: 'object',
+            properties: {
+              introduction: {
+                type: 'string',
+                description: 'A 2-3 paragraph introduction setting the stage for today\'s news landscape.'
               },
-              required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
-              additionalProperties: false,
+              themes: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    headline: { type: 'string', description: 'Punchy, journalistic headline for this theme' },
+                    summary: { type: 'string', description: '2-3 sentence summary of the story' },
+                    sourceAnalysis: {
+                      type: 'array',
+                      items: {
+                      type: 'object',
+                      properties: {
+                        sourceName: { type: 'string' },
+                        stance: { type: 'string', description: 'How this source framed/covered the story (1-2 sentences)' },
+                        keyQuotes: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          description: '1-2 notable quotes or phrases from this source',
+                        },
+                        biasIndicators: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          description: 'Specific examples of bias, framing choices, or omissions',
+                        },
+                        articleUrl: { type: 'string', description: 'Direct URL to the article from this source' },
+                      },
+                      required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
+                      additionalProperties: false,
+                    },
+                    },
+                    criticalCommentary: {
+                      type: 'string',
+                      description: '2-3 sentences of critical analysis on how this story is being covered overall'
+                    },
+                    ...(mondcivitanEnabled ? {
+                      mondcivitanReflection: {
+                        type: 'string',
+                        description: 'A thoughtful paragraph reflecting on this news story through the Mondcivitan Republic principles.',
+                      },
+                    } : {}),
+                    significance: {
+                      type: 'string',
+                      enum: ['high', 'medium', 'low'],
+                      description: 'How significant is this story?'
+                    },
+                  },
+                  required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
+                  additionalProperties: false,
+                },
+              },
+              conclusion: {
+                type: 'string',
+                description: '1-2 paragraphs summarizing key takeaways and what to watch for'
+              },
+              ...ethicalProperties,
             },
+            required: ['introduction', 'themes', 'conclusion', ...ethicalRequired],
+            additionalProperties: false,
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'generate_daily_news_report' } },
-      }),
+        },
+      }],
+      tool_choice: { type: 'function', function: { name: 'generate_daily_news_report' } },
     });
+    console.log(`[daily-news] AI provider used: ${provider}`);
 
     if (!response.ok) {
       if (response.status === 429) {
