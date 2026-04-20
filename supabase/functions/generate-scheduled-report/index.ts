@@ -4,6 +4,7 @@ const corsHeaders = {
 };
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { callAIChatCompletion } from '../_shared/ai-gateway.ts';
 
 // Convert perspective name to a safe JSON key
 function toFieldKey(name: string): string {
@@ -326,58 +327,55 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         const fallbackModel = 'openai/gpt-5-mini';
 
         const makeAIRequest = async (model: string) => {
-          const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model,
-              max_completion_tokens: 16384,
-              messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
-              tools: [{
-                type: 'function',
-                function: {
-                  name: 'generate_themes',
-                  description: 'Generate news themes',
-                  parameters: {
-                    type: 'object',
-                    properties: {
-                      ...(includeEthical ? { introduction: { type: 'string' } } : {}),
-                      themes: {
-                        type: 'array', minItems: batchThemeCount, maxItems: batchThemeCount,
-                        items: {
-                          type: 'object',
-                          properties: {
-                            headline: { type: 'string' },
-                            summary: { type: 'string' },
-                            sourceAnalysis: {
-                              type: 'array', minItems: 2, maxItems: 2,
-                              items: {
-                                type: 'object',
-                                properties: {
-                                  sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
-                                  keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
-                                  biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
-                                  articleUrl: { type: 'string' },
-                                },
-                                required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
+          const { response: aiResp, provider } = await callAIChatCompletion({
+            model,
+            max_completion_tokens: 16384,
+            messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'generate_themes',
+                description: 'Generate news themes',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    ...(includeEthical ? { introduction: { type: 'string' } } : {}),
+                    themes: {
+                      type: 'array', minItems: batchThemeCount, maxItems: batchThemeCount,
+                      items: {
+                        type: 'object',
+                        properties: {
+                          headline: { type: 'string' },
+                          summary: { type: 'string' },
+                          sourceAnalysis: {
+                            type: 'array', minItems: 2, maxItems: 2,
+                            items: {
+                              type: 'object',
+                              properties: {
+                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
+                                keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
+                                biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
+                                articleUrl: { type: 'string' },
                               },
+                              required: ['sourceName', 'stance', 'keyQuotes', 'biasIndicators', 'articleUrl'],
                             },
-                            criticalCommentary: { type: 'string' },
-                            ...(mondcivitanEnabled ? { mondcivitanReflection: { type: 'string' } } : {}),
-                            significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                           },
-                          required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
+                          criticalCommentary: { type: 'string' },
+                          ...(mondcivitanEnabled ? { mondcivitanReflection: { type: 'string' } } : {}),
+                          significance: { type: 'string', enum: ['high', 'medium', 'low'] },
                         },
+                        required: ['headline', 'summary', 'sourceAnalysis', 'criticalCommentary', 'significance', ...(mondcivitanEnabled ? ['mondcivitanReflection'] : [])],
                       },
-                      ...(includeEthical ? { conclusion: { type: 'string' }, ...ethicalProperties } : {}),
                     },
-                    required: ['themes', ...(includeEthical ? ['introduction', 'conclusion', ...ethicalRequired] : [])],
+                    ...(includeEthical ? { conclusion: { type: 'string' }, ...ethicalProperties } : {}),
                   },
+                  required: ['themes', ...(includeEthical ? ['introduction', 'conclusion', ...ethicalRequired] : [])],
                 },
-              }],
-              tool_choice: { type: 'function', function: { name: 'generate_themes' } },
-            }),
+              },
+            }],
+            tool_choice: { type: 'function', function: { name: 'generate_themes' } },
           });
+          console.log(`[scheduled-report] model=${model} provider=${provider} status=${aiResp.status}`);
           return aiResp;
         };
 

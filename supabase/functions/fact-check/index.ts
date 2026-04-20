@@ -1,3 +1,5 @@
+import { callAIChatCompletion } from "../_shared/ai-gateway.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -112,7 +114,7 @@ MANDATORY: Your sourceComparison array MUST contain exactly ${allNames.length} e
 
 Write everything in ${outputLang}.`;
 
-    const requestBody = JSON.stringify({
+    const requestBody = {
       model: 'google/gemini-3-flash-preview',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -177,24 +179,21 @@ Write everything in ${outputLang}.`;
         },
       }],
       tool_choice: { type: 'function', function: { name: 'generate_factcheck_report' } },
-    });
+    };
 
     let response: Response | null = null;
+    let providerUsed = '';
     for (let attempt = 0; attempt < 3; attempt++) {
-      response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
-      });
+      const result = await callAIChatCompletion(requestBody);
+      response = result.response;
+      providerUsed = result.provider;
 
       if (response.status !== 503 && response.status !== 500) break;
-      console.warn(`AI gateway returned ${response.status}, attempt ${attempt + 1}/3`);
+      console.warn(`AI returned ${response.status} (provider: ${providerUsed}), attempt ${attempt + 1}/3`);
       await response.text();
       if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
     }
+    console.log(`[fact-check] AI provider used: ${providerUsed}`);
 
     if (!response || !response.ok) {
       const status = response?.status ?? 500;
