@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -72,6 +73,13 @@ const Login = () => {
                 {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('adminSigningIn')}</> : t('adminSignIn')}
               </Button>
             </form>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
+            <GoogleSignInButton label="Continue with Google" />
             <div className="mt-4 text-center space-y-2">
               <Link to="/register" className="text-sm text-primary hover:underline block">
                 {t('adminNoAccount')}
