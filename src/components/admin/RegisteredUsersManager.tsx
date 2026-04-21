@@ -112,7 +112,7 @@ export function RegisteredUsersManager() {
                   <TableHead>{t('adminRegisteredColRole') || 'Role'}</TableHead>
                   <TableHead className="text-center">{t('adminRegisteredColNotif') || 'Notifications'}</TableHead>
                   <TableHead>{t('adminRegisteredColDate') || 'Joined'}</TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,19 +144,22 @@ export function RegisteredUsersManager() {
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       {!user.is_admin && (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive border-destructive/40 hover:bg-destructive hover:text-destructive-foreground"
                           onClick={() => handleDeleteUser(user.user_id)}
                           disabled={deletingId === user.user_id}
                         >
                           {deletingId === user.user_id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Trash2 className="h-3 w-3" />
+                            <>
+                              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                              Delete
+                            </>
                           )}
                         </Button>
                       )}
