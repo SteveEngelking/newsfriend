@@ -563,7 +563,6 @@ export const translations = {
     specialEditionActionStepsHeading: 'What can we do?',
     homeSpecialEditionsTitle: 'Special Editions',
     homeViewSpecialEdition: 'View',
-    mondcivitanReflectionTitle: 'Mondcivitan Reflection',
 
     language: 'Language',
     languageEnglish: 'English',
@@ -1108,7 +1107,6 @@ export const translations = {
     specialEditionActionStepsHeading: 'Was können wir tun?',
     homeSpecialEditionsTitle: 'Sonderausgaben',
     homeViewSpecialEdition: 'Ansehen',
-    mondcivitanReflectionTitle: 'Mondcivitan-Reflexion',
 
     language: 'Sprache',
     languageEnglish: 'Englisch',

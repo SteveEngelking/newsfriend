@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
-import { Newspaper, Loader2, Bell, ArrowRight } from 'lucide-react';
+import { SpecialEditionView } from '@/components/SpecialEditionView';
+import { SpecialEditionReport } from '@/lib/specialEditionTypes';
+import { Newspaper, Loader2, Bell, ArrowRight, Star } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +19,12 @@ interface ReportListItem {
   created_at: string;
 }
 
+interface SpecialEditionListItem {
+  id: string;
+  topic: string;
+  approved_at: string | null;
+}
+
 const Home = () => {
   const [reportList, setReportList] = useState<ReportListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -24,6 +32,9 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [specialEditions, setSpecialEditions] = useState<SpecialEditionListItem[]>([]);
+  const [selectedSpecialId, setSelectedSpecialId] = useState<string | null>(null);
+  const [selectedSpecial, setSelectedSpecial] = useState<SpecialEditionReport | null>(null);
   const { t, language } = useLanguage();
 
   useEffect(() => {
@@ -124,6 +135,39 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [fetchList]);
 
+  // Fetch approved special editions for current language
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('special_editions')
+        .select('id, topic, approved_at, language')
+        .eq('status', 'approved')
+        .eq('language', language)
+        .order('approved_at', { ascending: false })
+        .limit(20);
+      if (cancelled) return;
+      setSpecialEditions((data || []).map((r: any) => ({ id: r.id, topic: r.topic, approved_at: r.approved_at })));
+    })();
+    return () => { cancelled = true; };
+  }, [language]);
+
+  // Fetch selected special edition full data
+  useEffect(() => {
+    if (!selectedSpecialId) { setSelectedSpecial(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('special_editions')
+        .select('report_data')
+        .eq('id', selectedSpecialId)
+        .maybeSingle();
+      if (cancelled) return;
+      setSelectedSpecial(data?.report_data ? (data.report_data as unknown as SpecialEditionReport) : null);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedSpecialId]);
+
   const handleSelectReport = (id: string) => {
     setSelectedId(id);
   };
@@ -203,7 +247,36 @@ const Home = () => {
           <div className="flex justify-center">
             <ShareButtons url="https://newsfriend.org" />
           </div>
-          {isLoadingReport ? (
+          {specialEditions.length > 0 && (
+            <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="h-5 w-5 text-amber-500" />
+                <h3 className="font-semibold text-base sm:text-lg">{t('homeSpecialEditionsTitle')}</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Select value={selectedSpecialId || ''} onValueChange={(v) => setSelectedSpecialId(v)}>
+                  <SelectTrigger className="w-full sm:w-96">
+                    <SelectValue placeholder={t('homeSpecialEditionsTitle')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialEditions.map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.topic}{s.approved_at ? ` — ${new Date(s.approved_at).toLocaleDateString(language === 'de' ? 'de-DE' : 'en-GB')}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedSpecialId && (
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedSpecialId(null); setSelectedSpecial(null); }}>
+                    ✕
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          {selectedSpecial ? (
+            <SpecialEditionView report={selectedSpecial} />
+          ) : isLoadingReport ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>

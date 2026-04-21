@@ -10,7 +10,8 @@ import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
 import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManager';
 import { CommentsManager } from '@/components/admin/CommentsManager';
 import { NavOrderManager } from '@/components/admin/NavOrderManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu } from 'lucide-react';
+import { SpecialEditionsManager } from '@/components/admin/SpecialEditionsManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -47,6 +48,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <TabsTrigger value="schedule" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <CalendarClock className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabSchedule')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="special" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('adminTabSpecialEditions')}</span>
         </TabsTrigger>
         <TabsTrigger value="ethics" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Scale className="h-3.5 w-3.5" />
@@ -88,6 +93,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="schedule">
         <ScheduleManager sources={sources} />
+      </TabsContent>
+
+      <TabsContent value="special">
+        <SpecialEditionsManager />
       </TabsContent>
 
       <TabsContent value="ethics">
