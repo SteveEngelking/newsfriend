@@ -103,71 +103,60 @@ export function RegisteredUsersManager() {
         ) : users.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">{t('adminRegisteredNone') || 'No registered users yet.'}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('adminRegisteredColEmail') || 'Email'}</TableHead>
-                  <TableHead>{t('adminRegisteredColName') || 'Name'}</TableHead>
-                  <TableHead>{t('adminRegisteredColRole') || 'Role'}</TableHead>
-                  <TableHead className="text-center">{t('adminRegisteredColNotif') || 'Notifications'}</TableHead>
-                  <TableHead>{t('adminRegisteredColDate') || 'Joined'}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map(user => (
-                  <TableRow key={user.user_id}>
-                    <TableCell className="font-medium text-sm">{user.email || '—'}</TableCell>
-                    <TableCell className="text-sm">{user.display_name || '—'}</TableCell>
-                    <TableCell>
-                      {user.is_admin ? (
-                        <Badge variant="default" className="text-xs">Admin</Badge>
+          <div className="space-y-3">
+            {users.map(user => (
+              <div
+                key={user.user_id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-lg border bg-card"
+              >
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm truncate">{user.email || '—'}</span>
+                    {user.is_admin ? (
+                      <Badge variant="default" className="text-xs">Admin</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">{t('adminRegisteredRoleUser') || 'User'}</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                    <span>{user.display_name || '—'}</span>
+                    <span>•</span>
+                    <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      {user.notify_daily_reports ? (
+                        <Bell className="h-3 w-3 text-primary" />
                       ) : (
-                        <Badge variant="secondary" className="text-xs">{t('adminRegisteredRoleUser') || 'User'}</Badge>
+                        <BellOff className="h-3 w-3 text-muted-foreground/40" />
                       )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {user.notify_daily_reports ? (
-                          <Bell className="h-3.5 w-3.5 text-primary" />
-                        ) : (
-                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />
-                        )}
-                        {user.notify_announcements ? (
-                          <Bell className="h-3.5 w-3.5 text-primary" />
-                        ) : (
-                          <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {!user.is_admin && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive border-destructive/40 hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={() => handleDeleteUser(user.user_id)}
-                          disabled={deletingId === user.user_id}
-                        >
-                          {deletingId === user.user_id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                              Delete
-                            </>
-                          )}
-                        </Button>
+                      {user.notify_announcements ? (
+                        <Bell className="h-3 w-3 text-primary" />
+                      ) : (
+                        <BellOff className="h-3 w-3 text-muted-foreground/40" />
                       )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </span>
+                  </div>
+                </div>
+                {!user.is_admin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive/40 hover:bg-destructive hover:text-destructive-foreground shrink-0 self-start sm:self-auto"
+                    onClick={() => handleDeleteUser(user.user_id)}
+                    disabled={deletingId === user.user_id}
+                  >
+                    {deletingId === user.user_id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <>
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            ))}
             <p className="text-xs text-muted-foreground mt-2">
               {users.length} {t('adminRegisteredTotal') || 'total users'}
             </p>
