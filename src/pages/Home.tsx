@@ -247,7 +247,36 @@ const Home = () => {
           <div className="flex justify-center">
             <ShareButtons url="https://newsfriend.org" />
           </div>
-          {isLoadingReport ? (
+          {specialEditions.length > 0 && (
+            <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="h-5 w-5 text-amber-500" />
+                <h3 className="font-semibold text-base sm:text-lg">{t('homeSpecialEditionsTitle')}</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Select value={selectedSpecialId || ''} onValueChange={(v) => setSelectedSpecialId(v)}>
+                  <SelectTrigger className="w-full sm:w-96">
+                    <SelectValue placeholder={t('homeSpecialEditionsTitle')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialEditions.map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.topic}{s.approved_at ? ` — ${new Date(s.approved_at).toLocaleDateString(language === 'de' ? 'de-DE' : 'en-GB')}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedSpecialId && (
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedSpecialId(null); setSelectedSpecial(null); }}>
+                    ✕
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          {selectedSpecial ? (
+            <SpecialEditionView report={selectedSpecial} />
+          ) : isLoadingReport ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
