@@ -135,6 +135,39 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [fetchList]);
 
+  // Fetch approved special editions for current language
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('special_editions')
+        .select('id, topic, approved_at, language')
+        .eq('status', 'approved')
+        .eq('language', language)
+        .order('approved_at', { ascending: false })
+        .limit(20);
+      if (cancelled) return;
+      setSpecialEditions((data || []).map((r: any) => ({ id: r.id, topic: r.topic, approved_at: r.approved_at })));
+    })();
+    return () => { cancelled = true; };
+  }, [language]);
+
+  // Fetch selected special edition full data
+  useEffect(() => {
+    if (!selectedSpecialId) { setSelectedSpecial(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('special_editions')
+        .select('report_data')
+        .eq('id', selectedSpecialId)
+        .maybeSingle();
+      if (cancelled) return;
+      setSelectedSpecial(data?.report_data ? (data.report_data as unknown as SpecialEditionReport) : null);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedSpecialId]);
+
   const handleSelectReport = (id: string) => {
     setSelectedId(id);
   };
