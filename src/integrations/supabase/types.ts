@@ -529,6 +529,48 @@ export type Database = {
         }
         Relationships: []
       }
+      special_editions: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          language: string
+          notified_at: string | null
+          notified_count: number
+          report_data: Json
+          status: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          notified_at?: string | null
+          notified_count?: number
+          report_data: Json
+          status?: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          notified_at?: string | null
+          notified_count?: number
+          report_data?: Json
+          status?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
