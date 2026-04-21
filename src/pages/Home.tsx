@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
-import { Newspaper, Loader2, Bell, ArrowRight } from 'lucide-react';
+import { SpecialEditionView } from '@/components/SpecialEditionView';
+import { SpecialEditionReport } from '@/lib/specialEditionTypes';
+import { Newspaper, Loader2, Bell, ArrowRight, Star } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +19,12 @@ interface ReportListItem {
   created_at: string;
 }
 
+interface SpecialEditionListItem {
+  id: string;
+  topic: string;
+  approved_at: string | null;
+}
+
 const Home = () => {
   const [reportList, setReportList] = useState<ReportListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -24,6 +32,9 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [specialEditions, setSpecialEditions] = useState<SpecialEditionListItem[]>([]);
+  const [selectedSpecialId, setSelectedSpecialId] = useState<string | null>(null);
+  const [selectedSpecial, setSelectedSpecial] = useState<SpecialEditionReport | null>(null);
   const { t, language } = useLanguage();
 
   useEffect(() => {
