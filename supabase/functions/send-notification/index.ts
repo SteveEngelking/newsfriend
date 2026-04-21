@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
 
-    const { type, announcementId } = await req.json()
+    const { type, announcementId, specialEditionId } = await req.json()
 
-    if (!['daily_report', 'announcement'].includes(type)) {
+    if (!['daily_report', 'announcement', 'special_edition'].includes(type)) {
       return new Response(JSON.stringify({ error: 'Invalid notification type' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -68,8 +68,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Special edition: fetch the chosen edition (admin-curated, single record)
+    let specialEditionData: { topic: string; headline: string; summary: string; language: string } | null = null
+    if (type === 'special_edition') {
+      if (!specialEditionId) {
+        return new Response(JSON.stringify({ error: 'specialEditionId required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: se } = await supabase
+        .from('special_editions').select('topic, language, report_data').eq('id', specialEditionId).single()
+      if (!se) {
+        return new Response(JSON.stringify({ error: 'Special edition not found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const rd = (se as any).report_data || {}
+      specialEditionData = {
+        topic: se.topic,
+        headline: rd.headline || se.topic,
+        summary: (rd.summary || '').slice(0, 600),
+        language: se.language,
+      }
+    }
+
     // Get subscribers with their profile info (email + preferred language)
-    const column = type === 'daily_report' ? 'notify_daily_reports' : 'notify_announcements'
+    // Special editions reuse daily-report subscribers (per spec).
+    const column = (type === 'daily_report' || type === 'special_edition') ? 'notify_daily_reports' : 'notify_announcements'
     const { data: prefs, error: prefsError } = await supabase
       .from('notification_preferences')
       .select('user_id')
@@ -166,6 +191,9 @@ Deno.serve(async (req) => {
           templateName = 'daily-report-notification'
           const reportData = reportsByLanguage[lang] || reportsByLanguage['en'] || Object.values(reportsByLanguage)[0]
           templateData = { ...reportData, language: lang }
+        } else if (type === 'special_edition') {
+          templateName = 'special-edition-notification'
+          templateData = { ...specialEditionData!, language: specialEditionData!.language }
         } else {
           templateName = 'announcement-notification'
           templateData = { title: announcementData!.title, content: announcementData!.content }
@@ -184,7 +212,7 @@ Deno.serve(async (req) => {
 
         const { html, plainText, subject } = renderedByLang[cacheKey]
         const messageId = crypto.randomUUID()
-        const idempotencyKey = `${templateName}-${announcementId || 'daily'}-${normalizedEmail}-${dateKey}`
+        const idempotencyKey = `${templateName}-${announcementId || specialEditionId || 'daily'}-${normalizedEmail}-${dateKey}`
 
         await supabase.from('email_send_log').insert({
           message_id: messageId,
