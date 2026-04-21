@@ -112,7 +112,7 @@ export function RegisteredUsersManager() {
                   <TableHead>{t('adminRegisteredColRole') || 'Role'}</TableHead>
                   <TableHead className="text-center">{t('adminRegisteredColNotif') || 'Notifications'}</TableHead>
                   <TableHead>{t('adminRegisteredColDate') || 'Joined'}</TableHead>
-                  <TableHead className="text-right">{t('adminRegisteredColActions') || 'Actions'}</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
