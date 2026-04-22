@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+import { SEO } from '@/components/SEO';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -72,6 +73,11 @@ const Register = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <SEO
+        title="Create a free NewsFriend account"
+        description="Register for free to receive daily AI-powered news reports, special editions and announcements by email from NewsFriend."
+        path="/register"
+      />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">

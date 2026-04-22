@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { SEO } from '@/components/SEO';
 
 interface ImpressumData {
   company_name: string;
@@ -58,6 +59,11 @@ export default function Impressum() {
 
   return (
     <div className="space-y-6">
+      <SEO
+        title={t('impressumTitle')}
+        description="Legal notice (Impressum) for NewsFriend, the AI-powered news service of the Hugh & Helene Schonfield World Service Trust."
+        path="/impressum"
+      />
       <div className="flex items-center gap-3">
         <Building2 className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold tracking-tight">{t('impressumTitle')}</h1>

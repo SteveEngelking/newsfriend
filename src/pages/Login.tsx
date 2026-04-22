@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+import { SEO } from '@/components/SEO';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -37,6 +38,7 @@ const Login = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <SEO title="Sign in" description="Sign in to your NewsFriend account to manage notification preferences and questions." path="/login" noindex />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">

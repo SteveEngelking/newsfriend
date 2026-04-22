@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { SEO } from '@/components/SEO';
 
 const DonationThankYou = () => {
   const { t } = useLanguage();
 
   return (
     <div className="max-w-lg mx-auto text-center space-y-8 py-16">
+      <SEO title="Thank you for your support" description="Thank you for supporting NewsFriend with your donation." path="/donation-thank-you" noindex />
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
