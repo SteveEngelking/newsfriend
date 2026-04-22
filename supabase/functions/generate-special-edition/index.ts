@@ -76,7 +76,50 @@ Deno.serve(async (req) => {
 
     console.log(`[special-edition] Generating for topic="${topic}" lang=${language} sources=${sources.length}`);
 
-    // Search each source for the topic via Firecrawl, in parallel
+    // Heuristic source-language detection by hostname/name.
+    // Used to tailor the search query language per source so e.g. a German topic
+    // also returns matches on English-language outlets, and vice versa.
+    const GERMAN_HOST_HINTS = ['.de', 'spiegel', 'zeit', 'sueddeutsche', 'taz', 'faz', 'welt', 'tagesschau', 'heise', 'deutschlandfunk', 'dw.com', 'nzz'];
+    const detectSourceLang = (name: string, host: string): 'de' | 'en' => {
+      const h = host.toLowerCase();
+      const n = (name || '').toLowerCase();
+      if (GERMAN_HOST_HINTS.some(hint => h.includes(hint) || n.includes(hint))) return 'de';
+      return 'en';
+    };
+
+    // Translate topic to the source's language so each source is searched fairly.
+    const translateTopic = async (text: string, target: 'de' | 'en'): Promise<string> => {
+      try {
+        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-lite',
+            messages: [
+              { role: 'system', content: `Translate the user's short news topic into ${target === 'de' ? 'German' : 'English'} for a web search query. Reply with ONLY the translated topic, no quotes, no explanation.` },
+              { role: 'user', content: text },
+            ],
+            max_completion_tokens: 80,
+          }),
+        });
+        if (!r.ok) return text;
+        const j = await r.json();
+        const out = j?.choices?.[0]?.message?.content?.trim();
+        return out && out.length > 0 && out.length < 300 ? out : text;
+      } catch {
+        return text;
+      }
+    };
+
+    // Pre-translate topic into both languages once.
+    const topicByLang: Record<'de' | 'en', string> = {
+      de: language === 'de' ? topic : await translateTopic(topic, 'de'),
+      en: language === 'en' ? topic : await translateTopic(topic, 'en'),
+    };
+    console.log(`[special-edition] topic translations: de="${topicByLang.de}" en="${topicByLang.en}"`);
+
+    // Search each source for the topic via Firecrawl, in parallel.
+    // Use the source's own language for the topic part of the query so all sources are searched fairly.
     const searchTasks = sources.map(async (source) => {
       let sourceUrl = source.url.trim();
       if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
@@ -85,12 +128,20 @@ Deno.serve(async (req) => {
       let hostname: string;
       try { hostname = new URL(sourceUrl).hostname; } catch { return []; }
 
-      const searchQuery = `${topic} site:${hostname}`;
+      const sourceLang = detectSourceLang(source.name, hostname);
+      const queryTopic = topicByLang[sourceLang];
+      const searchQuery = `${queryTopic} site:${hostname}`;
       try {
         const resp = await fetch('https://api.firecrawl.dev/v1/search', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${FIRECRAWL_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: searchQuery, limit: 4, tbs: 'qdr:w' }),
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: 4,
+            tbs: 'qdr:w',
+            lang: sourceLang,
+            country: sourceLang === 'de' ? 'de' : 'us',
+          }),
         });
         if (!resp.ok) return [];
         const data = await resp.json();
