@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { SEO } from '@/components/SEO';
 
 type AdminState = 'loading' | 'login' | 'no-admin-exists' | 'not-admin' | 'admin';
 
@@ -218,6 +219,7 @@ const Admin = () => {
 
   return (
     <div className="space-y-6">
+      <SEO title="Admin" description="NewsFriend administrative dashboard." path="/admin" noindex />
       <div className="flex items-center justify-between">
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
           <h2 className="text-2xl font-bold tracking-tight">{t('adminSettings')}</h2>

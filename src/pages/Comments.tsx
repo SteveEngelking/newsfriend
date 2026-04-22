@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { SEO } from '@/components/SEO';
 
 interface Comment {
   id: string;
@@ -105,7 +106,12 @@ const Comments = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <section className="space-y-6 max-w-3xl mx-auto">
+      <SEO
+        title="Questions & Comments"
+        description="Ask questions about a NewsFriend report and receive AI-assisted answers reviewed by our editors."
+        path="/comments"
+      />
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <h2 className="text-2xl font-bold tracking-tight">{t('commentsTitle')}</h2>
         <p className="text-muted-foreground text-sm">{t('commentsDesc')}</p>
@@ -178,7 +184,7 @@ const Comments = () => {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

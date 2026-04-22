@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MailX, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { SEO } from '@/components/SEO';
 
 type Status = 'loading' | 'valid' | 'already' | 'invalid' | 'success' | 'error';
 
@@ -58,6 +59,7 @@ const Unsubscribe = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <SEO title="Unsubscribe" description="Unsubscribe from NewsFriend email notifications." path="/unsubscribe" noindex />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="w-full max-w-md text-center">
           <CardHeader>

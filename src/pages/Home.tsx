@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import logo from '@/assets/logo.jpg';
+import { SEO } from '@/components/SEO';
 
 interface ReportListItem {
   id: string;
@@ -172,8 +173,34 @@ const Home = () => {
     setSelectedId(id);
   };
 
+  const seoTitle = language === 'de'
+    ? 'NewsFriend — KI-gestützte Nachrichtenanalyse & Faktencheck'
+    : 'NewsFriend — AI-powered news analysis & fact-checking';
+  const seoDesc = language === 'de'
+    ? 'Kostenlose tägliche Nachrichtenberichte, synthetisiert aus mehreren internationalen Quellen, mit Faktencheck und ethischer Reflexion. Vom Hugh & Helene Schonfield World Service Trust.'
+    : 'Free daily news reports synthesised from multiple international sources, with fact-checking and ethical reflection. By the Hugh & Helene Schonfield World Service Trust.';
+
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-0">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        path="/"
+        lang={language as 'en' | 'de'}
+        jsonLd={selectedReport ? {
+          '@context': 'https://schema.org',
+          '@type': 'NewsArticle',
+          headline: selectedReport.title || (language === 'de' ? 'Tägliche Nachrichten' : 'Daily News'),
+          datePublished: (selectedReport as any).generated_at || new Date().toISOString(),
+          inLanguage: language,
+          publisher: {
+            '@type': 'Organization',
+            name: 'NewsFriend',
+            logo: { '@type': 'ImageObject', url: 'https://www.newsfriend.org/favicon.jpg' },
+          },
+          mainEntityOfPage: 'https://www.newsfriend.org/',
+        } : undefined}
+      />
       {isLoading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

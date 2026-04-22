@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { SEO } from '@/components/SEO';
 
 const Account = () => {
   const [session, setSession] = useState<any>(null);
@@ -154,6 +155,7 @@ const Account = () => {
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
+      <SEO title="My Account" description="Manage your NewsFriend account settings, notification preferences and password." path="/account" noindex />
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between">
           <div>

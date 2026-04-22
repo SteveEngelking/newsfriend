@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEO } from '@/components/SEO';
 
 const About = () => {
   const { language } = useLanguage();
@@ -37,7 +38,15 @@ const About = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <article className="max-w-3xl mx-auto space-y-8">
+      <SEO
+        title={title || (language === 'de' ? 'Über NewsFriend' : 'About NewsFriend')}
+        description={language === 'de'
+          ? 'Erfahren Sie mehr über NewsFriend, einen kostenlosen, KI-gestützten Nachrichtendienst des Hugh & Helene Schonfield World Service Trust.'
+          : 'Learn about NewsFriend, a free AI-powered news service presented by the Hugh & Helene Schonfield World Service Trust.'}
+        path="/page/about"
+        lang={language as 'en' | 'de'}
+      />
       <header className="text-center space-y-3">
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
       </header>
@@ -49,7 +58,7 @@ const About = () => {
         />
       )}
       <Separator />
-    </div>
+    </article>
   );
 };
 
