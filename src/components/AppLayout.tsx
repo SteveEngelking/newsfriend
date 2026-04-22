@@ -18,13 +18,13 @@ export function AppLayout() {
             <div className="flex items-center justify-between h-14 px-4">
               <div className="flex items-center gap-2.5">
                 <SidebarTrigger className="mr-2" />
-                <img src={logo} alt="NewsFriend" className="h-6 w-6 rounded" />
-                <h1 className="text-lg font-bold tracking-tight">NewsFriend</h1>
+                <img src={logo} alt="NewsFriend logo" width={24} height={24} className="h-6 w-6 rounded" />
+                <a href="/" className="text-lg font-bold tracking-tight" aria-label="NewsFriend home">NewsFriend</a>
               </div>
-              <div className="flex items-center gap-1">
+              <nav aria-label="Site controls" className="flex items-center gap-1">
                 <LanguageSwitcher />
                 <ThemeToggle />
-              </div>
+              </nav>
             </div>
           </header>
           <main className="flex-1 container max-w-4xl mx-auto px-2 sm:px-4 py-6 sm:py-8">
