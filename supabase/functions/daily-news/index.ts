@@ -136,11 +136,11 @@ Deno.serve(async (req) => {
 
     const mondcivitanInstruction = mondcivitanEnabled ? `
 
-MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story through the lens of the Mondcivitan Republic principles. The Mondcivitan Republic was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, later embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. Its aim was to create an international servant nation as spokesman for mankind. It was a considerable influence on John Lennon, and its ideas are embodied in his song "Imagine".
+MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. It is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens and choose to live by its principles. Its ideals also resonate in John Lennon's song "Imagine".
 
-The seven principles are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
+The seven principles its citizens live by are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
 
-Apply these principles to analyse how each news story could be approached differently if nations and leaders followed these ideals. Be specific about which principles are relevant to each story.` : '';
+Write in the present tense, as a citizen of this existing Republic reflecting on current events. Do NOT use conditional or hypothetical framing such as "if nations followed" or "were leaders to adopt". Instead, speak from the lived perspective of Mondcivitan citizens — how they understand, respond to, and act on each story now, and what their principles reveal about it. Be specific about which principles are most relevant to each story.` : '';
 
     // Build ethical instruction dynamically from DB
     let ethicalInstruction = '';

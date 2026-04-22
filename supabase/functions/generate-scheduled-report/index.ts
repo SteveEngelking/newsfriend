@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
 
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
-MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news through the Mondcivitan Republic principles (constituted 1953 by Hugh J. Schonfield et al., embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer, influential on John Lennon's "Imagine"). The seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Apply these to analyse how each story could be approached differently.` : '';
+MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news from the standpoint of the Mondcivitan Republic — Servant of Mankind. Constituted in 1953 by Hugh J. Schonfield and others (embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer; ideals echoed in John Lennon's "Imagine"), it is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens and live by its seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Write in the present tense from the lived perspective of these citizens — how they understand and respond to each story now. Do NOT use conditional framing such as "if nations followed" or "were leaders to adopt".` : '';
 
       const generatedLanguages: string[] = [];
 
