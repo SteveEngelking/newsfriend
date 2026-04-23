@@ -6,7 +6,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "NewsFriend"
-const SITE_URL = "https://newsfriend.lovable.app"
+const SITE_URL = "https://www.newsfriend.org"
 const LOGO_URL = "https://kitduddwitnsaqfwdpxd.supabase.co/storage/v1/object/public/email-assets/logo.jpg"
 
 interface SpecialEditionProps {
@@ -14,9 +14,10 @@ interface SpecialEditionProps {
   headline?: string
   summary?: string
   language?: string
+  editionId?: string
 }
 
-const SpecialEditionNotificationEmail = ({ topic, headline, summary, language }: SpecialEditionProps) => {
+const SpecialEditionNotificationEmail = ({ topic, headline, summary, language, editionId }: SpecialEditionProps) => {
   const isDE = language === 'de'
   const readNow = isDE ? 'Sonderausgabe lesen' : 'Read Special Edition'
   const previewText = isDE
@@ -57,7 +58,7 @@ const SpecialEditionNotificationEmail = ({ topic, headline, summary, language }:
           )}
 
           <Section style={ctaSection}>
-            <Button href={SITE_URL} style={button}>{readNow}</Button>
+            <Button href={editionId ? `${SITE_URL}/?se=${editionId}` : SITE_URL} style={button}>{readNow}</Button>
           </Section>
 
           <Hr style={hr} />

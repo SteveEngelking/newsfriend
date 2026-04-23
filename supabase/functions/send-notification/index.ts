@@ -114,7 +114,18 @@ Deno.serve(async (req) => {
       .in('user_id', userIds)
 
     if (profilesError) throw profilesError
-    const validProfiles = profiles?.filter(p => p.email) || []
+    let validProfiles = profiles?.filter(p => p.email) || []
+
+    // For special editions, only send to subscribers whose preferred language
+    // matches the edition's language. (e.g. a German edition goes only to DE users.)
+    if (type === 'special_edition' && specialEditionData) {
+      const editionLang = specialEditionData.language === 'de' ? 'de' : 'en'
+      validProfiles = validProfiles.filter(p => {
+        const lang = ((p as any).preferred_language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
+        return lang === editionLang
+      })
+    }
+
     if (validProfiles.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: 'No valid emails' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -193,7 +204,7 @@ Deno.serve(async (req) => {
           templateData = { ...reportData, language: lang }
         } else if (type === 'special_edition') {
           templateName = 'special-edition-notification'
-          templateData = { ...specialEditionData!, language: specialEditionData!.language }
+          templateData = { ...specialEditionData!, language: specialEditionData!.language, editionId: specialEditionId }
         } else {
           templateName = 'announcement-notification'
           templateData = { title: announcementData!.title, content: announcementData!.content }

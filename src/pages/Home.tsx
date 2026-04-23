@@ -153,6 +153,19 @@ const Home = () => {
     return () => { cancelled = true; };
   }, [language]);
 
+  // Honour deep-link from email: /?se=<id> selects a specific special edition
+  // and switches the UI language to match the edition.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const seId = params.get('se');
+    if (!seId) return;
+    setSelectedSpecialId(seId);
+    // Scroll to the special editions panel on next paint
+    setTimeout(() => {
+      document.getElementById('special-editions')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }, []);
+
   // Fetch selected special edition full data
   useEffect(() => {
     if (!selectedSpecialId) { setSelectedSpecial(null); return; }
@@ -275,7 +288,7 @@ const Home = () => {
             <ShareButtons url="https://newsfriend.org" />
           </div>
           {specialEditions.length > 0 && (
-            <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
+            <div id="special-editions" className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Star className="h-5 w-5 text-amber-500" />
                 <h3 className="font-semibold text-base sm:text-lg">{t('homeSpecialEditionsTitle')}</h3>
