@@ -13,6 +13,8 @@ import SupportUs from "./pages/SupportUs";
 import DonationThankYou from "./pages/DonationThankYou";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Account from "./pages/Account";
 import Unsubscribe from "./pages/Unsubscribe";
 import Comments from "./pages/Comments";
@@ -38,6 +40,8 @@ const App = () => (
               <Route path="/donation-thank-you" element={<DonationThankYou />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/account" element={<Account />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/comments" element={<Comments />} />

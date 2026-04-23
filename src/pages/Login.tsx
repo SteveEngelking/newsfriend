@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import { SEO } from '@/components/SEO';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -54,12 +55,10 @@ const Login = () => {
                 onChange={e => setEmail(e.target.value)}
                 required
               />
-              <Input
-                type="password"
-                placeholder={t('adminPasswordPlaceholder')}
+              <PasswordInput
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
+                onChange={setPassword}
+                placeholder={t('adminPasswordPlaceholder')}
               />
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -83,6 +82,9 @@ const Login = () => {
             </div>
             <GoogleSignInButton label="Continue with Google" />
             <div className="mt-4 text-center space-y-2">
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
+                {t('forgotPwLink')}
+              </Link>
               <Link to="/register" className="text-sm text-primary hover:underline block">
                 {t('adminNoAccount')}
               </Link>
