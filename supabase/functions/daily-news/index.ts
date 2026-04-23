@@ -134,13 +134,13 @@ Deno.serve(async (req) => {
       `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
     ).join('\n\n');
 
-    const mondcivitanInstruction = mondcivitanEnabled ? `
+const mondcivitanInstruction = mondcivitanEnabled ? `
 
-MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. It is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens and choose to live by its principles. Its ideals also resonate in John Lennon's song "Imagine".
+MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic is an international servant nation that EXISTS NOW in the minds and lives of its citizens. It was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. Its ideals also resonate in John Lennon's song "Imagine".
 
-The seven principles its citizens live by are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
+The seven principles its citizens LIVE BY NOW are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
 
-Write in the present tense, as a citizen of this existing Republic reflecting on current events. Do NOT use conditional or hypothetical framing such as "if nations followed" or "were leaders to adopt". Instead, speak from the lived perspective of Mondcivitan citizens — how they understand, respond to, and act on each story now, and what their principles reveal about it. Be specific about which principles are most relevant to each story.` : '';
+Write in DIRECT PRESENT TENSE as a citizen actively living these principles TODAY. The Republic IS real. The citizens ARE responding to events NOW. NEVER use conditional words like "would", "could", "should", "might", "if", "were", "imagine if", or hypothetical framing like "if nations followed" or "were leaders to adopt". Speak from the LIVED REALITY of Mondcivitan citizens — how they ACTUALLY understand, respond to, and act on each story right now, and what their principles REVEAL about it. Be specific about which principles apply to each story.` : '';
 
     // Build ethical instruction dynamically from DB
     let ethicalInstruction = '';
