@@ -61,7 +61,9 @@ function getLabels(lang: 'en' | 'de') {
 }
 
 export function SpecialEditionView({ report }: Props) {
-  const { language: uiLanguage } = useLanguage();
+  // We deliberately ignore the UI language: the rendered report should always
+  // reflect the language it was generated in.
+  useLanguage();
   const reportRef = useRef<HTMLDivElement>(null);
 
   const reportLang: 'en' | 'de' = report.language === 'de' ? 'de' : 'en';
@@ -222,8 +224,6 @@ export function SpecialEditionView({ report }: Props) {
           </div>
         </footer>
       </div>
-      {/* uiLanguage is intentionally unused for content; included to keep hook reactive if ever needed */}
-      {uiLanguage ? null : null}
     </div>
   );
 }
