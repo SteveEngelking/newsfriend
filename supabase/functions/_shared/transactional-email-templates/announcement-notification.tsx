@@ -6,7 +6,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "NewsFriend"
-const SITE_URL = "https://newsfriend.lovable.app"
+const SITE_URL = "https://www.newsfriend.org"
 const LOGO_URL = "https://kitduddwitnsaqfwdpxd.supabase.co/storage/v1/object/public/email-assets/logo.jpg"
 
 interface AnnouncementNotificationProps {
