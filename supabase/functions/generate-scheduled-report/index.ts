@@ -510,9 +510,33 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
 
         if (insertErr) {
           console.error(`Failed to store ${lang.code} report:`, insertErr);
-        } else {
-          generatedLanguages.push(lang.code);
-          console.log(`Schedule ${schedule.id}: ${lang.code} report stored with ${allThemes.length} themes`);
+          return;
+        }
+
+        generatedLanguages.push(lang.code);
+        console.log(`Schedule ${schedule.id}: ${lang.code} report stored with ${allThemes.length} themes`);
+
+        // Persist last_run_at AND trigger notification immediately per-language so that
+        // a per-language failure or edge-function timeout on the OTHER language does not
+        // lose the notification for the language that already succeeded.
+        const { error: updateErr } = await supabase
+          .from('report_schedules')
+          .update({ last_run_at: new Date().toISOString() })
+          .eq('id', schedule.id);
+        if (updateErr) {
+          console.error(`Schedule ${schedule.id}: failed to update last_run_at after ${lang.code}:`, updateErr);
+        }
+
+        // Fire notification (subscribers receive their preferred-language email).
+        // send-notification is idempotent per (template, recipient, date), so being
+        // called twice in a single run (once per language) is safe.
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { type: 'daily_report' },
+          });
+          console.log(`Schedule ${schedule.id}: notification triggered after ${lang.code}`);
+        } catch (notifErr) {
+          console.error(`Schedule ${schedule.id}: notification failed after ${lang.code}:`, notifErr);
         }
       };
 
@@ -525,27 +549,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         }
       }));
 
-      if (generatedLanguages.length > 0) {
-        const { error: updateErr } = await supabase
-          .from('report_schedules')
-          .update({ last_run_at: now.toISOString() })
-          .eq('id', schedule.id);
-        if (updateErr) {
-          console.error(`Schedule ${schedule.id}: failed to update last_run_at:`, updateErr);
-        } else {
-          console.log(`Schedule ${schedule.id}: last_run_at updated to ${now.toISOString()}`);
-        }
-
-        // Trigger notification to subscribers
-        try {
-          await supabase.functions.invoke('send-notification', {
-            body: { type: 'daily_report' },
-          });
-          console.log(`Schedule ${schedule.id}: notification triggered`);
-        } catch (notifErr) {
-          console.error(`Schedule ${schedule.id}: notification failed:`, notifErr);
-        }
-      } else {
+      if (generatedLanguages.length === 0) {
         console.error(`Schedule ${schedule.id}: no reports generated at all`);
       }
 
