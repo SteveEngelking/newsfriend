@@ -112,8 +112,8 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 <body>
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #3b82f6;">
     <div style="margin-bottom:12px;">
-      <a href="https://newsfriend.org" target="_blank" style="display:inline-block;">
-        <img src="https://newsfriend.org/logo.jpg" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
+      <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
+        <img src="${logoSrc || 'https://newsfriend.org/logo.jpg'}" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
       </a>
     </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
