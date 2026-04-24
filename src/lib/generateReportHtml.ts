@@ -21,6 +21,8 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 
   const generatedAtLabel = new Date(report.generatedAt).toLocaleString(lang === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'UTC', timeZoneName: 'short' });
   const significanceColor: Record<string, string> = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' };
+  const themes = Array.isArray(report.themes) ? report.themes : [];
+  const sourcesAnalyzed = Array.isArray(report.sourcesAnalyzed) ? report.sourcesAnalyzed : [];
 
   // Legacy field map for old report format
   const LEGACY_FIELDS: { key: string; name: string; icon: string; bg: string; border: string; heading: string; text: string }[] = [
@@ -59,7 +61,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
     }
   }
 
-  const themesHtml = report.themes.map((theme, index) => {
+  const themesHtml = themes.map((theme, index) => {
     const sourceAnalysisHtml = (theme.sourceAnalysis || []).map((sa) => {
       const quotesHtml = (sa.keyQuotes || []).map((q) => `<blockquote style="margin:4px 0;padding-left:10px;border-left:2px solid #d1d5db;font-style:italic;color:#6b7280;font-size:14px;">"${escapeHtml(q)}"</blockquote>`).join('');
       const biasHtml = (sa.biasIndicators || []).map((b) => `<span style="display:inline-block;padding:2px 8px;margin:2px;border:1px solid #d1d5db;border-radius:12px;font-size:12px;color:#6b7280;">${escapeHtml(b)}</span>`).join('');
@@ -91,7 +93,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
         <h3 style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#b45309;margin:0 0 8px 0;">☮ ${labels.mondcivitanReflection}</h3>
         <p style="font-size:14px;line-height:1.6;margin:0;color:#78350f;">${escapeHtml(theme.mondcivitanReflection)}</p>
       </div>` : ''}
-      ${index < report.themes.length - 1 ? '<hr style="margin-top:32px;border:none;border-top:1px solid #e5e7eb;">' : ''}
+      ${index < themes.length - 1 ? '<hr style="margin-top:32px;border:none;border-top:1px solid #e5e7eb;">' : ''}
     </article>`;
   }).join('');
 
@@ -117,7 +119,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
       </a>
     </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
-    <p style="font-size:14px;color:#6b7280;margin:0;">${labels.generated} ${generatedAtLabel} • ${labels.sources}: ${escapeHtml(report.sourcesAnalyzed.join(', '))}</p>
+    <p style="font-size:14px;color:#6b7280;margin:0;">${labels.generated} ${generatedAtLabel} • ${labels.sources}: ${escapeHtml(sourcesAnalyzed.join(', '))}</p>
   </header>
   <section style="margin-bottom:32px;">
     <p style="line-height:1.7;white-space:pre-line;">${escapeHtml(report.introduction)}</p>
@@ -138,8 +140,13 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 </html>`;
 }
 
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function escapeHtml(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function openReportInNewTab(html: string) {
