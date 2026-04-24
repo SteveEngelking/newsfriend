@@ -65,7 +65,11 @@ function buildPrompts(params: {
   ).join('\n\n');
 
   const mondcivitanInstruction = mondcivitanEnabled
-    ? `\n\nMONDCIVITAN REFLECTION: Write a substantial mondcivitanReflection paragraph (5-7 sentences) reflecting on this topic from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic EXISTS NOW. It was constituted in 1953 without territory by Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. It is a living international servant nation in the minds and daily lives of its citizens. Its ideals also resonate in John Lennon's song "Imagine".
+    ? `\n\nMONDCIVITAN REFLECTION: Write a substantial mondcivitanReflection paragraph (5-7 sentences) reflecting on this topic from the standpoint of the Mondcivitan Republic — Servant of Mankind.
+
+The Mondcivitan Republic EXISTS NOW. It was constituted in 1953 without territory by Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. In the 1970s, it was established as a virtual nation. Citizenship is a personal choice: you decide to join and strive to live according to our principles. We maintain no central register of citizens; instead, we are all Servants of Mankind, serving wherever we have the opportunity and the means. We may be dreamers, but we believe that a great dream is necessary for reality to change. Each of us strives to be an ambassador, mediating conflicts and spreading love and kindness wherever possible. "Join us, and one day the world will be as one!"
+
+It is a living international servant nation in the minds and daily lives of its citizens. Its ideals also resonate in John Lennon's song "Imagine".
 
 The seven principles its citizens LIVE BY NOW are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
 
