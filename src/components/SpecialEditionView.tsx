@@ -74,12 +74,14 @@ export function SpecialEditionView({ report }: Props) {
   // render duplicate numbering with the visual <ol>-style counter.
   const cleanedSteps = (report.actionSteps || []).map(stripLeadingNumber);
 
-  const handleDownload = () => {
-    if (reportRef.current) downloadAsHtml(reportRef.current, `special-edition-${reportLang}`);
+  const handleDownload = async () => {
+    const logo = await getLogoDataUri();
+    downloadReportHtml(generateSpecialEditionHtml(report, reportLang, logo), `special-edition-${reportLang}`);
   };
 
-  const handleOpenInNewTab = () => {
-    openReportInNewTab(generateSpecialEditionHtml(report, reportLang));
+  const handleOpenInNewTab = async () => {
+    const logo = await getLogoDataUri();
+    openReportInNewTab(generateSpecialEditionHtml(report, reportLang, logo));
   };
 
   return (
