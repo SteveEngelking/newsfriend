@@ -111,6 +111,11 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 </head>
 <body>
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #3b82f6;">
+    <div style="margin-bottom:12px;">
+      <a href="https://newsfriend.org" target="_blank" style="display:inline-block;">
+        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzI2L0A9Ljo7Ujo4P0ZDS0dMTU5PUVVDWkRHQ11VT0tUVVZfWj/2wBDAR..." alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
+      </a>
+    </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
     <p style="font-size:14px;color:#6b7280;margin:0;">${labels.generated} ${generatedAtLabel} • ${labels.sources}: ${escapeHtml(report.sourcesAnalyzed.join(', '))}</p>
   </header>
