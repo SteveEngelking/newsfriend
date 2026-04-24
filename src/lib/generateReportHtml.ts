@@ -1,7 +1,7 @@
 import { DailyNewsReport } from '@/lib/types';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
 
-export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage?: 'en' | 'de'): string {
+export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage?: 'en' | 'de', logoSrc?: string): string {
   const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
   const labels = lang === 'de'
     ? {
@@ -112,8 +112,8 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 <body>
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #3b82f6;">
     <div style="margin-bottom:12px;">
-      <a href="https://newsfriend.org" target="_blank" style="display:inline-block;">
-        <img src="https://newsfriend.org/logo.jpg" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
+      <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
+        <img src="${logoSrc || 'https://newsfriend.org/logo.jpg'}" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
       </a>
     </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
@@ -145,22 +145,20 @@ function escapeHtml(str: string): string {
 export function openReportInNewTab(html: string) {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) {
-    // Popup blocked — fall back to anchor click in same gesture
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+  // Anchor click in the same user gesture is the most reliable way to open
+  // a new tab without being treated as a popup by browsers.
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   // Keep the blob alive long enough for the new tab to load it
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-export function generateSpecialEditionHtml(report: SpecialEditionReport, preferredLanguage?: 'en' | 'de'): string {
+export function generateSpecialEditionHtml(report: SpecialEditionReport, preferredLanguage?: 'en' | 'de', logoSrc?: string): string {
   const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
   const labels = lang === 'de'
     ? {
@@ -225,8 +223,8 @@ export function generateSpecialEditionHtml(report: SpecialEditionReport, preferr
 <body>
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #f59e0b;">
     <div style="margin-bottom:12px;">
-      <a href="https://newsfriend.org" target="_blank" style="display:inline-block;">
-        <img src="https://newsfriend.org/logo.jpg" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
+      <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
+        <img src="${logoSrc || 'https://newsfriend.org/logo.jpg'}" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
       </a>
     </div>
     <div style="display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:600;margin-bottom:12px;">★ ${labels.badge}</div>

@@ -6,12 +6,13 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
 import { Star, Lightbulb, Download, ExternalLink } from 'lucide-react';
-import { downloadAsHtml } from '@/lib/downloadHtml';
 import {
   generateSpecialEditionHtml,
   openReportInNewTab,
+  downloadReportHtml,
   stripLeadingNumber,
 } from '@/lib/generateReportHtml';
+import { getLogoDataUri } from '@/lib/logoDataUri';
 
 interface Props {
   report: SpecialEditionReport;
@@ -73,12 +74,14 @@ export function SpecialEditionView({ report }: Props) {
   // render duplicate numbering with the visual <ol>-style counter.
   const cleanedSteps = (report.actionSteps || []).map(stripLeadingNumber);
 
-  const handleDownload = () => {
-    if (reportRef.current) downloadAsHtml(reportRef.current, `special-edition-${reportLang}`);
+  const handleDownload = async () => {
+    const logo = await getLogoDataUri();
+    downloadReportHtml(generateSpecialEditionHtml(report, reportLang, logo), `special-edition-${reportLang}`);
   };
 
-  const handleOpenInNewTab = () => {
-    openReportInNewTab(generateSpecialEditionHtml(report, reportLang));
+  const handleOpenInNewTab = async () => {
+    const logo = await getLogoDataUri();
+    openReportInNewTab(generateSpecialEditionHtml(report, reportLang, logo));
   };
 
   return (

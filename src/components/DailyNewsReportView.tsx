@@ -3,8 +3,8 @@ import { DailyNewsReport } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { downloadAsHtml } from '@/lib/downloadHtml';
-import { generateDailyNewsHtml, openReportInNewTab } from '@/lib/generateReportHtml';
+import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
+import { getLogoDataUri } from '@/lib/logoDataUri';
 import { Download, ExternalLink, Share2 } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -63,8 +63,14 @@ export function DailyNewsReportView({ report, reportId }: Props) {
       .order('sort_order').then(({ data }) => { if (data) setPerspectives(data as unknown as EthicalPerspective[]); });
   }, []);
 
-  const handleDownload = () => {
-    if (reportRef.current) downloadAsHtml(reportRef.current, 'news-of-the-day');
+  const handleDownload = async () => {
+    const logo = await getLogoDataUri();
+    downloadReportHtml(generateDailyNewsHtml(report, language, logo), 'news-of-the-day');
+  };
+
+  const handleOpenInNewTab = async () => {
+    const logo = await getLogoDataUri();
+    openReportInNewTab(generateDailyNewsHtml(report, language, logo));
   };
 
   const getSignificanceBadge = (significance: string) => {
@@ -115,7 +121,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-2">
-        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report, language))} variant="outline" className="gap-2">
+        <Button onClick={handleOpenInNewTab} variant="outline" className="gap-2">
           <ExternalLink className="h-4 w-4" /> {t('dailyOpenNewTab')}
         </Button>
         <Button onClick={handleDownload} className="gap-2">
