@@ -6,12 +6,13 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
 import { Star, Lightbulb, Download, ExternalLink } from 'lucide-react';
-import { downloadAsHtml } from '@/lib/downloadHtml';
 import {
   generateSpecialEditionHtml,
   openReportInNewTab,
+  downloadReportHtml,
   stripLeadingNumber,
 } from '@/lib/generateReportHtml';
+import { getLogoDataUri } from '@/lib/logoDataUri';
 
 interface Props {
   report: SpecialEditionReport;
