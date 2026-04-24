@@ -225,8 +225,8 @@ export function generateSpecialEditionHtml(report: SpecialEditionReport, preferr
 <body>
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #f59e0b;">
     <div style="margin-bottom:12px;">
-      <a href="https://newsfriend.org" target="_blank" style="display:inline-block;">
-        <img src="https://newsfriend.org/logo.jpg" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
+      <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
+        <img src="${logoSrc || 'https://newsfriend.org/logo.jpg'}" alt="NewsFriend" style="height:48px;width:auto;max-width:200px;" />
       </a>
     </div>
     <div style="display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:600;margin-bottom:12px;">★ ${labels.badge}</div>
