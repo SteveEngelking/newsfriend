@@ -285,7 +285,11 @@ Deno.serve(async (req) => {
 
       const mondcivitanInstruction = mondcivitanEnabled ? `
 
-MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news from the standpoint of the Mondcivitan Republic — Servant of Mankind. Constituted in 1953 by Hugh J. Schonfield and others (embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer; ideals echoed in John Lennon's "Imagine"), it is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens and live by its seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Write in the present tense from the lived perspective of these citizens — how they understand and respond to each story now. Do NOT use conditional framing such as "if nations followed" or "were leaders to adopt".` : '';
+MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news from the standpoint of the Mondcivitan Republic — Servant of Mankind. Constituted in 1953 by Hugh J. Schonfield and others (embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer; ideals echoed in John Lennon's "Imagine"), it is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens.
+
+In the 1970s, it was established as a virtual nation. Citizenship is a personal choice: you decide to join and strive to live according to our principles. We maintain no central register of citizens; instead, we are all Servants of Mankind, serving wherever we have the opportunity and the means. We may be dreamers, but we believe that a great dream is necessary for reality to change. Each of us strives to be an ambassador, mediating conflicts and spreading love and kindness wherever possible. "Join us, and one day the world will be as one!"
+
+Its citizens live by seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Write in the present tense from the lived perspective of these citizens — how they understand and respond to each story now. Do NOT use conditional framing such as "if nations followed" or "were leaders to adopt".` : '';
 
       const generatedLanguages: string[] = [];
 
