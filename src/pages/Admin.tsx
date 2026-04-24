@@ -56,7 +56,7 @@ const Admin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         statusCheckRef.current += 1;
-        if (mountedRef.current) setAdminState('login');
+        if (mountedRef.current) navigate('/login?redirect=/admin', { replace: true });
         return;
       }
 
