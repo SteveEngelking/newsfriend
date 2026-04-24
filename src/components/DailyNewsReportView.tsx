@@ -121,7 +121,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-2">
-        <Button onClick={() => openReportInNewTab(generateDailyNewsHtml(report, language))} variant="outline" className="gap-2">
+        <Button onClick={handleOpenInNewTab} variant="outline" className="gap-2">
           <ExternalLink className="h-4 w-4" /> {t('dailyOpenNewTab')}
         </Button>
         <Button onClick={handleDownload} className="gap-2">
