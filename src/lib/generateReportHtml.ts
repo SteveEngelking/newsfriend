@@ -145,17 +145,15 @@ function escapeHtml(str: string): string {
 export function openReportInNewTab(html: string) {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) {
-    // Popup blocked — fall back to anchor click in same gesture
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+  // Anchor click in the same user gesture is the most reliable way to open
+  // a new tab without being treated as a popup by browsers.
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   // Keep the blob alive long enough for the new tab to load it
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
