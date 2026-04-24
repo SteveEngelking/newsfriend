@@ -63,8 +63,14 @@ export function DailyNewsReportView({ report, reportId }: Props) {
       .order('sort_order').then(({ data }) => { if (data) setPerspectives(data as unknown as EthicalPerspective[]); });
   }, []);
 
-  const handleDownload = () => {
-    if (reportRef.current) downloadAsHtml(reportRef.current, 'news-of-the-day');
+  const handleDownload = async () => {
+    const logo = await getLogoDataUri();
+    downloadReportHtml(generateDailyNewsHtml(report, language, logo), 'news-of-the-day');
+  };
+
+  const handleOpenInNewTab = async () => {
+    const logo = await getLogoDataUri();
+    openReportInNewTab(generateDailyNewsHtml(report, language, logo));
   };
 
   const getSignificanceBadge = (significance: string) => {
