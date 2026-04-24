@@ -118,9 +118,9 @@ Deno.serve(async (req) => {
     };
     console.log(`[special-edition] topic translations: de="${topicByLang.de}" en="${topicByLang.en}"`);
 
-    // Search each source for the topic via Firecrawl, in parallel.
-    // Use the source's own language for the topic part of the query so all sources are searched fairly.
-    const searchTasks = sources.map(async (source) => {
+    // Search each source for the topic via Firecrawl, in parallel, with per-call timeouts
+    // to avoid one slow source hanging the whole function.
+    const searchOneSource = async (source: any) => {
       let sourceUrl = source.url.trim();
       if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
         sourceUrl = `https://${sourceUrl}`;
@@ -131,9 +131,12 @@ Deno.serve(async (req) => {
       const sourceLang = detectSourceLang(source.name, hostname);
       const queryTopic = topicByLang[sourceLang];
       const searchQuery = `${queryTopic} site:${hostname}`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000); // 20s per source
       try {
         const resp = await fetch('https://api.firecrawl.dev/v1/search', {
           method: 'POST',
+          signal: ctrl.signal,
           headers: { 'Authorization': `Bearer ${FIRECRAWL_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: searchQuery,
@@ -143,7 +146,10 @@ Deno.serve(async (req) => {
             country: sourceLang === 'de' ? 'de' : 'us',
           }),
         });
-        if (!resp.ok) return [];
+        if (!resp.ok) {
+          console.warn(`[special-edition] firecrawl ${source.name} returned ${resp.status}`);
+          return [];
+        }
         const data = await resp.json();
         if (!data.success || !Array.isArray(data.data)) return [];
         return data.data.map((item: any) => ({
@@ -152,13 +158,19 @@ Deno.serve(async (req) => {
           url: typeof item.url === 'string' ? item.url.slice(0, 2000) : '',
           content: (item.markdown || item.description || '').slice(0, 500),
         }));
-      } catch (err) {
-        console.warn(`[special-edition] search failed for ${source.name}:`, err);
+      } catch (err: any) {
+        const reason = err?.name === 'AbortError' ? 'timeout' : (err?.message || String(err));
+        console.warn(`[special-edition] search failed for ${source.name}: ${reason}`);
         return [];
+      } finally {
+        clearTimeout(timer);
       }
-    });
+    };
 
-    const results = await Promise.allSettled(searchTasks);
+    console.log(`[special-edition] starting firecrawl searches for ${sources.length} sources`);
+    const searchStart = Date.now();
+    const results = await Promise.allSettled(sources.map(s => searchOneSource(s)));
+    console.log(`[special-edition] firecrawl searches done in ${Date.now() - searchStart}ms`);
     const allArticles: any[] = [];
     for (const r of results) {
       if (r.status === 'fulfilled' && Array.isArray(r.value)) allArticles.push(...r.value);
