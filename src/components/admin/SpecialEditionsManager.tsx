@@ -140,7 +140,7 @@ export function SpecialEditionsManager() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Star className="h-5 w-5 text-amber-500" /> {t('specialEditionsTitle')}
+          <Star className="h-5 w-5 text-primary" /> {t('specialEditionsTitle')}
         </CardTitle>
         <CardDescription>{t('specialEditionsDesc')}</CardDescription>
       </CardHeader>
@@ -254,7 +254,7 @@ export function SpecialEditionsManager() {
                 )}
                 {isApproved && ed.notified_at && (
                   <Badge variant="outline" className="gap-1 text-xs">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    <CheckCircle2 className="h-3 w-3 text-primary" />
                     {t('specialEditionNotified')}
                   </Badge>
                 )}
