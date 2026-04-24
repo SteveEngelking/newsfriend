@@ -60,6 +60,7 @@ export function SpecialEditionsManager() {
       toast({ title: t('specialEditionGenerated'), description: t('specialEditionGeneratedDesc') });
       setTopic('');
       load();
+      setTimeout(() => load(), 2500);
     } catch (err: any) {
       toast({ title: t('adminError'), description: err.message, variant: 'destructive' });
     } finally {
@@ -77,27 +78,25 @@ export function SpecialEditionsManager() {
   };
 
   const handleApproveAndNotify = async (edition: SpecialEditionRecord) => {
+    if (edition.status !== 'draft') return;
     if (!confirm(t('specialEditionApproveConfirm'))) return;
     setActionId(edition.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // First mark as approved
       const { error: updErr } = await supabase
         .from('special_editions')
         .update({ status: 'approved', approved_at: new Date().toISOString() })
         .eq('id', edition.id);
       if (updErr) throw updErr;
 
-      // Then trigger notification
       const { data, error } = await supabase.functions.invoke('send-notification', {
         body: { type: 'special_edition', specialEditionId: edition.id },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
 
-      // Mark notified
       await supabase
         .from('special_editions')
         .update({ notified_at: new Date().toISOString(), notified_count: data?.sent ?? 0 })
@@ -116,6 +115,7 @@ export function SpecialEditionsManager() {
   };
 
   const startEdit = (edition: SpecialEditionRecord) => {
+    if (edition.status !== 'draft') return;
     setEditingId(edition.id);
     setEditingReport({ ...edition.report_data });
   };
@@ -184,70 +184,92 @@ export function SpecialEditionsManager() {
           <p className="text-sm text-muted-foreground text-center py-4">{t('specialEditionsNone')}</p>
         )}
 
-        {editions.map((ed) => (
-          <div key={ed.id} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-3 rounded-lg border bg-card">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-medium text-sm truncate">{ed.report_data.headline || ed.topic}</p>
-                {ed.status === 'draft' ? (
-                  <Badge variant="outline" className="text-xs shrink-0">{t('specialEditionStatusDraft')}</Badge>
-                ) : (
-                  <Badge className="text-xs shrink-0 bg-emerald-500 hover:bg-emerald-500">{t('specialEditionStatusApproved')}</Badge>
+        {editions.map((ed) => {
+          const isProcessing = ed.status === 'processing';
+          const isDraft = ed.status === 'draft';
+          const isApproved = ed.status === 'approved';
+          const isFailed = ed.status === 'failed';
+          const headline = isFailed ? (ed.report_data?.error || ed.topic) : (ed.report_data?.headline || ed.topic);
+
+          return (
+            <div key={ed.id} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-3 rounded-lg border bg-card">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="font-medium text-sm truncate">{headline}</p>
+                  {isProcessing && (
+                    <Badge variant="secondary" className="text-xs shrink-0 gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> {t('specialEditionStatusProcessing')}
+                    </Badge>
+                  )}
+                  {isDraft && (
+                    <Badge variant="outline" className="text-xs shrink-0">{t('specialEditionStatusDraft')}</Badge>
+                  )}
+                  {isApproved && (
+                    <Badge variant="default" className="text-xs shrink-0">{t('specialEditionStatusApproved')}</Badge>
+                  )}
+                  {isFailed && (
+                    <Badge variant="destructive" className="text-xs shrink-0">Failed</Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs shrink-0 uppercase">{ed.language}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground italic truncate">{ed.topic}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {new Date(ed.created_at).toLocaleString()}
+                  {ed.notified_at && ` • ${t('specialEditionNotifiedTo')} ${ed.notified_count}`}
+                </p>
+                {isFailed && ed.report_data?.error && (
+                  <p className="text-xs text-destructive mt-2">{ed.report_data.error}</p>
                 )}
-                <Badge variant="secondary" className="text-xs shrink-0 uppercase">{ed.language}</Badge>
               </div>
-              <p className="text-xs text-muted-foreground italic truncate">{ed.topic}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {new Date(ed.created_at).toLocaleString()}
-                {ed.notified_at && ` • ${t('specialEditionNotifiedTo')} ${ed.notified_count}`}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1.5 shrink-0">
-              <Button size="sm" variant="ghost" onClick={() => setPreviewReport(ed.report_data)} className="gap-1">
-                <Eye className="h-3 w-3" /> {t('specialEditionPreview')}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => startEdit(ed)} className="gap-1">
-                {t('specialEditionEdit')}
-              </Button>
-              {ed.status === 'draft' && (
+              <div className="flex flex-wrap gap-1.5 shrink-0">
+                {isDraft && (
+                  <Button size="sm" variant="ghost" onClick={() => setPreviewReport(ed.report_data)} className="gap-1">
+                    <Eye className="h-3 w-3" /> {t('specialEditionPreview')}
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => startEdit(ed)} className="gap-1" disabled={!isDraft}>
+                  {t('specialEditionEdit')}
+                </Button>
+                {isDraft && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleApproveAndNotify(ed)}
+                    disabled={actionId === ed.id}
+                    className="gap-1"
+                  >
+                    {actionId === ed.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                    {t('specialEditionApproveBtn')}
+                  </Button>
+                )}
+                {isApproved && !ed.notified_at && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleApproveAndNotify(ed)}
+                    disabled={actionId === ed.id}
+                    className="gap-1"
+                  >
+                    {actionId === ed.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                    {t('specialEditionResendBtn')}
+                  </Button>
+                )}
+                {isApproved && ed.notified_at && (
+                  <Badge variant="outline" className="gap-1 text-xs">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    {t('specialEditionNotified')}
+                  </Badge>
+                )}
                 <Button
                   size="sm"
-                  onClick={() => handleApproveAndNotify(ed)}
+                  variant="ghost"
+                  onClick={() => handleDelete(ed.id)}
                   disabled={actionId === ed.id}
-                  className="gap-1 bg-emerald-600 hover:bg-emerald-700"
                 >
-                  {actionId === ed.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                  {t('specialEditionApproveBtn')}
+                  <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
-              )}
-              {ed.status === 'approved' && !ed.notified_at && (
-                <Button
-                  size="sm"
-                  onClick={() => handleApproveAndNotify(ed)}
-                  disabled={actionId === ed.id}
-                  className="gap-1"
-                >
-                  {actionId === ed.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                  {t('specialEditionResendBtn')}
-                </Button>
-              )}
-              {ed.status === 'approved' && ed.notified_at && (
-                <Badge variant="outline" className="gap-1 text-xs">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                  {t('specialEditionNotified')}
-                </Badge>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDelete(ed.id)}
-                disabled={actionId === ed.id}
-              >
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
 
       {/* Preview dialog */}
