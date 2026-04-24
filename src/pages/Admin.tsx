@@ -1,30 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NewsSource } from '@/lib/types';
-import { Checkbox } from '@/components/ui/checkbox';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Lock, LogOut, Shield, Loader2 } from 'lucide-react';
+import { LogOut, Shield, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { SEO } from '@/components/SEO';
 
-type AdminState = 'loading' | 'login' | 'no-admin-exists' | 'not-admin' | 'admin';
+type AdminState = 'loading' | 'no-admin-exists' | 'not-admin' | 'admin';
 
 const Admin = () => {
   const [adminState, setAdminState] = useState<AdminState>('loading');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
-  const [humanCheck, setHumanCheck] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const mountedRef = useRef(true);
   const statusCheckRef = useRef(0);
 
@@ -34,7 +30,7 @@ const Admin = () => {
     if (!mountedRef.current || requestId !== statusCheckRef.current) return;
 
     if (!session) {
-      setAdminState('login');
+      navigate('/login?redirect=/admin', { replace: true });
       return;
     }
 
