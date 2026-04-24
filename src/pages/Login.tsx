@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,11 @@ const Login = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+    ? redirectParam
+    : '/account';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +34,7 @@ const Login = () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigate('/account');
+      navigate(safeRedirect);
     } catch (err: any) {
       toast({ title: t('adminLoginFailed'), description: err.message, variant: 'destructive' });
     } finally {

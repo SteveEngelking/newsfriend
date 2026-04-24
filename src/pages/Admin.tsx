@@ -1,30 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NewsSource } from '@/lib/types';
-import { Checkbox } from '@/components/ui/checkbox';
 import { fetchSources, saveEnabledState } from '@/lib/sources';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Lock, LogOut, Shield, Loader2 } from 'lucide-react';
+import { LogOut, Shield, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { SEO } from '@/components/SEO';
 
-type AdminState = 'loading' | 'login' | 'no-admin-exists' | 'not-admin' | 'admin';
+type AdminState = 'loading' | 'no-admin-exists' | 'not-admin' | 'admin';
 
 const Admin = () => {
   const [adminState, setAdminState] = useState<AdminState>('loading');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [sources, setSources] = useState<NewsSource[]>([]);
-  const [humanCheck, setHumanCheck] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const mountedRef = useRef(true);
   const statusCheckRef = useRef(0);
 
@@ -34,7 +30,7 @@ const Admin = () => {
     if (!mountedRef.current || requestId !== statusCheckRef.current) return;
 
     if (!session) {
-      setAdminState('login');
+      navigate('/login?redirect=/admin', { replace: true });
       return;
     }
 
@@ -60,7 +56,7 @@ const Admin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         statusCheckRef.current += 1;
-        if (mountedRef.current) setAdminState('login');
+        if (mountedRef.current) navigate('/login?redirect=/admin', { replace: true });
         return;
       }
 
@@ -89,29 +85,6 @@ const Admin = () => {
     saveEnabledState(newSources);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    } catch (err: any) {
-      toast({ title: t('adminLoginFailed'), description: err.message, variant: 'destructive' });
-    } finally { setIsLoading(false); }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      toast({ title: t('adminSignUpSuccess') });
-    } catch (err: any) {
-      toast({ title: t('adminSignUpFailed'), description: err.message, variant: 'destructive' });
-    } finally { setIsLoading(false); }
-  };
-
   const handleClaimAdmin = async () => {
     setIsLoading(true);
     try {
@@ -130,7 +103,7 @@ const Admin = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setAdminState('login');
+    navigate('/login', { replace: true });
   };
 
   if (adminState === 'loading') {
@@ -177,39 +150,6 @@ const Admin = () => {
               <Button variant="ghost" onClick={handleLogout} className="w-full gap-2">
                 <LogOut className="h-4 w-4" /> {t('adminSignOut')}
               </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (adminState === 'login') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="w-full max-w-sm">
-            <CardHeader className="text-center">
-              <Lock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle>{isSignUp ? t('adminSignUp') : t('adminLogin')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-4">
-                <Input type="email" placeholder={t('adminEmailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required />
-                <Input type="password" placeholder={t('adminPasswordPlaceholder')} value={password} onChange={e => setPassword(e.target.value)} required />
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="human-check" checked={humanCheck} onCheckedChange={(checked) => setHumanCheck(checked === true)} />
-                  <label htmlFor="human-check" className="text-sm font-medium leading-none cursor-pointer select-none">I am a human</label>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading || !humanCheck}>
-                  {isLoading ? (isSignUp ? t('adminSigningUp') : t('adminSigningIn')) : (isSignUp ? t('adminSignUp') : t('adminSignIn'))}
-                </Button>
-              </form>
-              <div className="mt-4 text-center">
-                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-primary hover:underline">
-                  {isSignUp ? t('adminHaveAccount') : t('adminNoAccount')}
-                </button>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
