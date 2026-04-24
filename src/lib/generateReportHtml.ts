@@ -160,7 +160,7 @@ export function openReportInNewTab(html: string) {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-export function generateSpecialEditionHtml(report: SpecialEditionReport, preferredLanguage?: 'en' | 'de'): string {
+export function generateSpecialEditionHtml(report: SpecialEditionReport, preferredLanguage?: 'en' | 'de', logoSrc?: string): string {
   const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
   const labels = lang === 'de'
     ? {
