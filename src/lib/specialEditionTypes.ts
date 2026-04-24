@@ -26,8 +26,8 @@ export interface SpecialEditionRecord {
   id: string;
   topic: string;
   language: string;
-  status: 'draft' | 'approved';
-  report_data: SpecialEditionReport;
+  status: 'processing' | 'draft' | 'approved' | 'failed';
+  report_data: SpecialEditionReport & { error?: string; processing?: boolean; details?: string };
   created_at: string;
   approved_at: string | null;
   notified_at: string | null;
