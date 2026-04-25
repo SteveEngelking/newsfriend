@@ -302,6 +302,27 @@ export function ScheduleManager({ sources }: Props) {
               <span className="text-muted-foreground ml-1 text-xs">— {t('schweitzerDesc')}</span>
             </label>
           </div>
+          <div className="flex items-start gap-3 p-3 rounded-md border bg-muted/30">
+            <ImageIcon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="banner-images"
+                  checked={bannerImagesEnabled}
+                  onCheckedChange={handleToggleBannerImages}
+                  disabled={bannerToggleSaving}
+                />
+                <label htmlFor="banner-images" className="text-sm font-medium cursor-pointer">
+                  {language === 'de' ? 'KI-Banner-Bilder generieren' : 'Generate AI banner images'}
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === 'de'
+                  ? 'Erstellt ein redaktionelles 16:9-Illustrationsbanner für jeden Tagesbericht und jede Sonderausgabe (Nano Banana, kostengünstig). Wird in der App, im HTML-Download und in E-Mails angezeigt.'
+                  : 'Creates an editorial 16:9 illustration banner for each daily report and special edition (Nano Banana, low cost). Shown in the app, HTML download, and emails.'}
+              </p>
+            </div>
+          </div>
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
