@@ -194,7 +194,7 @@ const Home = () => {
     : 'Free daily news reports synthesised from multiple international sources, with fact-checking and ethical reflection. By the Hugh & Helene Schonfield World Service Trust.';
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-0">
+    <div className="flex flex-col items-center px-0 pt-2">
       <SEO
         title={seoTitle}
         description={seoDesc}
