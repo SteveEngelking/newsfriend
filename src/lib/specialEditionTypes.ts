@@ -20,6 +20,7 @@ export interface SpecialEditionReport {
   actionSteps: string[];
   conclusion: string;
   sourcesAnalyzed: string[];
+  bannerImageUrl?: string;
 }
 
 export interface SpecialEditionRecord {

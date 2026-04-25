@@ -66,6 +66,7 @@ export interface DailyNewsReport {
   themes: DailyTheme[];
   conclusion: string;
   ethicalConsiderations?: EthicalConsiderationItem[];
+  bannerImageUrl?: string;
   // Legacy fields for backward compat
   schweitzerEthical?: string;
   ethicalJesus?: string;
