@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock, ExternalLink } from 'lucide-react';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
 import { DailyNewsReport } from '@/lib/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -53,14 +53,21 @@ export function ScheduleManager({ sources }: Props) {
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
+  const [bannerImagesEnabled, setBannerImagesEnabled] = useState(false);
+  const [bannerToggleSaving, setBannerToggleSaving] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
   const loadData = useCallback(async () => {
-    const [schedRes, repRes] = await Promise.all([
+    const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('app_settings').select('banner_images_enabled').eq('id', 1).maybeSingle(),
     ]);
+
+    if (settingsRes.data) {
+      setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
+    }
 
     if (schedRes.data) {
       const sched = schedRes.data as Schedule;
@@ -149,6 +156,28 @@ export function ScheduleManager({ sources }: Props) {
     if (!schedule) return;
     const { error } = await supabase.from('report_schedules').update({ enabled: !schedule.enabled }).eq('id', schedule.id);
     if (!error) loadData();
+  };
+
+  const handleToggleBannerImages = async (checked: boolean) => {
+    setBannerToggleSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, banner_images_enabled: checked, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    setBannerToggleSaving(false);
+    if (error) {
+      toast({
+        title: t('sourceError') || 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBannerImagesEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Banner-Bilder aktiviert' : 'Banner images enabled')
+        : (language === 'de' ? 'Banner-Bilder deaktiviert' : 'Banner images disabled'),
+    });
   };
 
   const handleDeleteReport = async (id: string) => {
@@ -272,6 +301,27 @@ export function ScheduleManager({ sources }: Props) {
               <span className="font-medium">{t('schweitzerLabel')}</span>
               <span className="text-muted-foreground ml-1 text-xs">— {t('schweitzerDesc')}</span>
             </label>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-md border bg-muted/30">
+            <ImageIcon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="banner-images"
+                  checked={bannerImagesEnabled}
+                  onCheckedChange={handleToggleBannerImages}
+                  disabled={bannerToggleSaving}
+                />
+                <label htmlFor="banner-images" className="text-sm font-medium cursor-pointer">
+                  {language === 'de' ? 'KI-Banner-Bilder generieren' : 'Generate AI banner images'}
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === 'de'
+                  ? 'Erstellt ein redaktionelles 16:9-Illustrationsbanner für jeden Tagesbericht und jede Sonderausgabe (Nano Banana, kostengünstig). Wird in der App, im HTML-Download und in E-Mails angezeigt.'
+                  : 'Creates an editorial 16:9 illustration banner for each daily report and special edition (Nano Banana, low cost). Shown in the app, HTML download, and emails.'}
+              </p>
+            </div>
           </div>
           {schedule && (
             <p className="text-xs text-muted-foreground">

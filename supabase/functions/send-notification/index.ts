@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     }
 
     // For daily_report, fetch the latest report data per language
-    let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[] }> = {}
+    let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
     if (type === 'daily_report') {
       for (const lang of ['en', 'de']) {
         const { data: latestReport } = await supabase
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
           reportsByLanguage[lang] = {
             introduction: (rd.introduction || '').slice(0, 500),
             themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+            bannerImageUrl: rd.bannerImageUrl || undefined,
           }
         }
       }
@@ -69,7 +70,7 @@ Deno.serve(async (req) => {
     }
 
     // Special edition: fetch the chosen edition (admin-curated, single record)
-    let specialEditionData: { topic: string; headline: string; summary: string; language: string } | null = null
+    let specialEditionData: { topic: string; headline: string; summary: string; language: string; bannerImageUrl?: string } | null = null
     if (type === 'special_edition') {
       if (!specialEditionId) {
         return new Response(JSON.stringify({ error: 'specialEditionId required' }), {
@@ -89,6 +90,7 @@ Deno.serve(async (req) => {
         headline: rd.headline || se.topic,
         summary: (rd.summary || '').slice(0, 600),
         language: se.language,
+        bannerImageUrl: rd.bannerImageUrl || undefined,
       }
     }
 
