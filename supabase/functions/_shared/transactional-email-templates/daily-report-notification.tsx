@@ -13,6 +13,7 @@ interface DailyReportProps {
   introduction?: string
   themeHeadlines?: string[]
   language?: string
+  bannerImageUrl?: string
 }
 
 const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language }: DailyReportProps) => {
