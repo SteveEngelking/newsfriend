@@ -59,10 +59,15 @@ export function ScheduleManager({ sources }: Props) {
   const { t, language } = useLanguage();
 
   const loadData = useCallback(async () => {
-    const [schedRes, repRes] = await Promise.all([
+    const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('app_settings').select('banner_images_enabled').eq('id', 1).maybeSingle(),
     ]);
+
+    if (settingsRes.data) {
+      setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
+    }
 
     if (schedRes.data) {
       const sched = schedRes.data as Schedule;
