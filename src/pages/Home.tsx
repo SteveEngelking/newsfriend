@@ -194,7 +194,7 @@ const Home = () => {
     : 'Free daily news reports synthesised from multiple international sources, with fact-checking and ethical reflection. By the Hugh & Helene Schonfield World Service Trust.';
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-0">
+    <div className="flex flex-col items-center px-0 pt-2">
       <SEO
         title={seoTitle}
         description={seoDesc}
@@ -239,17 +239,17 @@ const Home = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-4xl mx-auto space-y-4"
+          className="w-full max-w-4xl mx-auto space-y-3"
         >
           {!isAuthenticated && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-5 shadow-sm"
+              className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-4 shadow-sm"
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/15 p-2.5 shrink-0">
+                  <div className="rounded-full bg-primary/15 p-2 shrink-0">
                     <Bell className="h-5 w-5 text-primary" />
                   </div>
                   <div>
@@ -257,7 +257,7 @@ const Home = () => {
                     <p className="text-sm text-muted-foreground mt-0.5">{t('homeSignupCtaDesc')}</p>
                   </div>
                 </div>
-                <Button asChild size="lg" className="w-full sm:w-auto shrink-0 gap-2 font-semibold">
+                <Button asChild size="sm" className="w-full sm:w-auto shrink-0 gap-2 font-semibold">
                   <Link to="/register">
                     {t('homeSignupCtaButton')}
                     <ArrowRight className="h-4 w-4" />
@@ -266,9 +266,9 @@ const Home = () => {
               </div>
             </motion.div>
           )}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 flex-wrap">
             <Select value={selectedId || ''} onValueChange={handleSelectReport}>
-              <SelectTrigger className="w-full sm:w-80">
+              <SelectTrigger className="w-full sm:w-72 h-9">
                 <SelectValue placeholder={t('homePreviousEditions')} />
               </SelectTrigger>
               <SelectContent>
@@ -283,20 +283,14 @@ const Home = () => {
               <Newspaper className="h-4 w-4" />
               {t('homeRefresh')}
             </Button>
-          </div>
-          <div className="flex justify-center">
-            <ShareButtons url="https://newsfriend.org" />
-          </div>
-          {specialEditions.length > 0 && (
-            <div id="special-editions" className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 sm:p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Star className="h-5 w-5 text-amber-500" />
-                <h3 className="font-semibold text-base sm:text-lg">{t('homeSpecialEditionsTitle')}</h3>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+            {specialEditions.length > 0 && (
+              <div id="special-editions" className="flex items-center gap-2">
                 <Select value={selectedSpecialId || ''} onValueChange={(v) => setSelectedSpecialId(v)}>
-                  <SelectTrigger className="w-full sm:w-96">
-                    <SelectValue placeholder={t('homeSpecialEditionsTitle')} />
+                  <SelectTrigger className="w-full sm:w-72 h-9 border-amber-500/50 bg-amber-500/5">
+                    <div className="flex items-center gap-2 truncate">
+                      <Star className="h-4 w-4 text-amber-500 shrink-0" />
+                      <SelectValue placeholder={t('homeSpecialEditionsTitle')} />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     {specialEditions.map(s => (
@@ -312,8 +306,11 @@ const Home = () => {
                   </Button>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="flex justify-center">
+            <ShareButtons url="https://newsfriend.org" />
+          </div>
           {selectedSpecial ? (
             <SpecialEditionView report={selectedSpecial} />
           ) : isLoadingReport ? (
