@@ -46,6 +46,10 @@ const SpecialEditionNotificationEmail = ({ topic, headline, summary, language, e
 
           <Hr style={headerDivider} />
 
+          {bannerImageUrl && (
+            <Img src={bannerImageUrl} alt="" width="600" style={bannerStyle} />
+          )}
+
           <Text style={badge}>⭐ {heading}</Text>
 
           {topic && <Text style={topicLine}>{topicLabel}: {topic}</Text>}
