@@ -65,6 +65,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          banner_image_model: string
+          banner_images_enabled: boolean
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          banner_image_model?: string
+          banner_images_enabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          banner_image_model?: string
+          banner_images_enabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cms_pages: {
         Row: {
           content_de: string
