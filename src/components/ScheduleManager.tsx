@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock, ExternalLink } from 'lucide-react';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
 import { DailyNewsReport } from '@/lib/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
