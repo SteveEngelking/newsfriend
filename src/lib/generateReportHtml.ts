@@ -112,6 +112,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
 </style>
 </head>
 <body>
+  ${(report as any).bannerImageUrl ? `<div style="max-width:900px;margin:0 auto 24px;"><img src="${escapeHtml((report as any).bannerImageUrl)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>` : ''}
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #3b82f6;">
     <div style="margin-bottom:12px;">
       <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
@@ -228,6 +229,7 @@ export function generateSpecialEditionHtml(report: SpecialEditionReport, preferr
 </style>
 </head>
 <body>
+  ${(report as any).bannerImageUrl ? `<div style="max-width:900px;margin:0 auto 24px;"><img src="${escapeHtml((report as any).bannerImageUrl)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>` : ''}
   <header style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #f59e0b;">
     <div style="margin-bottom:12px;">
       <a href="https://newsfriend.org" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
