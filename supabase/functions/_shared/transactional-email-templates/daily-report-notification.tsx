@@ -45,6 +45,11 @@ const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language, 
 
           <Hr style={headerDivider} />
 
+          {/* Banner image (optional) */}
+          {bannerImageUrl && (
+            <Img src={bannerImageUrl} alt="" width="600" style={bannerStyle} />
+          )}
+
           {/* Badge */}
           <Text style={badge}>📰 {isDE ? 'Täglicher Bericht' : 'Daily Report'}</Text>
 
