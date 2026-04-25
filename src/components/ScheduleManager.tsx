@@ -179,6 +179,8 @@ export function ScheduleManager({ sources }: Props) {
         : (language === 'de' ? 'Banner-Bilder deaktiviert' : 'Banner images disabled'),
     });
   };
+
+  const handleDeleteReport = async (id: string) => {
     await supabase.from('generated_reports').delete().eq('id', id);
     setReports(prev => prev.filter(r => r.id !== id));
   };
