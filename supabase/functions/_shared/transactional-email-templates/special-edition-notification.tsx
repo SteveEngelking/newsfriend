@@ -98,6 +98,7 @@ const headerSection = { padding: '28px 28px 12px', textAlign: 'center' as const 
 const logoStyle = { borderRadius: '10px', display: 'block' as const, margin: '0 auto 4px', maxWidth: '48px' }
 const brandName = { fontSize: '22px', fontWeight: '700' as const, color: '#1a1a2e', margin: '4px 0 0', letterSpacing: '-0.3px', textAlign: 'center' as const }
 const headerDivider = { borderColor: '#e5e7eb', margin: '0 28px 20px' }
+const bannerStyle = { width: '100%' as const, maxWidth: '600px', height: 'auto' as const, display: 'block' as const, margin: '0 0 20px' }
 const badge = { fontSize: '11px', color: '#b45309', fontWeight: '700' as const, textTransform: 'uppercase' as const, letterSpacing: '1px', margin: '0 0 8px', padding: '0 16px' }
 const topicLine = { fontSize: '13px', color: '#666', margin: '0 0 6px', padding: '0 16px', fontStyle: 'italic' as const }
 const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#1a1a2e', margin: '0 0 8px', lineHeight: '1.3', padding: '0 16px', wordBreak: 'break-word' as const }
