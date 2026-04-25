@@ -496,7 +496,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
 
-        const report = {
+        const report: any = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
           generatedAt: now.toISOString(),
           language: lang.code,
@@ -507,6 +507,30 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           ...legacyFields,
           sourcesAnalyzed: sourceNames,
         };
+
+        // Optional: generate editorial banner image when global toggle is on
+        try {
+          const { data: settings } = await supabase
+            .from('app_settings')
+            .select('banner_images_enabled')
+            .eq('id', 1)
+            .maybeSingle();
+          if ((settings as any)?.banner_images_enabled) {
+            const themeText = (allThemes.slice(0, 3).map((t: any) => t.headline).filter(Boolean).join(' · ')
+              || introduction || report.title).slice(0, 400);
+            const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
+              body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
+            });
+            if (banner?.url) {
+              report.bannerImageUrl = banner.url as string;
+              console.log(`Schedule ${schedule.id}: banner generated for ${lang.code}`);
+            } else if (bannerErr) {
+              console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
+            }
+          }
+        } catch (bannerErr) {
+          console.warn(`Schedule ${schedule.id}: banner generation threw for ${lang.code}:`, bannerErr);
+        }
 
         const { error: insertErr } = await supabase.from('generated_reports').insert({
           schedule_id: schedule.id, title: report.title, report_data: report, language: lang.code,
