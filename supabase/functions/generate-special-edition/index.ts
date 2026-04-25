@@ -345,7 +345,7 @@ async function runGeneration(params: {
     const titlePrefix = language === 'de' ? 'Sonderausgabe' : 'Special Edition';
     const dateStr = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-    const reportData = {
+    const reportData: any = {
       topic,
       title: `${titlePrefix}: ${topic} — ${dateStr} (UTC)`,
       generatedAt: new Date().toISOString(),
@@ -360,6 +360,29 @@ async function runGeneration(params: {
       conclusion: parsed.conclusion,
       sourcesAnalyzed: sourceNames,
     };
+
+    // Optional: generate editorial banner image when global toggle is on
+    try {
+      const { data: settings } = await supabase
+        .from('app_settings')
+        .select('banner_images_enabled')
+        .eq('id', 1)
+        .maybeSingle();
+      if ((settings as any)?.banner_images_enabled) {
+        const themeText = (parsed.headline || topic || '').toString().slice(0, 400);
+        const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
+          body: { themeText, kind: 'special', reportId: editionId },
+        });
+        if (banner?.url) {
+          reportData.bannerImageUrl = banner.url as string;
+          console.log(`[special-edition] banner generated for ${editionId}`);
+        } else if (bannerErr) {
+          console.warn(`[special-edition] banner generation failed:`, bannerErr);
+        }
+      }
+    } catch (bannerErr) {
+      console.warn(`[special-edition] banner generation threw:`, bannerErr);
+    }
 
     await updateEditionStatus(supabase, editionId, {
       status: 'draft',
