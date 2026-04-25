@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     }
 
     // For daily_report, fetch the latest report data per language
-    let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[] }> = {}
+    let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
     if (type === 'daily_report') {
       for (const lang of ['en', 'de']) {
         const { data: latestReport } = await supabase
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
           reportsByLanguage[lang] = {
             introduction: (rd.introduction || '').slice(0, 500),
             themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+            bannerImageUrl: rd.bannerImageUrl || undefined,
           }
         }
       }
