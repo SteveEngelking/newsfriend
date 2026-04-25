@@ -99,6 +99,11 @@ export function SpecialEditionView({ report }: Props) {
         ref={reportRef}
         className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px] py-[20px]"
       >
+        {report.bannerImageUrl && (
+          <div className="mb-6 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
+            <img src={report.bannerImageUrl} alt="" className="w-full aspect-[16/9] object-cover" loading="lazy" />
+          </div>
+        )}
         <header className="text-center mb-8 pb-6 border-b-2 border-amber-500/60">
           <Badge className="mb-3 gap-1 bg-amber-500 hover:bg-amber-500 text-white">
             <Star className="h-3 w-3" /> {L.badge}
