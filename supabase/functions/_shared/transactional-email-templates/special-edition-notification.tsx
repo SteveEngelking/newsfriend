@@ -15,9 +15,10 @@ interface SpecialEditionProps {
   summary?: string
   language?: string
   editionId?: string
+  bannerImageUrl?: string
 }
 
-const SpecialEditionNotificationEmail = ({ topic, headline, summary, language, editionId }: SpecialEditionProps) => {
+const SpecialEditionNotificationEmail = ({ topic, headline, summary, language, editionId, bannerImageUrl }: SpecialEditionProps) => {
   const isDE = language === 'de'
   const readNow = isDE ? 'Sonderausgabe lesen' : 'Read Special Edition'
   const previewText = isDE
