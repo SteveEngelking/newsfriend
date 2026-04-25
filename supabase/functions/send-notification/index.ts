@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     }
 
     // Special edition: fetch the chosen edition (admin-curated, single record)
-    let specialEditionData: { topic: string; headline: string; summary: string; language: string } | null = null
+    let specialEditionData: { topic: string; headline: string; summary: string; language: string; bannerImageUrl?: string } | null = null
     if (type === 'special_edition') {
       if (!specialEditionId) {
         return new Response(JSON.stringify({ error: 'specialEditionId required' }), {
@@ -90,6 +90,7 @@ Deno.serve(async (req) => {
         headline: rd.headline || se.topic,
         summary: (rd.summary || '').slice(0, 600),
         language: se.language,
+        bannerImageUrl: rd.bannerImageUrl || undefined,
       }
     }
 
