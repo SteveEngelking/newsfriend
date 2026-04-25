@@ -158,7 +158,27 @@ export function ScheduleManager({ sources }: Props) {
     if (!error) loadData();
   };
 
-  const handleDeleteReport = async (id: string) => {
+  const handleToggleBannerImages = async (checked: boolean) => {
+    setBannerToggleSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, banner_images_enabled: checked, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    setBannerToggleSaving(false);
+    if (error) {
+      toast({
+        title: t('sourceError') || 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBannerImagesEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Banner-Bilder aktiviert' : 'Banner images enabled')
+        : (language === 'de' ? 'Banner-Bilder deaktiviert' : 'Banner images disabled'),
+    });
+  };
     await supabase.from('generated_reports').delete().eq('id', id);
     setReports(prev => prev.filter(r => r.id !== id));
   };
