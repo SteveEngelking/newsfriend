@@ -16,7 +16,7 @@ interface DailyReportProps {
   bannerImageUrl?: string
 }
 
-const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language }: DailyReportProps) => {
+const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language, bannerImageUrl }: DailyReportProps) => {
   const isDE = language === 'de'
   const readNow = isDE ? 'Jetzt lesen' : 'Read Now'
   const previewText = isDE
