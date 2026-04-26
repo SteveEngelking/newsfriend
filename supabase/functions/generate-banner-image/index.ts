@@ -13,14 +13,14 @@ const corsHeaders = {
 function buildPrompt(themeText: string): string {
   const safe = String(themeText || '').slice(0, 400).replace(/\s+/g, ' ').trim();
   return [
-    'Purely visual editorial illustration banner inspired by this news theme (for your understanding only, DO NOT render any of these words in the image):',
+    'Editorial illustration banner inspired by this news theme:',
     `"${safe}".`,
     'Flat, semi-abstract, muted colours, soft lighting, modern illustration style,',
     'suitable for a clean news-style layout, 16:9 aspect ratio.',
-    'ABSOLUTELY NO TEXT of any kind in the image: no letters, no words, no numbers, no captions,',
-    'no headlines, no labels, no signage, no writing on objects, no flags with text, no newspapers with readable text,',
-    'no logos, no watermarks, no signatures, no symbols resembling letters, no pseudo-text or gibberish glyphs.',
-    'No human faces, no brand names. Communicate the theme purely through shapes, colour and composition.',
+    'CRITICAL TEXT RULE: Text is OPTIONAL. If — and ONLY if — you include any letters, words, numbers, captions, headlines, labels, signage, or writing of any kind in the image,',
+    'every single character MUST be spelled perfectly correctly in standard English (or the language of the theme), with real, dictionary-correct words and proper grammar.',
+    'NEVER produce misspellings, garbled letters, fake/pseudo-text, gibberish glyphs, jumbled characters, or made-up words. If you are not 100% confident the text will render correctly, OMIT TEXT ENTIRELY and convey the theme through shapes, colour and composition only.',
+    'No logos, no brand names, no human faces. Avoid watermarks and signatures.',
   ].join(' ');
 }
 
