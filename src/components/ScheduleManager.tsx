@@ -137,18 +137,19 @@ export function ScheduleManager({ sources }: Props) {
 
   const triggerImmediateGeneration = async (scheduleId: string) => {
     const languages = immediateLanguage === 'both' ? ['en', 'de'] : [immediateLanguage];
-    toast({ title: t('scheduleRunningNow') });
-    // Fire and forget — don't await, the edge function can take 2-3 minutes
+    toast({ title: t('scheduleRunningNow'), description: language === 'de' ? 'Dies kann 1–3 Minuten dauern. Aktualisieren Sie die Liste danach.' : 'This can take 1–3 minutes. Refresh the list afterwards.' });
+    // Fire and forget — the edge function returns 202 immediately and finishes in background.
     supabase.functions.invoke('generate-scheduled-report', {
       body: { forceImmediate: true, scheduleId, languages },
-    }).then(({ error }) => {
+    }).then(({ error, data }) => {
       if (error) {
         console.error('Background generation error:', error);
         toast({ title: t('sourceError'), description: t('scheduleRunFailed'), variant: 'destructive' });
-      } else {
-        toast({ title: t('scheduleRunReady') });
-        loadData();
+        return;
       }
+      console.log('Generation accepted:', data);
+      // Reload after a delay so the new report appears in the list
+      setTimeout(() => loadData(), 90000);
     }).catch(e => console.error('Background generation error:', e));
   };
 

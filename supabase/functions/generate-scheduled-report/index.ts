@@ -43,8 +43,13 @@ Deno.serve(async (req) => {
     const currentHour = now.getUTCHours();
     let schedulesQuery = supabase
       .from('report_schedules')
-      .select('*')
-      .eq('enabled', true);
+      .select('*');
+
+    // For manual immediate triggers, bypass the `enabled` filter so an admin can
+    // run a one-off generation without first toggling the schedule on.
+    if (!(forceImmediate && manualScheduleId)) {
+      schedulesQuery = schedulesQuery.eq('enabled', true);
+    }
 
     if (manualScheduleId) {
       schedulesQuery = schedulesQuery.eq('id', manualScheduleId);
@@ -53,6 +58,7 @@ Deno.serve(async (req) => {
     const { data: schedules, error: schedErr } = await schedulesQuery;
 
     if (schedErr || !schedules?.length) {
+      console.warn('generate-scheduled-report: no schedules matched', { manualScheduleId, forceImmediate, schedErr });
       return new Response(
         JSON.stringify({ message: 'No active schedules' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -132,7 +138,8 @@ Deno.serve(async (req) => {
 
     const results: string[] = [];
 
-    for (const schedule of schedules) {
+    const runScheduleWork = async () => {
+      for (const schedule of schedules) {
       // Use new time-of-day trigger logic with catch-up
       const languagesDue = await getLanguagesDue(schedule);
       if (languagesDue.length === 0) {
@@ -586,7 +593,23 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
       } else {
         results.push(`Schedule ${schedule.id}: no reports generated`);
       }
+      }
+    };
+
+    // For manual immediate triggers, run the heavy work in the background and
+    // return 200 right away so the client doesn't time out at ~60s. The cron
+    // path waits as before so logs reflect the full result.
+    if (forceImmediate) {
+      // @ts-ignore EdgeRuntime is provided by Supabase Edge Runtime
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(runScheduleWork()); }
+      catch { runScheduleWork().catch(e => console.error('background runScheduleWork error:', e)); }
+      return new Response(
+        JSON.stringify({ message: 'Generation started', schedules: schedules.length }),
+        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    await runScheduleWork();
 
     return new Response(
       JSON.stringify({ results }),

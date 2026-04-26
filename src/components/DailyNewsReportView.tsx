@@ -130,8 +130,15 @@ export function DailyNewsReportView({ report, reportId }: Props) {
       </div>
       
       <div ref={reportRef} className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px] py-[20px]">
+        <header className="text-center mb-6 pb-6 border-b-2 border-primary">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t('homeGenerated')} {new Date(report.generatedAt).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • {t('dailySourcesLabel')}: {report.sourcesAnalyzed.join(', ')}
+          </p>
+        </header>
+
         {report.bannerImageUrl && (
-          <div className="mb-6 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
+          <div className="mb-8 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
             <img
               src={report.bannerImageUrl}
               alt=""
@@ -140,12 +147,6 @@ export function DailyNewsReportView({ report, reportId }: Props) {
             />
           </div>
         )}
-        <header className="text-center mb-8 pb-6 border-b-2 border-primary">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('homeGenerated')} {new Date(report.generatedAt).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • {t('dailySourcesLabel')}: {report.sourcesAnalyzed.join(', ')}
-          </p>
-        </header>
 
         <section className="mb-8">
           <p className="text-base leading-relaxed whitespace-pre-line">{report.introduction}</p>
