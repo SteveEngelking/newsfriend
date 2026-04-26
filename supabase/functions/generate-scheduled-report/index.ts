@@ -43,8 +43,13 @@ Deno.serve(async (req) => {
     const currentHour = now.getUTCHours();
     let schedulesQuery = supabase
       .from('report_schedules')
-      .select('*')
-      .eq('enabled', true);
+      .select('*');
+
+    // For manual immediate triggers, bypass the `enabled` filter so an admin can
+    // run a one-off generation without first toggling the schedule on.
+    if (!(forceImmediate && manualScheduleId)) {
+      schedulesQuery = schedulesQuery.eq('enabled', true);
+    }
 
     if (manualScheduleId) {
       schedulesQuery = schedulesQuery.eq('id', manualScheduleId);
@@ -53,6 +58,7 @@ Deno.serve(async (req) => {
     const { data: schedules, error: schedErr } = await schedulesQuery;
 
     if (schedErr || !schedules?.length) {
+      console.warn('generate-scheduled-report: no schedules matched', { manualScheduleId, forceImmediate, schedErr });
       return new Response(
         JSON.stringify({ message: 'No active schedules' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
