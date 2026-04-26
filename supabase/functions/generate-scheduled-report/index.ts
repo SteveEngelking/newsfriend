@@ -138,7 +138,8 @@ Deno.serve(async (req) => {
 
     const results: string[] = [];
 
-    for (const schedule of schedules) {
+    const runScheduleWork = async () => {
+      for (const schedule of schedules) {
       // Use new time-of-day trigger logic with catch-up
       const languagesDue = await getLanguagesDue(schedule);
       if (languagesDue.length === 0) {
