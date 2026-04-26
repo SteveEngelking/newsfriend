@@ -593,6 +593,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
       } else {
         results.push(`Schedule ${schedule.id}: no reports generated`);
       }
+      }
     };
 
     // For manual immediate triggers, run the heavy work in the background and
