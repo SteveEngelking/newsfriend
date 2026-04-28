@@ -79,4 +79,4 @@ Disallow: /unsubscribe
 Disallow: /donation-thank-you
 
 Sitemap: https://www.newsfriend.org/sitemap.xml
-Sitemap: https://www.newsfriend.org/news-sitemap.xml
+Sitemap: https://kitduddwitnsaqfwdpxd.supabase.co/functions/v1/news-sitemap
