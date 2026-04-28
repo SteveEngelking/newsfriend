@@ -17,10 +17,8 @@ function buildPrompt(themeText: string): string {
     `"${safe}".`,
     'Flat, semi-abstract, muted colours, soft lighting, modern illustration style,',
     'suitable for a clean news-style layout, 16:9 aspect ratio.',
-    'CRITICAL TEXT RULE: Text is OPTIONAL. If — and ONLY if — you include any letters, words, numbers, captions, headlines, labels, signage, or writing of any kind in the image,',
-    'every single character MUST be spelled perfectly correctly in standard English (or the language of the theme), with real, dictionary-correct words and proper grammar.',
-    'NEVER produce misspellings, garbled letters, fake/pseudo-text, gibberish glyphs, jumbled characters, or made-up words. If you are not 100% confident the text will render correctly, OMIT TEXT ENTIRELY and convey the theme through shapes, colour and composition only.',
-    'No logos, no brand names, no human faces. Avoid watermarks and signatures.',
+    'ABSOLUTELY NO TEXT: The image must contain ZERO text of any kind — no letters, no words, no numbers, no captions, no headlines, no labels, no signage, no writing, no typography, no glyphs, no characters in any language or script. Convey the theme purely through shapes, colour, composition and visual symbolism.',
+    'No logos, no brand names, no human faces. No watermarks, no signatures, no lettering of any kind.',
   ].join(' ');
 }
 
