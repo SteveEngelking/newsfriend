@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
     const { data: pub } = supabase.storage.from('report-banners').getPublicUrl(filename);
     const url = pub.publicUrl;
 
-    return new Response(JSON.stringify({ url, path: filename, model }), {
+    return new Response(JSON.stringify({ url, path: filename, model: usedModel }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
