@@ -525,69 +525,19 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
             .eq('id', 1)
             .maybeSingle();
           if ((settings as any)?.banner_images_enabled) {
-            // Only the German run may reuse a sibling banner — and only from the English version.
-            // Rationale: English prompts/themes produce cleaner wordless illustrations from the
-            // image model; German runs more often produce garbled pseudo-text artifacts. Never
-            // copy a German-run banner into the English report.
-            let siblingBanner: string | null = null;
-            if (lang.code === 'de') {
-              const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
-              const { data: sibling } = await supabase
-                .from('generated_reports')
-                .select('report_data, created_at')
-                .eq('schedule_id', schedule.id)
-                .eq('language', 'en')
-                .gte('created_at', sixHoursAgo)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-              const candidate = (sibling as any)?.report_data?.bannerImageUrl;
-              if (candidate && typeof candidate === 'string') siblingBanner = candidate;
-            }
-
-            if (siblingBanner) {
-              report.bannerImageUrl = siblingBanner;
-              console.log(`Schedule ${schedule.id}: reusing en banner for de`);
-            } else {
-              const themeText = (allThemes.slice(0, 3).map((t: any) => t.headline).filter(Boolean).join(' · ')
-                || introduction || report.title).slice(0, 400);
-              const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
-                body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
-              });
-              if (banner?.url) {
-                report.bannerImageUrl = banner.url as string;
-                console.log(`Schedule ${schedule.id}: banner generated for ${lang.code}`);
-
-                // Backfill: if this is the English run and a German sibling already
-                // exists from the last 6 hours (German ran first this cycle), overwrite
-                // its banner with this clean English-generated one.
-                if (lang.code === 'en') {
-                  const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
-                  const { data: deSibling } = await supabase
-                    .from('generated_reports')
-                    .select('id, report_data')
-                    .eq('schedule_id', schedule.id)
-                    .eq('language', 'de')
-                    .gte('created_at', sixHoursAgo)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-                  if (deSibling?.id) {
-                    const updatedData = { ...(deSibling.report_data as any), bannerImageUrl: banner.url };
-                    const { error: backfillErr } = await supabase
-                      .from('generated_reports')
-                      .update({ report_data: updatedData })
-                      .eq('id', deSibling.id);
-                    if (backfillErr) {
-                      console.warn(`Schedule ${schedule.id}: failed to backfill de banner:`, backfillErr);
-                    } else {
-                      console.log(`Schedule ${schedule.id}: backfilled de sibling with en banner`);
-                    }
-                  }
-                }
-              } else if (bannerErr) {
-                console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
-              }
+            // Generate a fresh deterministic wordless SVG for every report. The seed is
+            // language-neutral so EN/DE scheduled reports receive the same visual, without
+            // copying stale AI images that may contain garbled text.
+            const dateSeed = now.toISOString().slice(0, 10);
+            const themeText = `newsfriend-${schedule.id}-${dateSeed}-${sourceNames.join('-')}`.slice(0, 400);
+            const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
+              body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
+            });
+            if (banner?.url) {
+              report.bannerImageUrl = banner.url as string;
+              console.log(`Schedule ${schedule.id}: wordless banner generated for ${lang.code}`);
+            } else if (bannerErr) {
+              console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
             }
           }
         } catch (bannerErr) {
