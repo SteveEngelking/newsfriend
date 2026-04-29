@@ -56,18 +56,11 @@ Deno.serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY missing' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     const body = await req.json().catch(() => ({} as any));
     const themeText: string = String(body?.themeText || '').trim();
     const reportId: string = String(body?.reportId || crypto.randomUUID());
     const kind: 'daily' | 'special' = body?.kind === 'special' ? 'special' : 'daily';
-    const requestedModel: string | undefined = body?.model;
 
     if (!themeText) {
       return new Response(JSON.stringify({ error: 'themeText required' }), {
@@ -76,100 +69,11 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Read global model setting; allow caller override
-    const { data: settings } = await supabase
-      .from('app_settings')
-      .select('banner_image_model, banner_images_enabled')
-      .eq('id', 1)
-      .maybeSingle();
-
-    const primaryModel = requestedModel
-      || (settings as any)?.banner_image_model
-      || 'google/gemini-2.5-flash-image';
-    const fallbackModel = 'google/gemini-2.5-flash-image';
-
-    const prompt = buildPrompt(themeText);
-
-    async function tryGenerate(model: string): Promise<{ ok: true; imageUrl: string } | { ok: false; status: number; body: string }> {
-      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'user', content: prompt }],
-          modalities: ['image', 'text'],
-        }),
-      });
-      if (!resp.ok) {
-        const body = await resp.text().catch(() => '');
-        return { ok: false, status: resp.status, body };
-      }
-      const data = await resp.json();
-      const url: string | undefined = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!url || !url.startsWith('data:')) {
-        return { ok: false, status: 502, body: 'no image in response' };
-      }
-      return { ok: true, imageUrl: url };
-    }
-
-    const isTransient = (s: number) => s === 429 || s >= 500;
-
-    console.log(`[banner] generating with model=${primaryModel} kind=${kind} reportId=${reportId}`);
-    let attempt = await tryGenerate(primaryModel);
-    let usedModel = primaryModel;
-
-    // Retry primary once after 30s on transient errors
-    if (!attempt.ok && isTransient(attempt.status)) {
-      console.warn(`[banner] primary ${primaryModel} failed (${attempt.status}). Retrying in 30s. body=${attempt.body.slice(0, 200)}`);
-      await new Promise(r => setTimeout(r, 30000));
-      attempt = await tryGenerate(primaryModel);
-    }
-
-    // Fallback to alternate model on transient errors
-    if (!attempt.ok && isTransient(attempt.status) && fallbackModel !== primaryModel) {
-      console.warn(`[banner] primary still failing (${attempt.status}). Falling back to ${fallbackModel}`);
-      const fb = await tryGenerate(fallbackModel);
-      if (fb.ok) {
-        attempt = fb;
-        usedModel = fallbackModel;
-      } else if (isTransient(fb.status)) {
-        console.warn(`[banner] fallback ${fallbackModel} transient (${fb.status}). Retrying in 30s.`);
-        await new Promise(r => setTimeout(r, 30000));
-        const fb2 = await tryGenerate(fallbackModel);
-        if (fb2.ok) {
-          attempt = fb2;
-          usedModel = fallbackModel;
-        } else {
-          attempt = fb2;
-          usedModel = fallbackModel;
-        }
-      } else {
-        attempt = fb;
-        usedModel = fallbackModel;
-      }
-    }
-
-    if (!attempt.ok) {
-      console.error(`[banner] all attempts failed status=${attempt.status} body=${attempt.body.slice(0, 300)}`);
-      const status = attempt.status === 429 || attempt.status === 402 ? attempt.status : 502;
-      return new Response(JSON.stringify({
-        error: attempt.status === 429 ? 'Rate limited, try again shortly.'
-          : attempt.status === 402 ? 'AI credits exhausted.'
-          : 'Banner generation failed',
-      }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    const imageUrl = attempt.imageUrl;
-    console.log(`[banner] success usedModel=${usedModel}`);
-
-    const { bytes, contentType } = dataUrlToBytes(imageUrl);
-    const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg'
-      : contentType.includes('webp') ? 'webp' : 'png';
-    const filename = `${kind}/${reportId}-${Date.now()}.${ext}`;
+    const svg = buildWordlessSvg(themeText);
+    const bytes = new TextEncoder().encode(svg);
+    const contentType = 'image/svg+xml; charset=utf-8';
+    const filename = `${kind}/${reportId}-${Date.now()}.svg`;
+    console.log(`[banner] generated deterministic wordless svg kind=${kind} reportId=${reportId}`);
 
     const { error: uploadErr } = await supabase.storage
       .from('report-banners')
@@ -185,7 +89,7 @@ Deno.serve(async (req) => {
     const { data: pub } = supabase.storage.from('report-banners').getPublicUrl(filename);
     const url = pub.publicUrl;
 
-    return new Response(JSON.stringify({ url, path: filename, model: usedModel }), {
+    return new Response(JSON.stringify({ url, path: filename, model: 'wordless-svg' }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
