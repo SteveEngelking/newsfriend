@@ -11,14 +11,22 @@ const corsHeaders = {
 };
 
 function buildPrompt(themeText: string): string {
-  const safe = String(themeText || '').slice(0, 400).replace(/\s+/g, ' ').trim();
+  // Use the theme only as loose inspiration; strip quotes so model is less tempted to render them as letters.
+  const safe = String(themeText || '').slice(0, 200).replace(/["'`]/g, '').replace(/\s+/g, ' ').trim();
   return [
-    'Editorial illustration banner inspired by this news theme:',
-    `"${safe}".`,
-    'Flat, semi-abstract, muted colours, soft lighting, modern illustration style,',
-    'suitable for a clean news-style layout, 16:9 aspect ratio.',
-    'ABSOLUTELY NO TEXT: The image must contain ZERO text of any kind — no letters, no words, no numbers, no captions, no headlines, no labels, no signage, no writing, no typography, no glyphs, no characters in any language or script. Convey the theme purely through shapes, colour, composition and visual symbolism.',
-    'No logos, no brand names, no human faces. No watermarks, no signatures, no lettering of any kind.',
+    'A purely visual, wordless editorial illustration in 16:9 aspect ratio.',
+    'Style: flat, semi-abstract, muted colour palette, soft lighting, modern editorial illustration.',
+    'Use only shapes, colour, composition and visual symbolism — never text — to evoke this concept:',
+    `${safe}.`,
+    'STRICT NEGATIVE CONSTRAINTS (do not render any of the following under any circumstances):',
+    'no text, no letters, no words, no numbers, no digits, no captions, no headlines, no titles,',
+    'no labels, no signage, no signs, no banners with writing, no posters with writing,',
+    'no newspapers with readable text, no books with readable text, no screens with text,',
+    'no typography, no fonts, no glyphs, no characters, no scripts of any language (Latin, Cyrillic, Arabic, Chinese, Japanese, Korean, Hebrew, Devanagari, etc.),',
+    'no calligraphy, no graffiti, no handwriting, no symbols resembling letters,',
+    'no logos, no brand names, no trademarks, no watermarks, no signatures, no UI elements,',
+    'no human faces, no recognisable real people.',
+    'If a surface would normally contain text (sign, paper, screen, book), leave it completely blank or replace it with abstract shapes.',
   ].join(' ');
 }
 
