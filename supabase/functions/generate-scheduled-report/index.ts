@@ -515,7 +515,9 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           sourcesAnalyzed: sourceNames,
         };
 
-        // Optional: generate editorial banner image when global toggle is on
+        // Optional: generate editorial banner image when global toggle is on.
+        // Reuse the banner from the OTHER language of this schedule if produced recently
+        // (EN/DE typically run ~1h apart; the image is wordless so it's identical for both).
         try {
           const { data: settings } = await supabase
             .from('app_settings')
@@ -523,16 +525,35 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
             .eq('id', 1)
             .maybeSingle();
           if ((settings as any)?.banner_images_enabled) {
-            const themeText = (allThemes.slice(0, 3).map((t: any) => t.headline).filter(Boolean).join(' · ')
-              || introduction || report.title).slice(0, 400);
-            const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
-              body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
-            });
-            if (banner?.url) {
-              report.bannerImageUrl = banner.url as string;
-              console.log(`Schedule ${schedule.id}: banner generated for ${lang.code}`);
-            } else if (bannerErr) {
-              console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
+            // Look for a sibling report (other language, same schedule) from the last 6 hours
+            const otherLang = lang.code === 'en' ? 'de' : 'en';
+            const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+            const { data: sibling } = await supabase
+              .from('generated_reports')
+              .select('report_data, created_at')
+              .eq('schedule_id', schedule.id)
+              .eq('language', otherLang)
+              .gte('created_at', sixHoursAgo)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            const siblingBanner = (sibling as any)?.report_data?.bannerImageUrl;
+            if (siblingBanner && typeof siblingBanner === 'string') {
+              report.bannerImageUrl = siblingBanner;
+              console.log(`Schedule ${schedule.id}: reusing ${otherLang} banner for ${lang.code}`);
+            } else {
+              const themeText = (allThemes.slice(0, 3).map((t: any) => t.headline).filter(Boolean).join(' · ')
+                || introduction || report.title).slice(0, 400);
+              const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
+                body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
+              });
+              if (banner?.url) {
+                report.bannerImageUrl = banner.url as string;
+                console.log(`Schedule ${schedule.id}: banner generated for ${lang.code}`);
+              } else if (bannerErr) {
+                console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
+              }
             }
           }
         } catch (bannerErr) {
