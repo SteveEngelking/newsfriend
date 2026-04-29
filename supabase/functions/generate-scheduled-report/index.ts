@@ -557,6 +557,34 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
               if (banner?.url) {
                 report.bannerImageUrl = banner.url as string;
                 console.log(`Schedule ${schedule.id}: banner generated for ${lang.code}`);
+
+                // Backfill: if this is the English run and a German sibling already
+                // exists from the last 6 hours (German ran first this cycle), overwrite
+                // its banner with this clean English-generated one.
+                if (lang.code === 'en') {
+                  const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+                  const { data: deSibling } = await supabase
+                    .from('generated_reports')
+                    .select('id, report_data')
+                    .eq('schedule_id', schedule.id)
+                    .eq('language', 'de')
+                    .gte('created_at', sixHoursAgo)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                  if (deSibling?.id) {
+                    const updatedData = { ...(deSibling.report_data as any), bannerImageUrl: banner.url };
+                    const { error: backfillErr } = await supabase
+                      .from('generated_reports')
+                      .update({ report_data: updatedData })
+                      .eq('id', deSibling.id);
+                    if (backfillErr) {
+                      console.warn(`Schedule ${schedule.id}: failed to backfill de banner:`, backfillErr);
+                    } else {
+                      console.log(`Schedule ${schedule.id}: backfilled de sibling with en banner`);
+                    }
+                  }
+                }
               } else if (bannerErr) {
                 console.warn(`Schedule ${schedule.id}: banner generation failed for ${lang.code}:`, bannerErr);
               }
