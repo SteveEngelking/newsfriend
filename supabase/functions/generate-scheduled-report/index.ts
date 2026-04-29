@@ -525,23 +525,29 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
             .eq('id', 1)
             .maybeSingle();
           if ((settings as any)?.banner_images_enabled) {
-            // Look for a sibling report (other language, same schedule) from the last 6 hours
-            const otherLang = lang.code === 'en' ? 'de' : 'en';
-            const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
-            const { data: sibling } = await supabase
-              .from('generated_reports')
-              .select('report_data, created_at')
-              .eq('schedule_id', schedule.id)
-              .eq('language', otherLang)
-              .gte('created_at', sixHoursAgo)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
+            // Only the German run may reuse a sibling banner — and only from the English version.
+            // Rationale: English prompts/themes produce cleaner wordless illustrations from the
+            // image model; German runs more often produce garbled pseudo-text artifacts. Never
+            // copy a German-run banner into the English report.
+            let siblingBanner: string | null = null;
+            if (lang.code === 'de') {
+              const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+              const { data: sibling } = await supabase
+                .from('generated_reports')
+                .select('report_data, created_at')
+                .eq('schedule_id', schedule.id)
+                .eq('language', 'en')
+                .gte('created_at', sixHoursAgo)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              const candidate = (sibling as any)?.report_data?.bannerImageUrl;
+              if (candidate && typeof candidate === 'string') siblingBanner = candidate;
+            }
 
-            const siblingBanner = (sibling as any)?.report_data?.bannerImageUrl;
-            if (siblingBanner && typeof siblingBanner === 'string') {
+            if (siblingBanner) {
               report.bannerImageUrl = siblingBanner;
-              console.log(`Schedule ${schedule.id}: reusing ${otherLang} banner for ${lang.code}`);
+              console.log(`Schedule ${schedule.id}: reusing en banner for de`);
             } else {
               const themeText = (allThemes.slice(0, 3).map((t: any) => t.headline).filter(Boolean).join(' · ')
                 || introduction || report.title).slice(0, 400);
