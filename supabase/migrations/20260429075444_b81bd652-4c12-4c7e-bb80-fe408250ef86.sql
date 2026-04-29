@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET banner_image_model = 'google/gemini-3.1-flash-image-preview' WHERE id = 1;
