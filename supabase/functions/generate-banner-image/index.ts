@@ -75,46 +75,87 @@ Deno.serve(async (req) => {
       .eq('id', 1)
       .maybeSingle();
 
-    const model = requestedModel
+    const primaryModel = requestedModel
       || (settings as any)?.banner_image_model
       || 'google/gemini-2.5-flash-image';
+    const fallbackModel = 'google/gemini-2.5-flash-image';
 
     const prompt = buildPrompt(themeText);
-    console.log(`[banner] generating with model=${model} kind=${kind} reportId=${reportId}`);
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        modalities: ['image', 'text'],
-      }),
-    });
+    async function tryGenerate(model: string): Promise<{ ok: true; imageUrl: string } | { ok: false; status: number; body: string }> {
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          modalities: ['image', 'text'],
+        }),
+      });
+      if (!resp.ok) {
+        const body = await resp.text().catch(() => '');
+        return { ok: false, status: resp.status, body };
+      }
+      const data = await resp.json();
+      const url: string | undefined = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!url || !url.startsWith('data:')) {
+        return { ok: false, status: 502, body: 'no image in response' };
+      }
+      return { ok: true, imageUrl: url };
+    }
 
-    if (!aiResp.ok) {
-      const txt = await aiResp.text().catch(() => '');
-      console.error('[banner] AI gateway error', aiResp.status, txt.slice(0, 400));
-      const status = aiResp.status === 429 || aiResp.status === 402 ? aiResp.status : 502;
+    const isTransient = (s: number) => s === 429 || s >= 500;
+
+    console.log(`[banner] generating with model=${primaryModel} kind=${kind} reportId=${reportId}`);
+    let attempt = await tryGenerate(primaryModel);
+    let usedModel = primaryModel;
+
+    // Retry primary once after 30s on transient errors
+    if (!attempt.ok && isTransient(attempt.status)) {
+      console.warn(`[banner] primary ${primaryModel} failed (${attempt.status}). Retrying in 30s. body=${attempt.body.slice(0, 200)}`);
+      await new Promise(r => setTimeout(r, 30000));
+      attempt = await tryGenerate(primaryModel);
+    }
+
+    // Fallback to alternate model on transient errors
+    if (!attempt.ok && isTransient(attempt.status) && fallbackModel !== primaryModel) {
+      console.warn(`[banner] primary still failing (${attempt.status}). Falling back to ${fallbackModel}`);
+      const fb = await tryGenerate(fallbackModel);
+      if (fb.ok) {
+        attempt = fb;
+        usedModel = fallbackModel;
+      } else if (isTransient(fb.status)) {
+        console.warn(`[banner] fallback ${fallbackModel} transient (${fb.status}). Retrying in 30s.`);
+        await new Promise(r => setTimeout(r, 30000));
+        const fb2 = await tryGenerate(fallbackModel);
+        if (fb2.ok) {
+          attempt = fb2;
+          usedModel = fallbackModel;
+        } else {
+          attempt = fb2;
+          usedModel = fallbackModel;
+        }
+      } else {
+        attempt = fb;
+        usedModel = fallbackModel;
+      }
+    }
+
+    if (!attempt.ok) {
+      console.error(`[banner] all attempts failed status=${attempt.status} body=${attempt.body.slice(0, 300)}`);
+      const status = attempt.status === 429 || attempt.status === 402 ? attempt.status : 502;
       return new Response(JSON.stringify({
-        error: aiResp.status === 429 ? 'Rate limited, try again shortly.'
-          : aiResp.status === 402 ? 'AI credits exhausted.'
+        error: attempt.status === 429 ? 'Rate limited, try again shortly.'
+          : attempt.status === 402 ? 'AI credits exhausted.'
           : 'Banner generation failed',
       }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const aiData = await aiResp.json();
-    const imageUrl: string | undefined =
-      aiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    if (!imageUrl || !imageUrl.startsWith('data:')) {
-      console.error('[banner] no image in AI response');
-      return new Response(JSON.stringify({ error: 'No image returned' }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const imageUrl = attempt.imageUrl;
+    console.log(`[banner] success usedModel=${usedModel}`);
 
     const { bytes, contentType } = dataUrlToBytes(imageUrl);
     const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg'
