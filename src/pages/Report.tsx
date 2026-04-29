@@ -8,7 +8,6 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { getWordlessReportBannerDataUri } from '@/lib/reportBanner';
 
 const Report = () => {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +60,6 @@ const Report = () => {
 
   const lang = (meta.language === 'de' ? 'de' : 'en') as 'en' | 'de';
   const canonicalPath = `/report/${id}`;
-  const seoImage = getWordlessReportBannerDataUri(report);
 
   return (
     <div className="flex flex-col items-center px-0 pt-2">
@@ -71,7 +69,7 @@ const Report = () => {
         path={canonicalPath}
         type="article"
         lang={lang}
-        image={seoImage}
+        image={report.bannerImageUrl}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'NewsArticle',
@@ -79,7 +77,7 @@ const Report = () => {
           datePublished: meta.created_at,
           dateModified: meta.created_at,
           inLanguage: lang,
-          image: [seoImage],
+          image: report.bannerImageUrl ? [report.bannerImageUrl] : undefined,
           publisher: {
             '@type': 'Organization',
             name: 'NewsFriend',

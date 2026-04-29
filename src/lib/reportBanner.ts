@@ -1,4 +1,4 @@
-import { DailyNewsReport } from '@/lib/types';
+import type { DailyNewsReport } from '@/lib/types';
 
 function hashString(value: string): number {
   let hash = 2166136261;
@@ -11,9 +11,8 @@ function hashString(value: string): number {
 
 export function getWordlessReportBannerDataUri(report: DailyNewsReport): string {
   const seedText = [
-    report.title,
-    report.generatedAt,
-    ...(Array.isArray(report.themes) ? report.themes.slice(0, 6).map((theme) => theme.headline) : []),
+    String(report.generatedAt || '').slice(0, 10),
+    ...(Array.isArray(report.sourcesAnalyzed) ? report.sourcesAnalyzed : []),
   ].filter(Boolean).join('|');
   const seed = hashString(seedText);
   const palettes = [
