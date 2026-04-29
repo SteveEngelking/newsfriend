@@ -1,5 +1,6 @@
 import { DailyNewsReport } from '@/lib/types';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
+import { getWordlessReportBannerDataUri } from '@/lib/reportBanner';
 
 export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage?: 'en' | 'de', logoSrc?: string): string {
   const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
@@ -23,6 +24,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
   const significanceColor: Record<string, string> = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' };
   const themes = Array.isArray(report.themes) ? report.themes : [];
   const sourcesAnalyzed = Array.isArray(report.sourcesAnalyzed) ? report.sourcesAnalyzed : [];
+  const bannerSrc = getWordlessReportBannerDataUri(report);
 
   // Legacy field map for old report format
   const LEGACY_FIELDS: { key: string; name: string; icon: string; bg: string; border: string; heading: string; text: string }[] = [
@@ -119,7 +121,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
       </a>
     </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
-    ${(report as any).bannerImageUrl ? `<div style="max-width:900px;margin:16px auto;"><img src="${escapeHtml((report as any).bannerImageUrl)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>` : ''}
+    <div style="max-width:900px;margin:16px auto;"><img src="${escapeHtml(bannerSrc)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>
     <p style="font-size:14px;color:#6b7280;margin:0;">${labels.generated} ${generatedAtLabel} • ${labels.sources}: ${escapeHtml(sourcesAnalyzed.join(', '))}</p>
   </header>
   <section style="margin-bottom:32px;">

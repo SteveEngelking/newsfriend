@@ -10,6 +10,7 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MondcivitanLikeButton } from '@/components/MondcivitanLikeButton';
+import { getWordlessReportBannerDataUri } from '@/lib/reportBanner';
 
 interface Props {
   report: DailyNewsReport;
@@ -57,6 +58,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
   const [perspectives, setPerspectives] = useState<EthicalPerspective[]>([]);
+  const bannerSrc = getWordlessReportBannerDataUri(report);
 
   useEffect(() => {
     supabase.from('ethical_perspectives').select('id, name, icon, color_bg, color_border, color_heading, color_text')
@@ -133,16 +135,14 @@ export function DailyNewsReportView({ report, reportId }: Props) {
         <header className="text-center mb-6 pb-6 border-b-2 border-primary">
           <h1 className="text-3xl font-bold tracking-tight mb-2">{report.title}</h1>
 
-          {report.bannerImageUrl && (
-            <div className="my-4 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
-              <img
-                src={report.bannerImageUrl}
-                alt=""
-                className="w-full aspect-[16/9] object-cover"
-                loading="lazy"
-              />
-            </div>
-          )}
+          <div className="my-4 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
+            <img
+              src={bannerSrc}
+              alt=""
+              className="w-full aspect-[16/9] object-cover"
+              loading="lazy"
+            />
+          </div>
 
           <p className="text-sm text-muted-foreground">
             {t('homeGenerated')} {new Date(report.generatedAt).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'UTC', timeZoneName: 'short' })} • {t('dailySourcesLabel')}: {report.sourcesAnalyzed.join(', ')}
