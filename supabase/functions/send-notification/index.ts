@@ -37,14 +37,20 @@ Deno.serve(async (req) => {
       })
     }
 
-    // For daily_report, fetch the latest report data per language
+    // For daily_report, fetch the latest report data per language — but ONLY
+    // if it was generated today (UTC). This prevents notifying subscribers
+    // about a stale report from a previous day when only one language was
+    // produced in the current run.
     let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
     if (type === 'daily_report') {
+      const startOfTodayUtc = new Date()
+      startOfTodayUtc.setUTCHours(0, 0, 0, 0)
       for (const lang of ['en', 'de']) {
         const { data: latestReport } = await supabase
           .from('generated_reports')
-          .select('report_data')
+          .select('report_data, created_at')
           .eq('language', lang)
+          .gte('created_at', startOfTodayUtc.toISOString())
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
@@ -58,12 +64,12 @@ Deno.serve(async (req) => {
           }
         }
       }
-      // Fallback: if only one language exists, use it for both
-      if (!reportsByLanguage['en'] && reportsByLanguage['de']) reportsByLanguage['en'] = reportsByLanguage['de']
-      if (!reportsByLanguage['de'] && reportsByLanguage['en']) reportsByLanguage['de'] = reportsByLanguage['en']
+      // Do NOT cross-fill between languages — if a language has no fresh
+      // report today, its subscribers should be skipped this run rather than
+      // receive yesterday's content (or content in the wrong language).
 
       if (Object.keys(reportsByLanguage).length === 0) {
-        return new Response(JSON.stringify({ sent: 0, message: 'No recent reports found' }), {
+        return new Response(JSON.stringify({ sent: 0, message: 'No fresh reports for today' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
