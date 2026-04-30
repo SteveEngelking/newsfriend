@@ -338,6 +338,11 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         const fallbackModel = 'openai/gpt-5-mini';
 
         const makeAIRequest = async (model: string) => {
+          // Skip the Google free-tier path: our structured-output schema (many themes
+          // + ethical perspectives) routinely triggers Gemini's "schema produces too
+          // many states for serving" 400 error, costing 5–10s per failed batch and
+          // sometimes letting the edge runtime time out before the EN run finishes.
+          // Going straight to Lovable AI (gpt-5-mini) is reliable for this workload.
           const { response: aiResp, provider } = await callAIChatCompletion({
             model,
             max_completion_tokens: 16384,
@@ -385,8 +390,8 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
               },
             }],
             tool_choice: { type: 'function', function: { name: 'generate_themes' } },
-          });
-          console.log(`[scheduled-report] model=${model} provider=${provider} status=${aiResp.status}`);
+          }, { preferFree: false });
+          console.log(`[scheduled-report] lang=${lang.code} batch="${batchLabel}" model=${model} provider=${provider} status=${aiResp.status}`);
           return aiResp;
         };
 
@@ -470,7 +475,10 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           }
         } else {
           const result = await callAI(lang, themeCount, articlesSummary, 'Full report', true);
-          if (!result?.themes) return;
+          if (!result?.themes) {
+            console.error(`Schedule ${schedule.id}: ${lang.code} aborted — AI returned no themes (single-batch mode)`);
+            return;
+          }
           allThemes = result.themes;
           introduction = result.introduction || '';
           conclusion = result.conclusion || '';
@@ -494,11 +502,11 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
         if (allThemes.length < minAcceptable) {
-          console.error(`Schedule ${schedule.id}: expected ~${themeCount} themes, got ${allThemes.length} (min ${minAcceptable})`);
+          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} themes, need at least ${minAcceptable} of ${themeCount}`);
           return;
         }
         if (allThemes.length < themeCount) {
-          console.warn(`Schedule ${schedule.id}: partial result — ${allThemes.length}/${themeCount} themes, proceeding`);
+          console.warn(`Schedule ${schedule.id}: ${lang.code} partial — ${allThemes.length}/${themeCount} themes, proceeding`);
         }
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
@@ -580,14 +588,18 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         }
       };
 
-      // Run languages in parallel for speed (especially important for "both" immediate runs)
-      await Promise.all(languages.map(async (lang) => {
+      // Run languages SEQUENTIALLY: parallel runs were occasionally letting one
+      // language starve the other of compute time within the edge runtime's soft
+      // shutdown window, so e.g. DE finished but EN never completed.
+      for (const lang of languages) {
         try {
+          console.log(`Schedule ${schedule.id}: starting generation for ${lang.code}`);
           await generateForLang(lang);
+          console.log(`Schedule ${schedule.id}: finished generation for ${lang.code}`);
         } catch (langErr) {
-          console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr);
+          console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr instanceof Error ? `${langErr.message}\n${langErr.stack}` : langErr);
         }
-      }));
+      }
 
       if (generatedLanguages.length === 0) {
         console.error(`Schedule ${schedule.id}: no reports generated at all`);
