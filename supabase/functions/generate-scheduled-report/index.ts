@@ -585,14 +585,18 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         }
       };
 
-      // Run languages in parallel for speed (especially important for "both" immediate runs)
-      await Promise.all(languages.map(async (lang) => {
+      // Run languages SEQUENTIALLY: parallel runs were occasionally letting one
+      // language starve the other of compute time within the edge runtime's soft
+      // shutdown window, so e.g. DE finished but EN never completed.
+      for (const lang of languages) {
         try {
+          console.log(`Schedule ${schedule.id}: starting generation for ${lang.code}`);
           await generateForLang(lang);
+          console.log(`Schedule ${schedule.id}: finished generation for ${lang.code}`);
         } catch (langErr) {
-          console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr);
+          console.error(`Schedule ${schedule.id}: failed for ${lang.code}:`, langErr instanceof Error ? `${langErr.message}\n${langErr.stack}` : langErr);
         }
-      }));
+      }
 
       if (generatedLanguages.length === 0) {
         console.error(`Schedule ${schedule.id}: no reports generated at all`);
