@@ -475,7 +475,10 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
           }
         } else {
           const result = await callAI(lang, themeCount, articlesSummary, 'Full report', true);
-          if (!result?.themes) return;
+          if (!result?.themes) {
+            console.error(`Schedule ${schedule.id}: ${lang.code} aborted — AI returned no themes (single-batch mode)`);
+            return;
+          }
           allThemes = result.themes;
           introduction = result.introduction || '';
           conclusion = result.conclusion || '';
@@ -499,11 +502,11 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
         if (allThemes.length < minAcceptable) {
-          console.error(`Schedule ${schedule.id}: expected ~${themeCount} themes, got ${allThemes.length} (min ${minAcceptable})`);
+          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} themes, need at least ${minAcceptable} of ${themeCount}`);
           return;
         }
         if (allThemes.length < themeCount) {
-          console.warn(`Schedule ${schedule.id}: partial result — ${allThemes.length}/${themeCount} themes, proceeding`);
+          console.warn(`Schedule ${schedule.id}: ${lang.code} partial — ${allThemes.length}/${themeCount} themes, proceeding`);
         }
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
