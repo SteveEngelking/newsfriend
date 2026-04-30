@@ -51,12 +51,24 @@ const Home = () => {
   // Lightweight list fetch — no report_data
   const fetchList = useCallback(async (preserveSelection = true) => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('generated_reports')
         .select('id, title, created_at, language')
         .eq('language', language)
         .order('created_at', { ascending: false })
         .limit(20);
+
+      // Fallback: if no reports exist in the current UI language, show reports
+      // in any language so the latest edition is still visible.
+      if (!error && (!data || data.length === 0)) {
+        const fallback = await supabase
+          .from('generated_reports')
+          .select('id, title, created_at, language')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error || !data) {
         setReportList([]);
