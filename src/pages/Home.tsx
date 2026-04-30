@@ -58,32 +58,57 @@ const Home = () => {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error || !data) {
+      if (error) {
         setReportList([]);
         setSelectedId(null);
         setSelectedReport(null);
         return;
       }
 
-      const list = data.map((r: any) => ({
+      let combined = (data || []).map((r: any) => ({
         id: r.id,
         title: r.title,
         created_at: r.created_at,
       }));
 
-      setReportList(list);
-      if (list.length === 0) {
+      // If today has no report in the current UI language, also surface
+      // today's reports from any other language so the latest edition
+      // is always visible.
+      const startOfTodayUtc = new Date();
+      startOfTodayUtc.setUTCHours(0, 0, 0, 0);
+      const hasTodayInLang = combined.some(r => new Date(r.created_at) >= startOfTodayUtc);
+
+      if (!hasTodayInLang) {
+        const { data: otherToday } = await supabase
+          .from('generated_reports')
+          .select('id, title, created_at, language')
+          .neq('language', language)
+          .gte('created_at', startOfTodayUtc.toISOString())
+          .order('created_at', { ascending: false });
+
+        if (otherToday && otherToday.length > 0) {
+          const extras = otherToday.map((r: any) => ({
+            id: r.id,
+            title: `${r.title} [${String(r.language).toUpperCase()}]`,
+            created_at: r.created_at,
+          }));
+          combined = [...extras, ...combined];
+        }
+      }
+
+      setReportList(combined);
+      if (combined.length === 0) {
         setSelectedId(null);
         setSelectedReport(null);
         return;
       }
 
       setSelectedId(prev => {
-        if (preserveSelection && prev && list.some((report) => report.id === prev)) {
+        if (preserveSelection && prev && combined.some((report) => report.id === prev)) {
           return prev;
         }
 
-        return list[0].id;
+        return combined[0].id;
       });
     } catch (err) {
       console.error('Error fetching report list:', err);
