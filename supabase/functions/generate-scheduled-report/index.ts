@@ -338,6 +338,11 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
         const fallbackModel = 'openai/gpt-5-mini';
 
         const makeAIRequest = async (model: string) => {
+          // Skip the Google free-tier path: our structured-output schema (many themes
+          // + ethical perspectives) routinely triggers Gemini's "schema produces too
+          // many states for serving" 400 error, costing 5–10s per failed batch and
+          // sometimes letting the edge runtime time out before the EN run finishes.
+          // Going straight to Lovable AI (gpt-5-mini) is reliable for this workload.
           const { response: aiResp, provider } = await callAIChatCompletion({
             model,
             max_completion_tokens: 16384,
@@ -385,8 +390,8 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
               },
             }],
             tool_choice: { type: 'function', function: { name: 'generate_themes' } },
-          });
-          console.log(`[scheduled-report] model=${model} provider=${provider} status=${aiResp.status}`);
+          }, { preferFree: false });
+          console.log(`[scheduled-report] lang=${lang.code} batch="${batchLabel}" model=${model} provider=${provider} status=${aiResp.status}`);
           return aiResp;
         };
 
