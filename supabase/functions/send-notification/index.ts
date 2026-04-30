@@ -208,8 +208,13 @@ Deno.serve(async (req) => {
 
         if (type === 'daily_report') {
           templateName = 'daily-report-notification'
-          const reportData = reportsByLanguage[lang] || reportsByLanguage['en'] || Object.values(reportsByLanguage)[0]
-          templateData = { ...reportData, language: lang }
+          const normalizedLang = (lang || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
+          const reportData = reportsByLanguage[normalizedLang]
+          if (!reportData) {
+            console.log(`Skipping ${email}: no fresh ${normalizedLang} report today`)
+            continue
+          }
+          templateData = { ...reportData, language: normalizedLang }
         } else if (type === 'special_edition') {
           templateName = 'special-edition-notification'
           templateData = { ...specialEditionData!, language: specialEditionData!.language, editionId: specialEditionId }
