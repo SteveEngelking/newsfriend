@@ -10,6 +10,7 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MondcivitanLikeButton } from '@/components/MondcivitanLikeButton';
+import { useBannerSettings } from '@/lib/useBannerSettings';
 
 interface Props {
   report: DailyNewsReport;
