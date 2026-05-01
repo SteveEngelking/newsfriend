@@ -54,7 +54,9 @@ export function ScheduleManager({ sources }: Props) {
   const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
   const [bannerImagesEnabled, setBannerImagesEnabled] = useState(false);
+  const [specialBannerImagesEnabled, setSpecialBannerImagesEnabled] = useState(false);
   const [bannerToggleSaving, setBannerToggleSaving] = useState(false);
+  const [specialBannerToggleSaving, setSpecialBannerToggleSaving] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
