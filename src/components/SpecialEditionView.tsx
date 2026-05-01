@@ -74,6 +74,8 @@ export function SpecialEditionView({ report }: Props) {
   // Strip any leading "1.", "1)" etc. the model may have included so we don't
   // render duplicate numbering with the visual <ol>-style counter.
   const cleanedSteps = (report.actionSteps || []).map(stripLeadingNumber);
+  const bannerSettings = useBannerSettings();
+  const showBanner = bannerSettings.special && !!report.bannerImageUrl;
 
   const handleDownload = async () => {
     const logo = await getLogoDataUri();
