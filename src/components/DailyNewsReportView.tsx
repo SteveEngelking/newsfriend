@@ -57,7 +57,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const { t, language } = useLanguage();
   const [perspectives, setPerspectives] = useState<EthicalPerspective[]>([]);
-  const bannerSrc = getWordlessReportBannerDataUri(report);
+  const bannerSrc = (report as any).bannerImageUrl as string | undefined;
 
   useEffect(() => {
     supabase.from('ethical_perspectives').select('id, name, icon, color_bg, color_border, color_heading, color_text')
