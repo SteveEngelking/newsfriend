@@ -70,18 +70,21 @@ export type Database = {
           banner_image_model: string
           banner_images_enabled: boolean
           id: number
+          special_edition_banners_enabled: boolean
           updated_at: string
         }
         Insert: {
           banner_image_model?: string
           banner_images_enabled?: boolean
           id?: number
+          special_edition_banners_enabled?: boolean
           updated_at?: string
         }
         Update: {
           banner_image_model?: string
           banner_images_enabled?: boolean
           id?: number
+          special_edition_banners_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
