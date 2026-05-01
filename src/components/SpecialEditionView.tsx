@@ -13,6 +13,7 @@ import {
   stripLeadingNumber,
 } from '@/lib/generateReportHtml';
 import { getLogoDataUri } from '@/lib/logoDataUri';
+import { useBannerSettings } from '@/lib/useBannerSettings';
 
 interface Props {
   report: SpecialEditionReport;
@@ -73,6 +74,8 @@ export function SpecialEditionView({ report }: Props) {
   // Strip any leading "1.", "1)" etc. the model may have included so we don't
   // render duplicate numbering with the visual <ol>-style counter.
   const cleanedSteps = (report.actionSteps || []).map(stripLeadingNumber);
+  const bannerSettings = useBannerSettings();
+  const showBanner = bannerSettings.special && !!report.bannerImageUrl;
 
   const handleDownload = async () => {
     const logo = await getLogoDataUri();
@@ -99,7 +102,7 @@ export function SpecialEditionView({ report }: Props) {
         ref={reportRef}
         className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px] py-[20px]"
       >
-        {report.bannerImageUrl && (
+        {showBanner && (
           <div className="mb-6 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
             <img src={report.bannerImageUrl} alt="" className="w-full aspect-[16/9] object-cover" loading="lazy" />
           </div>
