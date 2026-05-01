@@ -121,7 +121,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
       </a>
     </div>
     <h1 style="font-size:28px;font-weight:700;margin:0 0 8px 0;">${escapeHtml(report.title)}</h1>
-    <div style="max-width:900px;margin:16px auto;"><img src="${escapeHtml(bannerSrc)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>
+    ${bannerSrc ? `<div style="max-width:900px;margin:16px auto;"><img src="${escapeHtml(bannerSrc)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;display:block;" /></div>` : ''}
     <p style="font-size:14px;color:#6b7280;margin:0;">${labels.generated} ${generatedAtLabel} • ${labels.sources}: ${escapeHtml(sourcesAnalyzed.join(', '))}</p>
   </header>
   <section style="margin-bottom:32px;">
