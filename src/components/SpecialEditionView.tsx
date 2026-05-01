@@ -102,7 +102,7 @@ export function SpecialEditionView({ report }: Props) {
         ref={reportRef}
         className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px] py-[20px]"
       >
-        {report.bannerImageUrl && (
+        {showBanner && (
           <div className="mb-6 -mx-[20px] sm:mx-0 overflow-hidden sm:rounded-lg">
             <img src={report.bannerImageUrl} alt="" className="w-full aspect-[16/9] object-cover" loading="lazy" />
           </div>
