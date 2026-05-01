@@ -13,6 +13,7 @@ import {
   stripLeadingNumber,
 } from '@/lib/generateReportHtml';
 import { getLogoDataUri } from '@/lib/logoDataUri';
+import { useBannerSettings } from '@/lib/useBannerSettings';
 
 interface Props {
   report: SpecialEditionReport;
