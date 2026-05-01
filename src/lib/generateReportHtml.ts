@@ -1,6 +1,6 @@
 import { DailyNewsReport } from '@/lib/types';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
-import { getWordlessReportBannerDataUri } from '@/lib/reportBanner';
+
 
 export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage?: 'en' | 'de', logoSrc?: string): string {
   const lang = preferredLanguage || (report.language === 'de' ? 'de' : 'en');
