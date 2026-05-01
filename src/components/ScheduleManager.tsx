@@ -54,7 +54,9 @@ export function ScheduleManager({ sources }: Props) {
   const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
   const [bannerImagesEnabled, setBannerImagesEnabled] = useState(false);
+  const [specialBannerImagesEnabled, setSpecialBannerImagesEnabled] = useState(false);
   const [bannerToggleSaving, setBannerToggleSaving] = useState(false);
+  const [specialBannerToggleSaving, setSpecialBannerToggleSaving] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
@@ -62,11 +64,12 @@ export function ScheduleManager({ sources }: Props) {
     const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
-      supabase.from('app_settings').select('banner_images_enabled').eq('id', 1).maybeSingle(),
+      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled').eq('id', 1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
       setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
+      setSpecialBannerImagesEnabled(!!(settingsRes.data as any).special_edition_banners_enabled);
     }
 
     if (schedRes.data) {
@@ -178,6 +181,24 @@ export function ScheduleManager({ sources }: Props) {
       title: checked
         ? (language === 'de' ? 'Banner-Bilder aktiviert' : 'Banner images enabled')
         : (language === 'de' ? 'Banner-Bilder deaktiviert' : 'Banner images disabled'),
+    });
+  };
+
+  const handleToggleSpecialBannerImages = async (checked: boolean) => {
+    setSpecialBannerToggleSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, special_edition_banners_enabled: checked, updated_at: new Date().toISOString() } as any, { onConflict: 'id' });
+    setSpecialBannerToggleSaving(false);
+    if (error) {
+      toast({ title: t('sourceError') || 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setSpecialBannerImagesEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Sonderausgaben-Banner aktiviert' : 'Special edition banners enabled')
+        : (language === 'de' ? 'Sonderausgaben-Banner deaktiviert' : 'Special edition banners disabled'),
     });
   };
 
@@ -314,13 +335,34 @@ export function ScheduleManager({ sources }: Props) {
                   disabled={bannerToggleSaving}
                 />
                 <label htmlFor="banner-images" className="text-sm font-medium cursor-pointer">
-                  {language === 'de' ? 'KI-Banner-Bilder generieren' : 'Generate AI banner images'}
+                  {language === 'de' ? 'KI-Banner für Tagesberichte' : 'AI banners for daily reports'}
                 </label>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {language === 'de'
-                  ? 'Erstellt ein redaktionelles 16:9-Illustrationsbanner für jeden Tagesbericht und jede Sonderausgabe (Nano Banana, kostengünstig). Wird in der App, im HTML-Download und in E-Mails angezeigt.'
-                  : 'Creates an editorial 16:9 illustration banner for each daily report and special edition (Nano Banana, low cost). Shown in the app, HTML download, and emails.'}
+                  ? 'Erstellt ein redaktionelles 16:9-Illustrationsbanner für jeden Tagesbericht (mit Wiederholung und Modell-Fallback). Wird in der App, im HTML-Download und in E-Mails angezeigt.'
+                  : 'Creates an editorial 16:9 illustration banner for each daily report (with retry and model fallback). Shown in the app, HTML download, and emails.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-md border bg-muted/30">
+            <ImageIcon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="special-banner-images"
+                  checked={specialBannerImagesEnabled}
+                  onCheckedChange={handleToggleSpecialBannerImages}
+                  disabled={specialBannerToggleSaving}
+                />
+                <label htmlFor="special-banner-images" className="text-sm font-medium cursor-pointer">
+                  {language === 'de' ? 'KI-Banner für Sonderausgaben' : 'AI banners for special editions'}
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === 'de'
+                  ? 'Unabhängig vom Schalter für Tagesberichte. Aktivieren, um für jede Sonderausgabe ein Banner zu erzeugen.'
+                  : 'Independent from the daily report toggle. Enable to generate a banner for each special edition.'}
               </p>
             </div>
           </div>

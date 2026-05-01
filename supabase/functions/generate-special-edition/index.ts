@@ -365,10 +365,10 @@ async function runGeneration(params: {
     try {
       const { data: settings } = await supabase
         .from('app_settings')
-        .select('banner_images_enabled')
+        .select('special_edition_banners_enabled')
         .eq('id', 1)
         .maybeSingle();
-      if ((settings as any)?.banner_images_enabled) {
+      if ((settings as any)?.special_edition_banners_enabled) {
         const themeText = (parsed.headline || topic || '').toString().slice(0, 400);
         const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
           body: { themeText, kind: 'special', reportId: editionId },
