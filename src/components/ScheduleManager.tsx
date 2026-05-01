@@ -64,11 +64,12 @@ export function ScheduleManager({ sources }: Props) {
     const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
-      supabase.from('app_settings').select('banner_images_enabled').eq('id', 1).maybeSingle(),
+      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled').eq('id', 1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
       setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
+      setSpecialBannerImagesEnabled(!!(settingsRes.data as any).special_edition_banners_enabled);
     }
 
     if (schedRes.data) {
