@@ -184,6 +184,24 @@ export function ScheduleManager({ sources }: Props) {
     });
   };
 
+  const handleToggleSpecialBannerImages = async (checked: boolean) => {
+    setSpecialBannerToggleSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, special_edition_banners_enabled: checked, updated_at: new Date().toISOString() } as any, { onConflict: 'id' });
+    setSpecialBannerToggleSaving(false);
+    if (error) {
+      toast({ title: t('sourceError') || 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setSpecialBannerImagesEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Sonderausgaben-Banner aktiviert' : 'Special edition banners enabled')
+        : (language === 'de' ? 'Sonderausgaben-Banner deaktiviert' : 'Special edition banners disabled'),
+    });
+  };
+
   const handleDeleteReport = async (id: string) => {
     await supabase.from('generated_reports').delete().eq('id', id);
     setReports(prev => prev.filter(r => r.id !== id));
