@@ -24,7 +24,7 @@ export function generateDailyNewsHtml(report: DailyNewsReport, preferredLanguage
   const significanceColor: Record<string, string> = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' };
   const themes = Array.isArray(report.themes) ? report.themes : [];
   const sourcesAnalyzed = Array.isArray(report.sourcesAnalyzed) ? report.sourcesAnalyzed : [];
-  const bannerSrc = getWordlessReportBannerDataUri(report);
+  const bannerSrc = (report as any).bannerImageUrl as string | undefined;
 
   // Legacy field map for old report format
   const LEGACY_FIELDS: { key: string; name: string; icon: string; bg: string; border: string; heading: string; text: string }[] = [
