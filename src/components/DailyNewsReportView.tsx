@@ -11,6 +11,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MondcivitanLikeButton } from '@/components/MondcivitanLikeButton';
 import { useBannerSettings } from '@/lib/useBannerSettings';
+import { ThemeComments } from '@/components/ThemeComments';
 
 interface Props {
   report: DailyNewsReport;
@@ -200,6 +201,15 @@ export function DailyNewsReportView({ report, reportId }: Props) {
                 <p className="text-sm leading-relaxed text-amber-900 dark:text-amber-200">{theme.mondcivitanReflection}</p>
                 {reportId && <MondcivitanLikeButton reportId={reportId} themeId={theme.id} />}
               </div>
+            )}
+
+            {bannerSettings.themeComments && reportId && (
+              <ThemeComments
+                reportId={reportId}
+                themeId={theme.id}
+                themeHeadline={theme.headline}
+                themeSummary={theme.summary}
+              />
             )}
 
             {index < report.themes.length - 1 && <Separator className="mt-8" />}
