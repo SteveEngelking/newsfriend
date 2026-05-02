@@ -387,6 +387,25 @@ export function ScheduleManager({ sources }: Props) {
               </p>
             </div>
           </div>
+          <div className="flex items-start gap-3 p-3 rounded-md border bg-muted/30">
+            <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="theme-comments"
+                  checked={themeCommentsEnabled}
+                  onCheckedChange={handleToggleThemeComments}
+                  disabled={themeCommentsSaving}
+                />
+                <label htmlFor="theme-comments" className="text-sm font-medium cursor-pointer">
+                  {t('scheduleThemeCommentsLabel')}
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('scheduleThemeCommentsHelp')}
+              </p>
+            </div>
+          </div>
           {schedule && (
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
