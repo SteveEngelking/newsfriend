@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
 import { DailyNewsReport } from '@/lib/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -55,8 +55,10 @@ export function ScheduleManager({ sources }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [bannerImagesEnabled, setBannerImagesEnabled] = useState(false);
   const [specialBannerImagesEnabled, setSpecialBannerImagesEnabled] = useState(false);
+  const [themeCommentsEnabled, setThemeCommentsEnabled] = useState(false);
   const [bannerToggleSaving, setBannerToggleSaving] = useState(false);
   const [specialBannerToggleSaving, setSpecialBannerToggleSaving] = useState(false);
+  const [themeCommentsSaving, setThemeCommentsSaving] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
@@ -64,12 +66,13 @@ export function ScheduleManager({ sources }: Props) {
     const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
-      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled').eq('id', 1).maybeSingle(),
+      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled, theme_comments_enabled').eq('id', 1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
       setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
       setSpecialBannerImagesEnabled(!!(settingsRes.data as any).special_edition_banners_enabled);
+      setThemeCommentsEnabled(!!(settingsRes.data as any).theme_comments_enabled);
     }
 
     if (schedRes.data) {
@@ -199,6 +202,24 @@ export function ScheduleManager({ sources }: Props) {
       title: checked
         ? (language === 'de' ? 'Sonderausgaben-Banner aktiviert' : 'Special edition banners enabled')
         : (language === 'de' ? 'Sonderausgaben-Banner deaktiviert' : 'Special edition banners disabled'),
+    });
+  };
+
+  const handleToggleThemeComments = async (checked: boolean) => {
+    setThemeCommentsSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, theme_comments_enabled: checked, updated_at: new Date().toISOString() } as any, { onConflict: 'id' });
+    setThemeCommentsSaving(false);
+    if (error) {
+      toast({ title: t('sourceError') || 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setThemeCommentsEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Kommentare aktiviert' : 'Comments enabled')
+        : (language === 'de' ? 'Kommentare deaktiviert' : 'Comments disabled'),
     });
   };
 
@@ -363,6 +384,25 @@ export function ScheduleManager({ sources }: Props) {
                 {language === 'de'
                   ? 'Unabhängig vom Schalter für Tagesberichte. Aktivieren, um für jede Sonderausgabe ein Banner zu erzeugen.'
                   : 'Independent from the daily report toggle. Enable to generate a banner for each special edition.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 rounded-md border bg-muted/30">
+            <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="theme-comments"
+                  checked={themeCommentsEnabled}
+                  onCheckedChange={handleToggleThemeComments}
+                  disabled={themeCommentsSaving}
+                />
+                <label htmlFor="theme-comments" className="text-sm font-medium cursor-pointer">
+                  {t('scheduleThemeCommentsLabel')}
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('scheduleThemeCommentsHelp')}
               </p>
             </div>
           </div>

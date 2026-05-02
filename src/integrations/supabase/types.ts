@@ -71,6 +71,7 @@ export type Database = {
           banner_images_enabled: boolean
           id: number
           special_edition_banners_enabled: boolean
+          theme_comments_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -78,6 +79,7 @@ export type Database = {
           banner_images_enabled?: boolean
           id?: number
           special_edition_banners_enabled?: boolean
+          theme_comments_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -85,6 +87,7 @@ export type Database = {
           banner_images_enabled?: boolean
           id?: number
           special_edition_banners_enabled?: boolean
+          theme_comments_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -616,6 +619,42 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      theme_comments: {
+        Row: {
+          ai_analysis: string | null
+          content: string
+          created_at: string
+          display_name: string | null
+          id: string
+          report_id: string
+          theme_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          content: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          report_id: string
+          theme_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          content?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          report_id?: string
+          theme_id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
