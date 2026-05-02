@@ -205,6 +205,24 @@ export function ScheduleManager({ sources }: Props) {
     });
   };
 
+  const handleToggleThemeComments = async (checked: boolean) => {
+    setThemeCommentsSaving(true);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ id: 1, theme_comments_enabled: checked, updated_at: new Date().toISOString() } as any, { onConflict: 'id' });
+    setThemeCommentsSaving(false);
+    if (error) {
+      toast({ title: t('sourceError') || 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setThemeCommentsEnabled(checked);
+    toast({
+      title: checked
+        ? (language === 'de' ? 'Kommentare aktiviert' : 'Comments enabled')
+        : (language === 'de' ? 'Kommentare deaktiviert' : 'Comments disabled'),
+    });
+  };
+
   const handleDeleteReport = async (id: string) => {
     await supabase.from('generated_reports').delete().eq('id', id);
     setReports(prev => prev.filter(r => r.id !== id));
