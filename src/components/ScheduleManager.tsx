@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { Clock, Download, Trash2, CalendarClock, ExternalLink, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { generateDailyNewsHtml, openReportInNewTab, downloadReportHtml } from '@/lib/generateReportHtml';
 import { DailyNewsReport } from '@/lib/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -55,8 +55,10 @@ export function ScheduleManager({ sources }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [bannerImagesEnabled, setBannerImagesEnabled] = useState(false);
   const [specialBannerImagesEnabled, setSpecialBannerImagesEnabled] = useState(false);
+  const [themeCommentsEnabled, setThemeCommentsEnabled] = useState(false);
   const [bannerToggleSaving, setBannerToggleSaving] = useState(false);
   const [specialBannerToggleSaving, setSpecialBannerToggleSaving] = useState(false);
+  const [themeCommentsSaving, setThemeCommentsSaving] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
@@ -64,12 +66,13 @@ export function ScheduleManager({ sources }: Props) {
     const [schedRes, repRes, settingsRes] = await Promise.all([
       supabase.from('report_schedules').select('*').limit(1).single(),
       supabase.from('generated_reports').select('*').order('created_at', { ascending: false }).limit(20),
-      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled').eq('id', 1).maybeSingle(),
+      supabase.from('app_settings').select('banner_images_enabled, special_edition_banners_enabled, theme_comments_enabled').eq('id', 1).maybeSingle(),
     ]);
 
     if (settingsRes.data) {
       setBannerImagesEnabled(!!settingsRes.data.banner_images_enabled);
       setSpecialBannerImagesEnabled(!!(settingsRes.data as any).special_edition_banners_enabled);
+      setThemeCommentsEnabled(!!(settingsRes.data as any).theme_comments_enabled);
     }
 
     if (schedRes.data) {
