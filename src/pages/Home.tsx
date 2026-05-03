@@ -65,36 +65,14 @@ const Home = () => {
         return;
       }
 
-      let combined = (data || []).map((r: any) => ({
+      // Only show reports in the current UI language. Never surface
+      // reports from other languages — that caused the EN page to display
+      // the DE report when today's EN edition was missing.
+      const combined = (data || []).map((r: any) => ({
         id: r.id,
         title: r.title,
         created_at: r.created_at,
       }));
-
-      // If today has no report in the current UI language, also surface
-      // today's reports from any other language so the latest edition
-      // is always visible.
-      const startOfTodayUtc = new Date();
-      startOfTodayUtc.setUTCHours(0, 0, 0, 0);
-      const hasTodayInLang = combined.some(r => new Date(r.created_at) >= startOfTodayUtc);
-
-      if (!hasTodayInLang) {
-        const { data: otherToday } = await supabase
-          .from('generated_reports')
-          .select('id, title, created_at, language')
-          .neq('language', language)
-          .gte('created_at', startOfTodayUtc.toISOString())
-          .order('created_at', { ascending: false });
-
-        if (otherToday && otherToday.length > 0) {
-          const extras = otherToday.map((r: any) => ({
-            id: r.id,
-            title: `${r.title} [${String(r.language).toUpperCase()}]`,
-            created_at: r.created_at,
-          }));
-          combined = [...extras, ...combined];
-        }
-      }
 
       setReportList(combined);
       if (combined.length === 0) {
