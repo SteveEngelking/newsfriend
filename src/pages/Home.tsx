@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import logo from '@/assets/logo.jpg';
 import { SEO } from '@/components/SEO';
+import { ReportSearch } from '@/components/ReportSearch';
 
 interface ReportListItem {
   id: string;
@@ -286,6 +287,17 @@ const Home = () => {
               <Newspaper className="h-4 w-4" />
               {t('homeRefresh')}
             </Button>
+            <ReportSearch
+              onOpenReport={(kind, id) => {
+                if (kind === 'daily') {
+                  setSelectedSpecialId(null);
+                  setSelectedSpecial(null);
+                  setSelectedId(id);
+                } else {
+                  setSelectedSpecialId(id);
+                }
+              }}
+            />
             {specialEditions.length > 0 && (
               <div id="special-editions" className="flex items-center gap-2">
                 <Select value={selectedSpecialId || ''} onValueChange={(v) => setSelectedSpecialId(v)}>
