@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import logo from '@/assets/logo.jpg';
 import { SEO } from '@/components/SEO';
+import { ReportSearch } from '@/components/ReportSearch';
 
 interface ReportListItem {
   id: string;
