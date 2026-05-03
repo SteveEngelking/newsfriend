@@ -629,6 +629,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          parent_id: string | null
           report_id: string
           theme_id: string
           updated_at: string
@@ -640,6 +641,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          parent_id?: string | null
           report_id: string
           theme_id: string
           updated_at?: string
@@ -651,12 +653,21 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          parent_id?: string | null
           report_id?: string
           theme_id?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "theme_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "theme_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_comments: {
         Row: {
@@ -747,6 +758,17 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      search_reports: {
+        Args: { q: string }
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          language: string
+          snippet: string
+          title: string
         }[]
       }
     }
