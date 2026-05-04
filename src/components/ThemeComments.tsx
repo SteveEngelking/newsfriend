@@ -77,7 +77,25 @@ export function ThemeComments({ reportId, themeId, themeHeadline, themeSummary }
       .eq('report_id', reportId)
       .eq('theme_id', themeId)
       .order('created_at', { ascending: true });
-    const list = (data as any) || [];
+    let list: ThemeComment[] = ((data as any) || []);
+
+    // Backfill missing display_name via secure RPC (only signed-in users can call it).
+    if (session) {
+      const missingIds = Array.from(new Set(
+        list.filter(c => !c.display_name || c.display_name.trim() === '').map(c => c.user_id)
+      ));
+      if (missingIds.length > 0) {
+        const { data: names } = await supabase.rpc('get_commenter_display_names' as any, { _user_ids: missingIds });
+        const map = new Map<string, string>();
+        for (const r of (names as any[] || [])) {
+          if (r?.user_id && r?.display_name) map.set(r.user_id, r.display_name);
+        }
+        list = list.map(c => (!c.display_name || c.display_name.trim() === '') && map.has(c.user_id)
+          ? { ...c, display_name: map.get(c.user_id)! }
+          : c);
+      }
+    }
+
     setComments(list);
     setCount(list.length);
     setLoading(false);
