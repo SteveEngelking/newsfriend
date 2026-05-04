@@ -179,6 +179,16 @@ export function ReportSearch({ onOpenReport }: Props) {
               <Button onClick={doFindOnPage} variant="outline" size="sm" disabled={!q.trim()}>
                 {t('searchReportsInPage')}
               </Button>
+              <Button
+                onClick={() => { setQ(''); setResults(null); clearAll(); }}
+                variant="ghost"
+                size="sm"
+                disabled={!q && !results && hitCount === 0}
+                className="gap-1"
+              >
+                <X className="h-4 w-4" />
+                {t('searchReportsClear')}
+              </Button>
             </div>
 
             {results !== null && (
