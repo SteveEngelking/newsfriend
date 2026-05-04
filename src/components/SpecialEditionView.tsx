@@ -100,6 +100,7 @@ export function SpecialEditionView({ report }: Props) {
 
       <div
         ref={reportRef}
+        data-report-content
         className="bg-background text-foreground p-8 max-w-4xl mx-auto px-[20px] py-[20px]"
       >
         {showBanner && (
