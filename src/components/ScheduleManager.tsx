@@ -27,6 +27,7 @@ interface Schedule {
   mondcivitan_enabled: boolean;
   schweitzer_enabled: boolean;
   target_themes: number;
+  sources_per_theme: number;
   report_style: string;
   last_run_at: string | null;
   created_at: string;
@@ -48,6 +49,7 @@ export function ScheduleManager({ sources }: Props) {
   const [schweitzerEnabled, setSchweitzerEnabled] = useState(false);
   const [maxArticles, setMaxArticles] = useState(80);
   const [targetThemes, setTargetThemes] = useState(0);
+  const [sourcesPerTheme, setSourcesPerTheme] = useState(2);
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
   const [reportStyle, setReportStyle] = useState('analytical');
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
@@ -83,6 +85,7 @@ export function ScheduleManager({ sources }: Props) {
       setSchweitzerEnabled(sched.schweitzer_enabled ?? false);
       setMaxArticles((sched as any).max_articles ?? 80);
       setTargetThemes((sched as any).target_themes ?? 0);
+      setSourcesPerTheme((sched as any).sources_per_theme ?? 2);
       setAiModel((sched as any).ai_model || 'openai/gpt-5-mini');
       setReportStyle((sched as any).report_style || 'analytical');
       setOutputLanguage(sched.language || language);
@@ -114,7 +117,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle };
       if (frequency === 'immediate') updateData.last_run_at = null;
       const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
@@ -127,7 +130,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { data, error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, ai_model: aiModel, report_style: reportStyle } as any)
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle } as any)
         .select('id')
         .single();
       if (error) {
@@ -326,6 +329,17 @@ export function ScheduleManager({ sources }: Props) {
               <SelectContent>
                 <SelectItem value="0">{language === 'de' ? 'Auto' : 'Auto'}</SelectItem>
                 {[4, 5, 6, 7, 8, 10, 12, 15, 20].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">{language === 'de' ? 'Quellen pro Thema' : 'Sources per theme'}</label>
+            <Select value={String(sourcesPerTheme)} onValueChange={(v) => setSourcesPerTheme(Number(v))}>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2, 3, 4, 5].map(n => (
                   <SelectItem key={n} value={String(n)}>{n}</SelectItem>
                 ))}
               </SelectContent>
