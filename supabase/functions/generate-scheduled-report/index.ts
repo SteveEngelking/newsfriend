@@ -91,9 +91,10 @@ Deno.serve(async (req) => {
       const deHours = enHours.map(h => h + 1); // DE is nominally 1 hour later
 
       const lastRun = schedule.last_run_at ? new Date(schedule.last_run_at) : null;
-      const hoursSinceLastRun = lastRun ? (now.getTime() - lastRun.getTime()) / (1000 * 60 * 60) : 999;
-      // Minimum gap to prevent double-firing within the same window
-      if (hoursSinceLastRun < 2) return [];
+      const minutesSinceLastRun = lastRun ? (now.getTime() - lastRun.getTime()) / (1000 * 60) : 999999;
+      // Minimum gap to prevent double-firing within the same minute (cron retries).
+      // Must be < 60 min so that the EN run at 06:00 does not block the DE run at 07:00.
+      if (minutesSinceLastRun < 30) return [];
 
       // Window is open once we've reached the earliest EN trigger hour for the day
       const earliestHour = Math.min(...enHours);
