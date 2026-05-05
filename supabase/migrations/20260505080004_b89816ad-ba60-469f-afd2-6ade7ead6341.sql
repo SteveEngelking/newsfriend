@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN IF NOT EXISTS sources_per_theme integer NOT NULL DEFAULT 2;

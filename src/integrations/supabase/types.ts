@@ -520,6 +520,7 @@ export type Database = {
           report_style: string
           schweitzer_enabled: boolean
           source_ids: string[]
+          sources_per_theme: number
           target_themes: number
         }
         Insert: {
@@ -536,6 +537,7 @@ export type Database = {
           report_style?: string
           schweitzer_enabled?: boolean
           source_ids?: string[]
+          sources_per_theme?: number
           target_themes?: number
         }
         Update: {
@@ -552,6 +554,7 @@ export type Database = {
           report_style?: string
           schweitzer_enabled?: boolean
           source_ids?: string[]
+          sources_per_theme?: number
           target_themes?: number
         }
         Relationships: []
