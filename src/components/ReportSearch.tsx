@@ -224,7 +224,7 @@ export function ReportSearch({ onOpenReport }: Props) {
       {hitCount > 0 && (
         <div
           data-search-skip
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-background border shadow-lg rounded-full px-3 py-1.5"
+          className="fixed top-3 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 bg-background border shadow-lg rounded-full px-3 py-1.5"
           role="status"
         >
           <span className="text-xs text-muted-foreground">
