@@ -276,7 +276,8 @@ Deno.serve(async (req) => {
       const themeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
-      const sourcesPerTheme = Math.min(3, Math.max(2, Math.ceil(sourceNames.length / Math.max(themeCount * 3, 1))));
+      const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
+      const sourcesPerTheme = Math.min(5, Math.max(2, Math.min(requestedSourcesPerTheme, Math.max(2, sourceNames.length))));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
@@ -330,7 +331,9 @@ ${styleInstruction}
 LANGUAGE RULE — ABSOLUTE, NO EXCEPTIONS: Every single field you output (title, introduction, summary, stance, bias indicators, key quotes, critical commentary, conclusion, mondcivitanReflection, ethical considerations) MUST be written entirely in ${lang.outputLang}. If a source quote is originally in another language, you MUST translate it into ${lang.outputLang}. There must be ZERO words in any other language in your output, except for source/publication names in the sourceName field which MUST stay exactly as provided in the original list. URLs must also remain unchanged.
 INTRODUCTION RULE — ABSOLUTE: The introduction MUST NOT mention any specific number of themes, topics, or articles (e.g. never write "ten themes", "20 topics", "the following 15 stories"). Write a natural editorial introduction without counting.
 CONCLUSION RULE — ABSOLUTE: The conclusion MUST NOT reference any specific count of themes, topics, or articles either (never write "these ten themes", "the twenty stories above", "across these 15 topics"). Refer to the coverage in general terms only (e.g. "today's themes", "the stories above").
-RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source analyses per theme. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
+SOURCE-SPECIFIC ANALYSIS RULE — ABSOLUTE: For every source analysis, the "stance" field MUST describe how that specific publication framed THIS specific theme — not a generic boilerplate description of the outlet. NEVER output generic outlet self-descriptions such as "Latest news, sport, business, comment, analysis and reviews from the Guardian, the world's leading liberal voice." or anything resembling marketing copy or a publication's tagline. The stance must reference concrete details from the article (angle, framing, what they emphasised or omitted, tone) and be unique to this theme.
+SOURCE DIVERSITY RULE: Across the ${batchThemeCount} themes you produce, vary which publications you cite. Do NOT reuse the same two publications for every theme when other relevant sources are available. Each theme should ideally feature a different combination of publications drawn from the article list.
+RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
@@ -365,11 +368,12 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include 2 source anal
                           headline: { type: 'string' },
                           summary: { type: 'string' },
                           sourceAnalysis: {
-                            type: 'array', minItems: 2, maxItems: 2,
+                            type: 'array', minItems: sourcesPerTheme, maxItems: sourcesPerTheme,
                             items: {
                               type: 'object',
                               properties: {
-                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` }, stance: { type: 'string' },
+                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` },
+                                stance: { type: 'string', description: 'How THIS publication framed THIS specific theme. Must reference concrete article details. Never a generic outlet description or tagline.' },
                                 keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
                                 biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
                                 articleUrl: { type: 'string' },
