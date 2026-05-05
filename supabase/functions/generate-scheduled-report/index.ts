@@ -374,7 +374,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
                               properties: {
                                 sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` },
                                 stance: { type: 'string', description: 'How THIS publication framed THIS specific theme. Must reference concrete article details. Never a generic outlet description or tagline.' },
-                                keyQuotes: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
+                                keyQuotes: { type: 'array', items: { type: 'string', description: `A short representative quote, FULLY TRANSLATED into ${lang.outputLang}. If the original quote is in another language (French, German, Spanish, etc.), translate it — do NOT output the original-language text. No bilingual output.` }, minItems: 1, maxItems: 1 },
                                 biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
                                 articleUrl: { type: 'string' },
                               },
