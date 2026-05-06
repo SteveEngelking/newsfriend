@@ -15,10 +15,12 @@ import { template as adminReply } from './admin-reply.tsx'
 import { template as announcementNotification } from './announcement-notification.tsx'
 import { template as dailyReportNotification } from './daily-report-notification.tsx'
 import { template as specialEditionNotification } from './special-edition-notification.tsx'
+import { template as newUserAdmin } from './new-user-admin.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
   'new-comment-admin': newCommentAdmin,
+  'new-user-admin': newUserAdmin,
   'admin-reply': adminReply,
   'announcement-notification': announcementNotification,
   'daily-report-notification': dailyReportNotification,
