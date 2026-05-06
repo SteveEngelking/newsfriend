@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Trash2, Loader2, Bell, BellOff } from 'lucide-react';
+import { Users, Trash2, Loader2, Bell, BellOff, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -16,6 +16,7 @@ interface UserProfile {
   notify_daily_reports?: boolean;
   notify_announcements?: boolean;
   is_admin?: boolean;
+  email_verified?: boolean;
 }
 
 export function RegisteredUsersManager() {
@@ -49,6 +50,16 @@ export function RegisteredUsersManager() {
         .from('user_roles')
         .select('user_id');
 
+      // Load email verification status
+      let verifications: Record<string, { confirmed: boolean }> = {};
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: verData } = await supabase.functions.invoke('list-user-verification', {
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        });
+        if (verData?.verifications) verifications = verData.verifications;
+      } catch { /* ignore */ }
+
       const adminSet = new Set((roles ?? []).map(r => r.user_id));
       const prefsMap = new Map((prefs ?? []).map(p => [p.user_id, p]));
 
@@ -57,6 +68,7 @@ export function RegisteredUsersManager() {
         notify_daily_reports: prefsMap.get(p.user_id)?.notify_daily_reports ?? false,
         notify_announcements: prefsMap.get(p.user_id)?.notify_announcements ?? false,
         is_admin: adminSet.has(p.user_id),
+        email_verified: verifications[p.user_id]?.confirmed ?? false,
       }));
 
       setUsers(merged);
@@ -112,6 +124,15 @@ export function RegisteredUsersManager() {
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm truncate">{user.email || '—'}</span>
+                    {user.email_verified ? (
+                      <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
+                        <ShieldCheck className="h-3 w-3" /> Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs gap-1 border-destructive/40 text-destructive">
+                        <ShieldAlert className="h-3 w-3" /> Unverified
+                      </Badge>
+                    )}
                     {user.is_admin ? (
                       <Badge variant="default" className="text-xs">Admin</Badge>
                     ) : (
