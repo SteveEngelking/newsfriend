@@ -16,6 +16,7 @@ interface UserProfile {
   notify_daily_reports?: boolean;
   notify_announcements?: boolean;
   is_admin?: boolean;
+  email_verified?: boolean;
 }
 
 export function RegisteredUsersManager() {
