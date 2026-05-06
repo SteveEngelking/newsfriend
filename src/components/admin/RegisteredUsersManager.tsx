@@ -50,6 +50,16 @@ export function RegisteredUsersManager() {
         .from('user_roles')
         .select('user_id');
 
+      // Load email verification status
+      let verifications: Record<string, { confirmed: boolean }> = {};
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: verData } = await supabase.functions.invoke('list-user-verification', {
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        });
+        if (verData?.verifications) verifications = verData.verifications;
+      } catch { /* ignore */ }
+
       const adminSet = new Set((roles ?? []).map(r => r.user_id));
       const prefsMap = new Map((prefs ?? []).map(p => [p.user_id, p]));
 
@@ -58,6 +68,7 @@ export function RegisteredUsersManager() {
         notify_daily_reports: prefsMap.get(p.user_id)?.notify_daily_reports ?? false,
         notify_announcements: prefsMap.get(p.user_id)?.notify_announcements ?? false,
         is_admin: adminSet.has(p.user_id),
+        email_verified: verifications[p.user_id]?.confirmed ?? false,
       }));
 
       setUsers(merged);
