@@ -42,6 +42,10 @@ const Register = () => {
         },
       });
       if (error) throw error;
+      // Notify admins of new registration (fire-and-forget)
+      supabase.functions.invoke('notify-admin-registration', {
+        body: { newUserEmail: email, newUserName: displayName },
+      }).catch(err => console.error('Admin notify failed:', err));
       setIsSuccess(true);
     } catch (err: any) {
       toast({ title: t('registerFailed'), description: err.message, variant: 'destructive' });
