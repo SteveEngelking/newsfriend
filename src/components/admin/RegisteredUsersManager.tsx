@@ -124,6 +124,15 @@ export function RegisteredUsersManager() {
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm truncate">{user.email || '—'}</span>
+                    {user.email_verified ? (
+                      <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
+                        <ShieldCheck className="h-3 w-3" /> Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs gap-1 border-destructive/40 text-destructive">
+                        <ShieldAlert className="h-3 w-3" /> Unverified
+                      </Badge>
+                    )}
                     {user.is_admin ? (
                       <Badge variant="default" className="text-xs">Admin</Badge>
                     ) : (
