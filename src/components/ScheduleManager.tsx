@@ -53,6 +53,7 @@ export function ScheduleManager({ sources }: Props) {
   const [sourcesPerTheme, setSourcesPerTheme] = useState(2);
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
   const [reportStyle, setReportStyle] = useState('analytical');
+  const [scheduleHourUtc, setScheduleHourUtc] = useState(6);
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
