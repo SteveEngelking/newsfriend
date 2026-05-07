@@ -86,9 +86,9 @@ Deno.serve(async (req) => {
         return [EN_LANG, DE_LANG];
       }
 
-      // Trigger hours: daily = [8], twice_daily = [8, 20]
-      const enHours = freq === 'twice_daily' ? [8, 20] : [8];
-      const deHours = enHours.map(h => h + 1); // DE is nominally 1 hour later (09:00 / 21:00 UTC)
+      // Trigger hours: daily = [4], twice_daily = [4, 16]
+      const enHours = freq === 'twice_daily' ? [4, 16] : [4];
+      const deHours = enHours.map(h => h + 1); // DE is nominally 1 hour later (05:00 / 17:00 UTC)
 
       const lastRun = schedule.last_run_at ? new Date(schedule.last_run_at) : null;
       const minutesSinceLastRun = lastRun ? (now.getTime() - lastRun.getTime()) / (1000 * 60) : 999999;
