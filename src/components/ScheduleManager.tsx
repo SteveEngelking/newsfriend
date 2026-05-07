@@ -149,20 +149,30 @@ export function ScheduleManager({ sources }: Props) {
 
   const triggerImmediateGeneration = async (scheduleId: string) => {
     const languages = immediateLanguage === 'both' ? ['en', 'de'] : [immediateLanguage];
-    toast({ title: t('scheduleRunningNow'), description: language === 'de' ? 'Dies kann 1–3 Minuten dauern. Aktualisieren Sie die Liste danach.' : 'This can take 1–3 minutes. Refresh the list afterwards.' });
-    // Fire and forget — the edge function returns 202 immediately and finishes in background.
-    supabase.functions.invoke('generate-scheduled-report', {
-      body: { forceImmediate: true, scheduleId, languages },
-    }).then(({ error, data }) => {
-      if (error) {
-        console.error('Background generation error:', error);
-        toast({ title: t('sourceError'), description: t('scheduleRunFailed'), variant: 'destructive' });
-        return;
-      }
-      console.log('Generation accepted:', data);
-      // Reload after a delay so the new report appears in the list
-      setTimeout(() => loadData(), 90000);
-    }).catch(e => console.error('Background generation error:', e));
+    toast({ title: t('scheduleRunningNow'), description: language === 'de' ? 'Dies kann 3–6 Minuten dauern. Die Liste wird automatisch aktualisiert.' : 'This can take 3–6 minutes. The list will refresh automatically.' });
+    // Fire one invocation per language IN PARALLEL so they don't share the same
+    // edge-function wall-clock budget (each language can take 3–5 min on its own).
+    for (const lang of languages) {
+      supabase.functions.invoke('generate-scheduled-report', {
+        body: { forceImmediate: true, scheduleId, languages: [lang] },
+      }).then(({ error, data }) => {
+        if (error) {
+          console.error(`Background generation error (${lang}):`, error);
+          toast({ title: t('sourceError'), description: `${lang.toUpperCase()}: ${t('scheduleRunFailed')}`, variant: 'destructive' });
+          return;
+        }
+        console.log(`Generation accepted (${lang}):`, data);
+      }).catch(e => console.error(`Background generation error (${lang}):`, e));
+    }
+    // Poll for results every 30s for up to 8 minutes — each successful language
+    // will appear in the past-reports list as soon as it finishes.
+    let polls = 0;
+    const maxPolls = 16;
+    const interval = setInterval(() => {
+      polls += 1;
+      loadData();
+      if (polls >= maxPolls) clearInterval(interval);
+    }, 30000);
   };
 
   const handleToggleSchedule = async () => {
