@@ -120,7 +120,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc };
       if (frequency === 'immediate') updateData.last_run_at = null;
       const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
