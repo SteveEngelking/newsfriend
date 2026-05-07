@@ -29,6 +29,7 @@ interface Schedule {
   target_themes: number;
   sources_per_theme: number;
   report_style: string;
+  schedule_hour_utc: number;
   last_run_at: string | null;
   created_at: string;
 }
@@ -52,6 +53,7 @@ export function ScheduleManager({ sources }: Props) {
   const [sourcesPerTheme, setSourcesPerTheme] = useState(2);
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
   const [reportStyle, setReportStyle] = useState('analytical');
+  const [scheduleHourUtc, setScheduleHourUtc] = useState(6);
   const [outputLanguage, setOutputLanguage] = useState<'en' | 'de'>('en');
   const [immediateLanguage, setImmediateLanguage] = useState<'en' | 'de' | 'both'>('both');
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +90,7 @@ export function ScheduleManager({ sources }: Props) {
       setSourcesPerTheme((sched as any).sources_per_theme ?? 2);
       setAiModel((sched as any).ai_model || 'openai/gpt-5-mini');
       setReportStyle((sched as any).report_style || 'analytical');
+      setScheduleHourUtc(Number.isInteger((sched as any).schedule_hour_utc) ? (sched as any).schedule_hour_utc : 6);
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
@@ -117,7 +120,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc };
       if (frequency === 'immediate') updateData.last_run_at = null;
       const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
@@ -130,7 +133,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { data, error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle } as any)
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc } as any)
         .select('id')
         .single();
       if (error) {
@@ -236,10 +239,15 @@ export function ScheduleManager({ sources }: Props) {
     return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport, reportLanguage);
   };
 
+  const fmtH = (h: number) => String(((h % 24) + 24) % 24).padStart(2, '0') + ':00';
+  const enH = scheduleHourUtc;
+  const deH = (scheduleHourUtc + 1) % 24;
+  const enH2 = (scheduleHourUtc + 12) % 24;
+  const deH2 = (scheduleHourUtc + 13) % 24;
   const frequencyLabels: Record<string, string> = {
     immediate: language === 'de' ? '⚡ Sofort (einmalig)' : '⚡ Immediate (one-time)',
-    daily: language === 'de' ? '📅 Täglich (EN 06:00 · DE 07:00 UTC)' : '📅 Daily (EN 06:00 · DE 07:00 UTC)',
-    twice_daily: language === 'de' ? '🔄 Zweimal täglich (EN 06:00/18:00 · DE 07:00/19:00 UTC)' : '🔄 Twice daily (EN 06:00/18:00 · DE 07:00/19:00 UTC)',
+    daily: language === 'de' ? `📅 Täglich (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)` : `📅 Daily (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)`,
+    twice_daily: language === 'de' ? `🔄 Zweimal täglich (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)` : `🔄 Twice daily (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)`,
   };
 
   return (
@@ -283,6 +291,22 @@ export function ScheduleManager({ sources }: Props) {
               </div>
             )}
           </div>
+          {frequency !== 'immediate' && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="text-sm font-medium">{language === 'de' ? 'Startzeit (EN, UTC)' : 'Start hour (EN, UTC)'}</label>
+              <Select value={String(scheduleHourUtc)} onValueChange={(v) => setScheduleHourUtc(Number(v))}>
+                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 24 }, (_, i) => i).map(h => (
+                    <SelectItem key={h} value={String(h)}>{fmtH(h)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {language === 'de' ? `DE läuft 1 Std. später um ${fmtH(deH)} UTC` : `DE runs 1 hour later at ${fmtH(deH)} UTC`}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-medium">{t('scheduleMaxArticles')}</label>
             <Select value={String(maxArticles)} onValueChange={(v) => setMaxArticles(Number(v))}>

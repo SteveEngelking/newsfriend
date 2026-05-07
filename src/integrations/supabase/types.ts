@@ -518,6 +518,7 @@ export type Database = {
           max_articles: number
           mondcivitan_enabled: boolean
           report_style: string
+          schedule_hour_utc: number
           schweitzer_enabled: boolean
           source_ids: string[]
           sources_per_theme: number
@@ -535,6 +536,7 @@ export type Database = {
           max_articles?: number
           mondcivitan_enabled?: boolean
           report_style?: string
+          schedule_hour_utc?: number
           schweitzer_enabled?: boolean
           source_ids?: string[]
           sources_per_theme?: number
@@ -552,6 +554,7 @@ export type Database = {
           max_articles?: number
           mondcivitan_enabled?: boolean
           report_style?: string
+          schedule_hour_utc?: number
           schweitzer_enabled?: boolean
           source_ids?: string[]
           sources_per_theme?: number

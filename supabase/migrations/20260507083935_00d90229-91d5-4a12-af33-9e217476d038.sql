@@ -1,0 +1,1 @@
+ALTER TABLE public.report_schedules ADD COLUMN IF NOT EXISTS schedule_hour_utc integer NOT NULL DEFAULT 6 CHECK (schedule_hour_utc >= 0 AND schedule_hour_utc <= 23);
