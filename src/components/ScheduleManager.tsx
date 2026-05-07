@@ -29,6 +29,7 @@ interface Schedule {
   target_themes: number;
   sources_per_theme: number;
   report_style: string;
+  schedule_hour_utc: number;
   last_run_at: string | null;
   created_at: string;
 }
