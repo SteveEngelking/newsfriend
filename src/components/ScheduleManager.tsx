@@ -291,6 +291,22 @@ export function ScheduleManager({ sources }: Props) {
               </div>
             )}
           </div>
+          {frequency !== 'immediate' && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="text-sm font-medium">{language === 'de' ? 'Startzeit (EN, UTC)' : 'Start hour (EN, UTC)'}</label>
+              <Select value={String(scheduleHourUtc)} onValueChange={(v) => setScheduleHourUtc(Number(v))}>
+                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 24 }, (_, i) => i).map(h => (
+                    <SelectItem key={h} value={String(h)}>{fmtH(h)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {language === 'de' ? `DE läuft 1 Std. später um ${fmtH(deH)} UTC` : `DE runs 1 hour later at ${fmtH(deH)} UTC`}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 flex-wrap">
             <label className="text-sm font-medium">{t('scheduleMaxArticles')}</label>
             <Select value={String(maxArticles)} onValueChange={(v) => setMaxArticles(Number(v))}>
