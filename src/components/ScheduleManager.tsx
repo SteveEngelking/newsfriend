@@ -239,10 +239,15 @@ export function ScheduleManager({ sources }: Props) {
     return generateDailyNewsHtml(report.report_data as unknown as DailyNewsReport, reportLanguage);
   };
 
+  const fmtH = (h: number) => String(((h % 24) + 24) % 24).padStart(2, '0') + ':00';
+  const enH = scheduleHourUtc;
+  const deH = (scheduleHourUtc + 1) % 24;
+  const enH2 = (scheduleHourUtc + 12) % 24;
+  const deH2 = (scheduleHourUtc + 13) % 24;
   const frequencyLabels: Record<string, string> = {
     immediate: language === 'de' ? '⚡ Sofort (einmalig)' : '⚡ Immediate (one-time)',
-    daily: language === 'de' ? '📅 Täglich (EN 06:00 · DE 07:00 UTC)' : '📅 Daily (EN 06:00 · DE 07:00 UTC)',
-    twice_daily: language === 'de' ? '🔄 Zweimal täglich (EN 06:00/18:00 · DE 07:00/19:00 UTC)' : '🔄 Twice daily (EN 06:00/18:00 · DE 07:00/19:00 UTC)',
+    daily: language === 'de' ? `📅 Täglich (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)` : `📅 Daily (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)`,
+    twice_daily: language === 'de' ? `🔄 Zweimal täglich (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)` : `🔄 Twice daily (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)`,
   };
 
   return (
