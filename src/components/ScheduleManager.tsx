@@ -90,6 +90,7 @@ export function ScheduleManager({ sources }: Props) {
       setSourcesPerTheme((sched as any).sources_per_theme ?? 2);
       setAiModel((sched as any).ai_model || 'openai/gpt-5-mini');
       setReportStyle((sched as any).report_style || 'analytical');
+      setScheduleHourUtc(Number.isInteger((sched as any).schedule_hour_utc) ? (sched as any).schedule_hour_utc : 6);
       setOutputLanguage(sched.language || language);
     } else {
       setOutputLanguage(language);
