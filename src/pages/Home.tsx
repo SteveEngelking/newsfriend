@@ -38,7 +38,7 @@ const Home = () => {
   const [selectedSpecialId, setSelectedSpecialId] = useState<string | null>(null);
   const [selectedSpecial, setSelectedSpecial] = useState<SpecialEditionReport | null>(null);
   const [selectedSourceLang, setSelectedSourceLang] = useState<string | null>(null);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  
   const { t, language } = useLanguage();
 
   useEffect(() => {
