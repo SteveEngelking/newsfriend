@@ -160,7 +160,22 @@ const Report = () => {
           <Button asChild variant="ghost" size="sm">
             <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('homeRefresh') ? 'Home' : 'Home'}</Link>
           </Button>
-          <ShareButtons url={`https://www.newsfriend.org/report/${id}`} />
+          <div className="flex items-center gap-2">
+            {sourceLanguage && sourceLanguage !== uiLang && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={isRegenerating}
+                className="gap-2"
+                title={uiLang === 'de' ? 'Übersetzung neu generieren' : 'Regenerate translation'}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                {uiLang === 'de' ? 'Neu übersetzen' : 'Regenerate'}
+              </Button>
+            )}
+            <ShareButtons url={`https://www.newsfriend.org/report/${id}`} />
+          </div>
         </div>
         <DailyNewsReportView report={report} reportId={id} />
       </div>
