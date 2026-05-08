@@ -11,7 +11,8 @@ import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManage
 import { CommentsManager } from '@/components/admin/CommentsManager';
 import { NavOrderManager } from '@/components/admin/NavOrderManager';
 import { SpecialEditionsManager } from '@/components/admin/SpecialEditionsManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles } from 'lucide-react';
+import { GlossaryManager } from '@/components/admin/GlossaryManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles, Languages } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
