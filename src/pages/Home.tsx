@@ -115,6 +115,7 @@ const Home = () => {
       if (error || !data) return;
 
       const srcLang = (data as any).language || 'en';
+      setSelectedSourceLang(srcLang);
       if (srcLang === language) {
         setSelectedReport(data.report_data as unknown as DailyNewsReport);
         return;
@@ -147,6 +148,23 @@ const Home = () => {
       setIsLoadingReport(false);
     }
   }, [language]);
+
+  const handleRegenerateTranslation = useCallback(async () => {
+    if (!selectedId) return;
+    setIsRegenerating(true);
+    try {
+      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
+        body: { reportId: selectedId, language, force: true },
+      });
+      if (trErr || !tr?.report_data) {
+        console.error('Regenerate translation failed', trErr);
+      } else {
+        setSelectedReport(tr.report_data as DailyNewsReport);
+      }
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [selectedId, language]);
 
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, [fetchList]);
