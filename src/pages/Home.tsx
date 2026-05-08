@@ -5,7 +5,7 @@ import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { SpecialEditionView } from '@/components/SpecialEditionView';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
-import { Newspaper, Loader2, Bell, ArrowRight, Star, RefreshCw } from 'lucide-react';
+import { Newspaper, Loader2, Bell, ArrowRight, Star } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,7 @@ const Home = () => {
   const [selectedSpecialId, setSelectedSpecialId] = useState<string | null>(null);
   const [selectedSpecial, setSelectedSpecial] = useState<SpecialEditionReport | null>(null);
   const [selectedSourceLang, setSelectedSourceLang] = useState<string | null>(null);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  
   const { t, language } = useLanguage();
 
   useEffect(() => {
@@ -149,22 +149,6 @@ const Home = () => {
     }
   }, [language]);
 
-  const handleRegenerateTranslation = useCallback(async () => {
-    if (!selectedId) return;
-    setIsRegenerating(true);
-    try {
-      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
-        body: { reportId: selectedId, language, force: true },
-      });
-      if (trErr || !tr?.report_data) {
-        console.error('Regenerate translation failed', trErr);
-      } else {
-        setSelectedReport(tr.report_data as DailyNewsReport);
-      }
-    } finally {
-      setIsRegenerating(false);
-    }
-  }, [selectedId, language]);
 
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, [fetchList]);
@@ -330,19 +314,6 @@ const Home = () => {
                 ))}
               </SelectContent>
             </Select>
-            {selectedSourceLang && selectedSourceLang !== language && selectedReport && (
-              <Button
-                variant="outline"
-                onClick={handleRegenerateTranslation}
-                disabled={isRegenerating || isLoadingReport}
-                className="gap-2"
-                size="sm"
-                title={language === 'de' ? 'Übersetzung neu generieren' : 'Regenerate translation'}
-              >
-                <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-                {language === 'de' ? 'Neu übersetzen' : 'Regenerate translation'}
-              </Button>
-            )}
             <ReportSearch
               onOpenReport={(kind, id) => {
                 if (kind === 'daily') {

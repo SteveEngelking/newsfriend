@@ -12,6 +12,7 @@ import { CommentsManager } from '@/components/admin/CommentsManager';
 import { NavOrderManager } from '@/components/admin/NavOrderManager';
 import { SpecialEditionsManager } from '@/components/admin/SpecialEditionsManager';
 import { GlossaryManager } from '@/components/admin/GlossaryManager';
+import { RegenerateTranslationPanel } from '@/components/admin/RegenerateTranslationPanel';
 import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles, Languages } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
@@ -116,8 +117,9 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <CommentsManager />
       </TabsContent>
 
-      <TabsContent value="glossary">
+      <TabsContent value="glossary" className="space-y-4">
         <GlossaryManager />
+        <RegenerateTranslationPanel />
       </TabsContent>
 
       <TabsContent value="impressum">
