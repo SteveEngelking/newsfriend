@@ -93,7 +93,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { reportId, language } = await req.json();
+    const body = await req.json();
+    const { reportId, language, force } = body;
     if (!reportId || typeof reportId !== "string" || !language || typeof language !== "string") {
       return new Response(JSON.stringify({ error: "reportId and language required" }), {
         status: 400,
@@ -103,19 +104,21 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Already cached?
-    const { data: cached } = await admin
-      .from("report_translations")
-      .select("title, report_data, language")
-      .eq("report_id", reportId)
-      .eq("language", language)
-      .maybeSingle();
+    // Already cached? Skip unless force=true
+    if (!force) {
+      const { data: cached } = await admin
+        .from("report_translations")
+        .select("title, report_data, language")
+        .eq("report_id", reportId)
+        .eq("language", language)
+        .maybeSingle();
 
-    if (cached) {
-      return new Response(
-        JSON.stringify({ title: cached.title, report_data: cached.report_data, cached: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      if (cached) {
+        return new Response(
+          JSON.stringify({ title: cached.title, report_data: cached.report_data, cached: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Load source report
