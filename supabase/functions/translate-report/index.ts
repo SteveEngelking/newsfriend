@@ -236,7 +236,20 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    const status = (err as { status?: number })?.status;
     console.error("[translate-report]", msg);
+    if (status === 402) {
+      return new Response(
+        JSON.stringify({ error: "Translation unavailable: AI credits exhausted. Please add credits in Lovable Cloud → AI balance." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (status === 429) {
+      return new Response(
+        JSON.stringify({ error: "Translation rate-limited. Please try again in a moment." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
