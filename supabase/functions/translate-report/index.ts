@@ -47,8 +47,19 @@ async function translateChunk(
   description: string,
 ): Promise<unknown> {
   const langName = LANGUAGE_NAMES[targetLanguage] ?? targetLanguage;
+  const isGerman = targetLanguage === "de";
+  const germanRules = isGerman
+    ? `\nGERMAN-SPECIFIC CORE RULES (apply automatically to EVERY string):\n` +
+      `1. GRAMMAR: Fix ALL adjective endings, cases, verb conjugation. Examples: "militärische Druck" → "militärischer Druck"; "wirtschaftliche Folgen" agrees with plural; respect der/die/das + nominative/accusative/dative/genitive throughout.\n` +
+      `2. PRECISE TERMINOLOGY: "fiscal" → "fiskalisch" (NOT "finanziell"); "leverage" → "Druckmittel" or "Hebelwirkung"; "resilience" → "Widerstandsfähigkeit"; "sanctions" → "Sanktionen"; "blockade" → "Blockade"; use established economic/political/legal German terms.\n` +
+      `3. NEWS STYLE: FAZ / Handelsblatt / NZZ tone — analytical, precise, sober, natural German. No tabloid phrasing.\n` +
+      `4. NO LITERAL ENGLISH: rewrite awkward word-for-word constructions; use native German syntax (verb-second main clauses, verb-final subordinate clauses, idiomatic prepositions).\n` +
+      `5. PRESERVE MEANING EXACTLY: only improve German idiomaticity; never add, omit, or shift nuance.\n` +
+      `WORKFLOW: For every string, treat the English as source + draft, then silently apply rules 1–5 and emit only the polished German.\n`
+    : "";
+
   const system =
-    `You are a senior ${langName} news editor and translator working for a polished news-analysis publication. ` +
+    `You are a senior ${langName} news editor and translator working for Newsfriend.org, a polished news-analysis publication. ` +
     `Render the JSON value below from English into natural, idiomatic ${langName} that reads as if it were originally written by a native ${langName} journalist.\n` +
     `STYLE RULES:\n` +
     `- Produce fluent, polished ${langName} headlines and body text. Avoid literal or word-for-word English phrasing, anglicisms, and awkward syntax.\n` +
@@ -56,6 +67,7 @@ async function translateChunk(
     `- Use precise, established ${langName} terminology for politics, economics, law, technology, and current affairs. Prefer the standard ${langName} term over a transliteration.\n` +
     `- Headlines and theme titles should follow ${langName} news headline conventions (concise, punchy, grammatically natural).\n` +
     `- Return ONLY the final ${langName} version. No notes, no alternatives, no explanations.\n` +
+    germanRules +
     `STRUCTURAL RULES:\n` +
     `1. Return a single JSON object with the EXACT SAME SHAPE and SAME KEYS as the input. Only translate string VALUES.\n` +
     `2. Translate every user-visible string: titles, summaries, quotes, commentary, names of perspectives, source labels, conclusion, etc. Translate quoted speech too (rendered as natural ${langName}).\n` +
