@@ -149,22 +149,6 @@ const Home = () => {
     }
   }, [language]);
 
-  const handleRegenerateTranslation = useCallback(async () => {
-    if (!selectedId) return;
-    setIsRegenerating(true);
-    try {
-      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
-        body: { reportId: selectedId, language, force: true },
-      });
-      if (trErr || !tr?.report_data) {
-        console.error('Regenerate translation failed', trErr);
-      } else {
-        setSelectedReport(tr.report_data as DailyNewsReport);
-      }
-    } finally {
-      setIsRegenerating(false);
-    }
-  }, [selectedId, language]);
 
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, [fetchList]);
