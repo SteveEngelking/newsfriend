@@ -48,12 +48,19 @@ async function translateChunk(
 ): Promise<unknown> {
   const langName = LANGUAGE_NAMES[targetLanguage] ?? targetLanguage;
   const system =
-    `You are a professional news translator. Translate the JSON value below from English into ${langName}.\n` +
-    `STRICT RULES:\n` +
+    `You are a senior ${langName} news editor and translator working for a polished news-analysis publication. ` +
+    `Render the JSON value below from English into natural, idiomatic ${langName} that reads as if it were originally written by a native ${langName} journalist.\n` +
+    `STYLE RULES:\n` +
+    `- Produce fluent, polished ${langName} headlines and body text. Avoid literal or word-for-word English phrasing, anglicisms, and awkward syntax.\n` +
+    `- Reorder clauses, split or merge sentences within a single string, and adapt idioms so the result sounds native. Preserve meaning, nuance, and tone (analytical, neutral, precise).\n` +
+    `- Use precise, established ${langName} terminology for politics, economics, law, technology, and current affairs. Prefer the standard ${langName} term over a transliteration.\n` +
+    `- Headlines and theme titles should follow ${langName} news headline conventions (concise, punchy, grammatically natural).\n` +
+    `- Return ONLY the final ${langName} version. No notes, no alternatives, no explanations.\n` +
+    `STRUCTURAL RULES:\n` +
     `1. Return a single JSON object with the EXACT SAME SHAPE and SAME KEYS as the input. Only translate string VALUES.\n` +
-    `2. Translate every user-visible string into ${langName}: titles, summaries, quotes, commentary, names of perspectives, source labels, conclusion, etc. Translate quoted speech too.\n` +
+    `2. Translate every user-visible string: titles, summaries, quotes, commentary, names of perspectives, source labels, conclusion, etc. Translate quoted speech too (rendered as natural ${langName}).\n` +
     `3. Do NOT translate: URLs, IDs, ISO dates, image URLs, enum values like "high"/"medium"/"low", proper names of organisations or people unless they have an established ${langName} form.\n` +
-    `4. Do NOT add, remove, reorder, or merge fields. Preserve arrays length and order.\n` +
+    `4. Do NOT add, remove, reorder, or merge fields. Preserve array length and order.\n` +
     `5. Output ONLY the translated JSON, no prose, no markdown.\n` +
     glossaryBlock;
 
