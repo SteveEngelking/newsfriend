@@ -330,10 +330,19 @@ const Home = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => fetchList(false)} className="gap-2" size="sm">
-              <Newspaper className="h-4 w-4" />
-              {t('homeRefresh')}
-            </Button>
+            {selectedSourceLang && selectedSourceLang !== language && selectedReport && (
+              <Button
+                variant="outline"
+                onClick={handleRegenerateTranslation}
+                disabled={isRegenerating || isLoadingReport}
+                className="gap-2"
+                size="sm"
+                title={language === 'de' ? 'Übersetzung neu generieren' : 'Regenerate translation'}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                {language === 'de' ? 'Neu übersetzen' : 'Regenerate translation'}
+              </Button>
+            )}
             <ReportSearch
               onOpenReport={(kind, id) => {
                 if (kind === 'daily') {
