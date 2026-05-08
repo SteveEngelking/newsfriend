@@ -98,25 +98,53 @@ const Home = () => {
     }
   }, [language]);
 
-  // Fetch full report data for selected report only
+  // Fetch full report data for selected report only.
+  // If the source language differs from the UI language, use cached
+  // translation (or trigger translate-report on demand).
   const fetchFullReport = useCallback(async (id: string) => {
     setIsLoadingReport(true);
     try {
       const { data, error } = await supabase
         .from('generated_reports')
-        .select('report_data')
+        .select('report_data, language')
         .eq('id', id)
         .single();
 
-      if (data && !error) {
+      if (error || !data) return;
+
+      const srcLang = (data as any).language || 'en';
+      if (srcLang === language) {
         setSelectedReport(data.report_data as unknown as DailyNewsReport);
+        return;
+      }
+
+      const { data: cached } = await supabase
+        .from('report_translations')
+        .select('report_data')
+        .eq('report_id', id)
+        .eq('language', language)
+        .maybeSingle();
+
+      if (cached) {
+        setSelectedReport(cached.report_data as unknown as DailyNewsReport);
+        return;
+      }
+
+      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
+        body: { reportId: id, language },
+      });
+      if (trErr || !tr?.report_data) {
+        // Fall back to source-language report so user still sees something
+        setSelectedReport(data.report_data as unknown as DailyNewsReport);
+      } else {
+        setSelectedReport(tr.report_data as DailyNewsReport);
       }
     } catch (err) {
       console.error('Error fetching report:', err);
     } finally {
       setIsLoadingReport(false);
     }
-  }, []);
+  }, [language]);
 
   // Auto-fetch list on mount
   useEffect(() => { fetchList(); }, [fetchList]);
