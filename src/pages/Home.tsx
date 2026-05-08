@@ -55,7 +55,6 @@ const Home = () => {
       const { data, error } = await supabase
         .from('generated_reports')
         .select('id, title, created_at, language')
-        .eq('language', language)
         .order('created_at', { ascending: false })
         .limit(20);
 
