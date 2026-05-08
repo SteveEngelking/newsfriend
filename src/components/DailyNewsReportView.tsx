@@ -170,7 +170,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
                 </h2>
                 <Badge variant={getSignificanceBadge(theme.significance)} className="shrink-0">{theme.significance}</Badge>
               </div>
-              <p className="mt-2 text-muted-foreground leading-relaxed">{theme.summary}</p>
+              <p className="mt-2 text-muted-foreground leading-relaxed text-slate-600">{theme.summary}</p>
             </header>
 
             <div className="bg-muted/30 rounded-lg p-4 mb-4">
