@@ -66,6 +66,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
           <MessageSquare className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabComments')}</span>
         </TabsTrigger>
+        <TabsTrigger value="glossary" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
+          <Languages className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Glossary</span>
+        </TabsTrigger>
         <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <FileText className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabImpressum')}</span>
