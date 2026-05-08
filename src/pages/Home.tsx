@@ -5,7 +5,7 @@ import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { SpecialEditionView } from '@/components/SpecialEditionView';
 import { SpecialEditionReport } from '@/lib/specialEditionTypes';
-import { Newspaper, Loader2, Bell, ArrowRight, Star, RefreshCw } from 'lucide-react';
+import { Newspaper, Loader2, Bell, ArrowRight, Star } from 'lucide-react';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
