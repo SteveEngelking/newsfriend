@@ -620,24 +620,17 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
       }
     };
 
-    // For manual immediate triggers, run the heavy work in the background and
-    // return 200 right away so the client doesn't time out at ~60s. The cron
-    // path waits as before so logs reflect the full result.
-    if (forceImmediate) {
-      // @ts-ignore EdgeRuntime is provided by Supabase Edge Runtime
-      try { (globalThis as any).EdgeRuntime?.waitUntil?.(runScheduleWork()); }
-      catch { runScheduleWork().catch(e => console.error('background runScheduleWork error:', e)); }
-      return new Response(
-        JSON.stringify({ message: 'Generation started', schedules: schedules.length }),
-        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    await runScheduleWork();
+    // Run the heavy work in the background and return immediately. The database
+    // cron HTTP client times out after ~5s, so scheduled generation must not wait
+    // for the full AI/report pipeline inside the request-response cycle.
+    const backgroundWork = runScheduleWork().catch(e => console.error('background runScheduleWork error:', e));
+    // @ts-ignore EdgeRuntime is provided by Supabase Edge Runtime
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(backgroundWork); }
+    catch { /* backgroundWork is already running */ }
 
     return new Response(
-      JSON.stringify({ results }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ message: forceImmediate ? 'Generation started' : 'Scheduled generation started', schedules: schedules.length }),
+      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Scheduled report error:', error);
