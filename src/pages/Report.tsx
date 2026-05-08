@@ -13,8 +13,10 @@ const Report = () => {
   const { id } = useParams<{ id: string }>();
   const [report, setReport] = useState<DailyNewsReport | null>(null);
   const [meta, setMeta] = useState<{ title: string; created_at: string; language: string } | null>(null);
+  const [sourceLanguage, setSourceLanguage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const { t, language: uiLang } = useLanguage();
 
@@ -24,6 +26,7 @@ const Report = () => {
     (async () => {
       setLoading(true);
       setTranslating(false);
+      setIsRegenerating(false);
       const { data, error } = await supabase
         .from('generated_reports')
         .select('title, created_at, language, report_data')
@@ -36,11 +39,12 @@ const Report = () => {
         return;
       }
 
-      const sourceLang = data.language || 'en';
+      const srcLang = data.language || 'en';
+      setSourceLanguage(srcLang);
       // Same language as UI → render as-is
-      if (sourceLang === uiLang) {
+      if (srcLang === uiLang) {
         setReport(data.report_data as unknown as DailyNewsReport);
-        setMeta({ title: data.title, created_at: data.created_at, language: sourceLang });
+        setMeta({ title: data.title, created_at: data.created_at, language: srcLang });
         setLoading(false);
         return;
       }
@@ -71,7 +75,7 @@ const Report = () => {
       if (trErr || !tr?.report_data) {
         // Fall back to source language
         setReport(data.report_data as unknown as DailyNewsReport);
-        setMeta({ title: data.title, created_at: data.created_at, language: sourceLang });
+        setMeta({ title: data.title, created_at: data.created_at, language: srcLang });
       } else {
         setReport(tr.report_data as DailyNewsReport);
         setMeta({ title: tr.title, created_at: data.created_at, language: uiLang });
@@ -81,11 +85,29 @@ const Report = () => {
     return () => { cancelled = true; };
   }, [id, uiLang]);
 
-  if (loading || translating) {
+  const handleRegenerate = async () => {
+    if (!id || !meta) return;
+    setIsRegenerating(true);
+    try {
+      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
+        body: { reportId: id, language: uiLang, force: true },
+      });
+      if (trErr || !tr?.report_data) {
+        console.error('Regenerate translation failed', trErr);
+      } else {
+        setReport(tr.report_data as DailyNewsReport);
+        setMeta({ title: tr.title, created_at: meta.created_at, language: uiLang });
+      }
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  if (loading || translating || isRegenerating) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        {translating && (
+        {(translating || isRegenerating) && (
           <p className="text-sm text-muted-foreground">
             {uiLang === 'de' ? 'Übersetze Bericht…' : 'Translating report…'}
           </p>
