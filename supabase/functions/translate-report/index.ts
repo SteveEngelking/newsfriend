@@ -93,7 +93,9 @@ async function translateChunk(
   const { response, provider } = await callAIChatCompletion(body);
   if (!response.ok) {
     const txt = await response.text().catch(() => "");
-    throw new Error(`AI translate failed (${response.status}, ${provider}): ${txt.slice(0, 300)}`);
+    const err = new Error(`AI translate failed (${response.status}, ${provider}): ${txt.slice(0, 300)}`) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
   const json = await response.json();
   const content = json?.choices?.[0]?.message?.content;
@@ -234,7 +236,20 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    const status = (err as { status?: number })?.status;
     console.error("[translate-report]", msg);
+    if (status === 402) {
+      return new Response(
+        JSON.stringify({ error: "Translation unavailable: AI credits exhausted. Please add credits in Lovable Cloud → AI balance." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (status === 429) {
+      return new Response(
+        JSON.stringify({ error: "Translation rate-limited. Please try again in a moment." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
