@@ -65,7 +65,7 @@ async function translateChunk(
     glossaryBlock;
 
   const body = {
-    model: "google/gemini-2.5-flash",
+    model: "google/gemini-2.5-pro",
     messages: [
       { role: "system", content: system },
       {
