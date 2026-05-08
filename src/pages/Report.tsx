@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DailyNewsReport } from '@/lib/types';
 import { DailyNewsReportView } from '@/components/DailyNewsReportView';
 import { SEO } from '@/components/SEO';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShareButtons } from '@/components/ShareButtons';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
