@@ -117,8 +117,9 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <CommentsManager />
       </TabsContent>
 
-      <TabsContent value="glossary">
+      <TabsContent value="glossary" className="space-y-4">
         <GlossaryManager />
+        <RegenerateTranslationPanel />
       </TabsContent>
 
       <TabsContent value="impressum">
