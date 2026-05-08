@@ -93,7 +93,9 @@ async function translateChunk(
   const { response, provider } = await callAIChatCompletion(body);
   if (!response.ok) {
     const txt = await response.text().catch(() => "");
-    throw new Error(`AI translate failed (${response.status}, ${provider}): ${txt.slice(0, 300)}`);
+    const err = new Error(`AI translate failed (${response.status}, ${provider}): ${txt.slice(0, 300)}`) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
   const json = await response.json();
   const content = json?.choices?.[0]?.message?.content;
