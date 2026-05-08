@@ -562,6 +562,41 @@ export type Database = {
         }
         Relationships: []
       }
+      report_translations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string
+          report_data: Json
+          report_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language: string
+          report_data: Json
+          report_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string
+          report_data?: Json
+          report_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_translations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "generated_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       special_editions: {
         Row: {
           approved_at: string | null
@@ -674,6 +709,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      translation_glossary: {
+        Row: {
+          created_at: string
+          do_not_translate: boolean
+          id: string
+          notes: string
+          source_term: string
+          translations: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          do_not_translate?: boolean
+          id?: string
+          notes?: string
+          source_term: string
+          translations?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          do_not_translate?: boolean
+          id?: string
+          notes?: string
+          source_term?: string
+          translations?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_comments: {
         Row: {

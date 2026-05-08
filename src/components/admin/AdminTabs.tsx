@@ -11,7 +11,8 @@ import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManage
 import { CommentsManager } from '@/components/admin/CommentsManager';
 import { NavOrderManager } from '@/components/admin/NavOrderManager';
 import { SpecialEditionsManager } from '@/components/admin/SpecialEditionsManager';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles } from 'lucide-react';
+import { GlossaryManager } from '@/components/admin/GlossaryManager';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles, Languages } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -65,6 +66,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
           <MessageSquare className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabComments')}</span>
         </TabsTrigger>
+        <TabsTrigger value="glossary" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
+          <Languages className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Glossary</span>
+        </TabsTrigger>
         <TabsTrigger value="impressum" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <FileText className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabImpressum')}</span>
@@ -109,6 +114,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="comments">
         <CommentsManager />
+      </TabsContent>
+
+      <TabsContent value="glossary">
+        <GlossaryManager />
       </TabsContent>
 
       <TabsContent value="impressum">

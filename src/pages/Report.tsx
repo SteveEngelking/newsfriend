@@ -14,14 +14,16 @@ const Report = () => {
   const [report, setReport] = useState<DailyNewsReport | null>(null);
   const [meta, setMeta] = useState<{ title: string; created_at: string; language: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [translating, setTranslating] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const { t } = useLanguage();
+  const { t, language: uiLang } = useLanguage();
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setTranslating(false);
       const { data, error } = await supabase
         .from('generated_reports')
         .select('title, created_at, language, report_data')
@@ -30,19 +32,64 @@ const Report = () => {
       if (cancelled) return;
       if (error || !data) {
         setNotFound(true);
-      } else {
-        setReport(data.report_data as unknown as DailyNewsReport);
-        setMeta({ title: data.title, created_at: data.created_at, language: data.language });
+        setLoading(false);
+        return;
       }
+
+      const sourceLang = data.language || 'en';
+      // Same language as UI → render as-is
+      if (sourceLang === uiLang) {
+        setReport(data.report_data as unknown as DailyNewsReport);
+        setMeta({ title: data.title, created_at: data.created_at, language: sourceLang });
+        setLoading(false);
+        return;
+      }
+
+      // Different language → check cache, else translate
+      const { data: cached } = await supabase
+        .from('report_translations')
+        .select('title, report_data')
+        .eq('report_id', id)
+        .eq('language', uiLang)
+        .maybeSingle();
+      if (cancelled) return;
+
+      if (cached) {
+        setReport(cached.report_data as unknown as DailyNewsReport);
+        setMeta({ title: cached.title, created_at: data.created_at, language: uiLang });
+        setLoading(false);
+        return;
+      }
+
+      // Need to translate
       setLoading(false);
+      setTranslating(true);
+      const { data: tr, error: trErr } = await supabase.functions.invoke('translate-report', {
+        body: { reportId: id, language: uiLang },
+      });
+      if (cancelled) return;
+      if (trErr || !tr?.report_data) {
+        // Fall back to source language
+        setReport(data.report_data as unknown as DailyNewsReport);
+        setMeta({ title: data.title, created_at: data.created_at, language: sourceLang });
+      } else {
+        setReport(tr.report_data as DailyNewsReport);
+        setMeta({ title: tr.title, created_at: data.created_at, language: uiLang });
+      }
+      setTranslating(false);
     })();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, uiLang]);
 
-  if (loading) {
+  if (loading || translating) {
     return (
-      <div className="flex justify-center py-16">
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        {translating && (
+          <p className="text-sm text-muted-foreground">
+            {uiLang === 'de' ? 'Übersetze Bericht…' : 'Translating report…'}
+          </p>
+        )}
       </div>
     );
   }
