@@ -116,6 +116,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <CommentsManager />
       </TabsContent>
 
+      <TabsContent value="glossary">
+        <GlossaryManager />
+      </TabsContent>
+
       <TabsContent value="impressum">
         <ImpressumEditor />
       </TabsContent>
