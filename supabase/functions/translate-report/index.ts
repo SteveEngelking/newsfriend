@@ -201,13 +201,13 @@ Deno.serve(async (req) => {
 
     const newTitle = String(metaT?.title ?? metaT?.reportTitle ?? src.title);
 
-    // Cache
-    await admin.from("report_translations").insert({
+    // Cache (upsert to allow overwrite on force)
+    await admin.from("report_translations").upsert({
       report_id: reportId,
       language,
       title: newTitle,
       report_data: newReport,
-    });
+    }, { onConflict: "report_id,language" });
 
     return new Response(
       JSON.stringify({ title: newTitle, report_data: newReport, cached: false }),
