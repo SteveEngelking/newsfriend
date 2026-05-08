@@ -170,7 +170,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
                 </h2>
                 <Badge variant={getSignificanceBadge(theme.significance)} className="shrink-0">{theme.significance}</Badge>
               </div>
-              <p className="mt-2 text-muted-foreground leading-relaxed">{theme.summary}</p>
+              <p className="mt-2 text-muted-foreground leading-relaxed text-slate-600">{theme.summary}</p>
             </header>
 
             <div className="bg-muted/30 rounded-lg p-4 mb-4">
@@ -182,7 +182,7 @@ export function DailyNewsReportView({ report, reportId }: Props) {
                       <h4 className="font-semibold text-sm">{sa.sourceName}</h4>
                       {sa.articleUrl && <a href={sa.articleUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">{t('dailyReadArticle')}</a>}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">{sa.stance}</p>
+                    <p className="text-sm text-muted-foreground mt-1 text-slate-700">{sa.stance}</p>
                     {sa.keyQuotes.length > 0 && <div className="mt-2">{sa.keyQuotes.map((quote, qi) => <blockquote key={qi} className="text-sm italic border-l-2 border-muted pl-2 my-1">"{quote}"</blockquote>)}</div>}
                     {sa.biasIndicators.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{sa.biasIndicators.map((bias, bi) => <Badge key={bi} variant="outline" className="text-xs">{bias}</Badge>)}</div>}
                   </div>
