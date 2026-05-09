@@ -151,6 +151,14 @@ Deno.serve(async (req) => {
       })
     }
 
+    // For daily_report with a specific reportId+language, only email matching subscribers.
+    if (type === 'daily_report' && restrictToLanguage) {
+      validProfiles = validProfiles.filter(p => {
+        const lang = ((p as any).preferred_language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
+        return lang === restrictToLanguage
+      })
+    }
+
     if (validProfiles.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: 'No valid emails' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
