@@ -559,14 +559,15 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
           console.warn(`Schedule ${schedule.id}: banner generation threw for ${lang.code}:`, bannerErr);
         }
 
-        const { error: insertErr } = await supabase.from('generated_reports').insert({
+        const { data: insertedReport, error: insertErr } = await supabase.from('generated_reports').insert({
           schedule_id: schedule.id, title: report.title, report_data: report, language: lang.code,
-        });
+        }).select('id').single();
 
         if (insertErr) {
           console.error(`Failed to store ${lang.code} report:`, insertErr);
           return;
         }
+        const newReportId = insertedReport?.id as string | undefined;
 
         generatedLanguages.push(lang.code);
         console.log(`Schedule ${schedule.id}: ${lang.code} report stored with ${allThemes.length} themes`);
