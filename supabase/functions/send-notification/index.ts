@@ -261,7 +261,8 @@ Deno.serve(async (req) => {
 
         const { html, plainText, subject } = renderedByLang[cacheKey]
         const messageId = crypto.randomUUID()
-        const idempotencyKey = `${templateName}-${announcementId || specialEditionId || 'daily'}-${normalizedEmail}-${dateKey}`
+        const dailyScope = reportId || 'daily'
+        const idempotencyKey = `${templateName}-${announcementId || specialEditionId || dailyScope}-${normalizedEmail}-${dateKey}`
 
         await supabase.from('email_send_log').insert({
           message_id: messageId,
