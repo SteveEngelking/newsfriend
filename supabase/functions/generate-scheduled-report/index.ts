@@ -588,9 +588,9 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
         // called twice in a single run (once per language) is safe.
         try {
           await supabase.functions.invoke('send-notification', {
-            body: { type: 'daily_report' },
+            body: { type: 'daily_report', reportId: newReportId, language: lang.code },
           });
-          console.log(`Schedule ${schedule.id}: notification triggered after ${lang.code}`);
+          console.log(`Schedule ${schedule.id}: notification triggered after ${lang.code} (report ${newReportId})`);
         } catch (notifErr) {
           console.error(`Schedule ${schedule.id}: notification failed after ${lang.code}:`, notifErr);
         }
