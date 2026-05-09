@@ -143,7 +143,15 @@ Deno.serve(async (req) => {
     const runScheduleWork = async () => {
       for (const schedule of schedules) {
       // Use new time-of-day trigger logic with catch-up
-      const languagesDue = await getLanguagesDue(schedule);
+      let languagesDue = await getLanguagesDue(schedule);
+      // Honor the schedule's language field: a DE schedule should only ever
+      // produce DE reports (and vice versa). Without this filter, every enabled
+      // schedule would emit BOTH EN and DE.
+      const scheduleLang = (schedule.language || '').toLowerCase().startsWith('de') ? 'de'
+        : (schedule.language || '').toLowerCase().startsWith('en') ? 'en' : null;
+      if (scheduleLang && !forceImmediate) {
+        languagesDue = languagesDue.filter(l => l.code === scheduleLang);
+      }
       if (languagesDue.length === 0) {
         results.push(`Schedule ${schedule.id}: not due yet`);
         continue;
