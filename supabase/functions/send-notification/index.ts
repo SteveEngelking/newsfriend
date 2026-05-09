@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
 
-    const { type, announcementId, specialEditionId } = await req.json()
+    const { type, announcementId, specialEditionId, reportId, language: targetLanguage } = await req.json()
 
     if (!['daily_report', 'announcement', 'special_edition'].includes(type)) {
       return new Response(JSON.stringify({ error: 'Invalid notification type' }), {
@@ -37,36 +37,53 @@ Deno.serve(async (req) => {
       })
     }
 
-    // For daily_report, fetch the latest report data per language — but ONLY
-    // if it was generated today (UTC). This prevents notifying subscribers
-    // about a stale report from a previous day when only one language was
-    // produced in the current run.
+    // For daily_report:
+    //  - If reportId+language are supplied, use that EXACT report and only send to
+    //    subscribers whose preferred language matches (guarantees email content
+    //    matches the report just generated, even if a newer one is produced later).
+    //  - Otherwise fall back to "latest report today per language" (manual triggers).
     let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
+    let restrictToLanguage: 'en' | 'de' | null = null
     if (type === 'daily_report') {
-      const startOfTodayUtc = new Date()
-      startOfTodayUtc.setUTCHours(0, 0, 0, 0)
-      for (const lang of ['en', 'de']) {
-        const { data: latestReport } = await supabase
+      if (reportId && targetLanguage) {
+        const normalizedLang = (targetLanguage || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
+        restrictToLanguage = normalizedLang
+        const { data: specificReport } = await supabase
           .from('generated_reports')
-          .select('report_data, created_at')
-          .eq('language', lang)
-          .gte('created_at', startOfTodayUtc.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .select('report_data')
+          .eq('id', reportId)
           .maybeSingle()
-
-        if (latestReport?.report_data) {
-          const rd = latestReport.report_data as any
-          reportsByLanguage[lang] = {
+        if (specificReport?.report_data) {
+          const rd = specificReport.report_data as any
+          reportsByLanguage[normalizedLang] = {
             introduction: (rd.introduction || '').slice(0, 500),
             themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
             bannerImageUrl: rd.bannerImageUrl || undefined,
           }
         }
+      } else {
+        const startOfTodayUtc = new Date()
+        startOfTodayUtc.setUTCHours(0, 0, 0, 0)
+        for (const lang of ['en', 'de']) {
+          const { data: latestReport } = await supabase
+            .from('generated_reports')
+            .select('report_data, created_at')
+            .eq('language', lang)
+            .gte('created_at', startOfTodayUtc.toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (latestReport?.report_data) {
+            const rd = latestReport.report_data as any
+            reportsByLanguage[lang] = {
+              introduction: (rd.introduction || '').slice(0, 500),
+              themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+              bannerImageUrl: rd.bannerImageUrl || undefined,
+            }
+          }
+        }
       }
-      // Do NOT cross-fill between languages — if a language has no fresh
-      // report today, its subscribers should be skipped this run rather than
-      // receive yesterday's content (or content in the wrong language).
 
       if (Object.keys(reportsByLanguage).length === 0) {
         return new Response(JSON.stringify({ sent: 0, message: 'No fresh reports for today' }), {
