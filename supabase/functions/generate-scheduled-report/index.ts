@@ -287,7 +287,8 @@ Deno.serve(async (req) => {
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
-      const sourcesPerTheme = Math.min(5, Math.max(2, Math.min(requestedSourcesPerTheme, Math.max(2, sourceNames.length))));
+      // Honor admin's sources_per_theme as-is, only clamped by available sources.
+      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
