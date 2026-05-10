@@ -111,20 +111,18 @@ Deno.serve(async (req) => {
 
       const due: typeof EN_LANG[] = [];
 
-      // Nominal time-of-day trigger
+      // Strict time-of-day trigger only — no hourly catch-up. The hourly cron
+      // would otherwise re-fire a missed run on every subsequent hour, which
+      // produces multiple updates per day and ignores the configured hour.
       if (enHours.includes(currentHour) && !producedToday.has('en')) due.push(EN_LANG);
       if (deHours.includes(currentHour) && !producedToday.has('de')) due.push(DE_LANG);
 
-      // Catch-up: emit any language not yet produced today, regardless of hour
-      if (!producedToday.has('en') && !due.some(l => l.code === 'en')) due.push(EN_LANG);
-      if (!producedToday.has('de') && !due.some(l => l.code === 'de')) due.push(DE_LANG);
-
-      // For twice_daily, also catch up the 18:00 window if missed (allow second EN/DE per day)
+      // For twice_daily, also fire the second window at its scheduled hour.
       if (freq === 'twice_daily' && currentHour >= 18) {
         const eveningEn = (todays ?? []).filter((r: any) => r.language === 'en').length;
         const eveningDe = (todays ?? []).filter((r: any) => r.language === 'de').length;
-        if (eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
-        if (eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
+        if (enHours.includes(currentHour) && eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
+        if (deHours.includes(currentHour) && eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
       }
 
       return due;
@@ -287,7 +285,8 @@ Deno.serve(async (req) => {
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
-      const sourcesPerTheme = Math.min(5, Math.max(2, Math.min(requestedSourcesPerTheme, Math.max(2, sourceNames.length))));
+      // Honor admin's sources_per_theme as-is, only clamped by available sources.
+      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
