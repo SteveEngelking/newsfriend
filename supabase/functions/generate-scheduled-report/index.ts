@@ -111,20 +111,18 @@ Deno.serve(async (req) => {
 
       const due: typeof EN_LANG[] = [];
 
-      // Nominal time-of-day trigger
+      // Strict time-of-day trigger only — no hourly catch-up. The hourly cron
+      // would otherwise re-fire a missed run on every subsequent hour, which
+      // produces multiple updates per day and ignores the configured hour.
       if (enHours.includes(currentHour) && !producedToday.has('en')) due.push(EN_LANG);
       if (deHours.includes(currentHour) && !producedToday.has('de')) due.push(DE_LANG);
 
-      // Catch-up: emit any language not yet produced today, regardless of hour
-      if (!producedToday.has('en') && !due.some(l => l.code === 'en')) due.push(EN_LANG);
-      if (!producedToday.has('de') && !due.some(l => l.code === 'de')) due.push(DE_LANG);
-
-      // For twice_daily, also catch up the 18:00 window if missed (allow second EN/DE per day)
+      // For twice_daily, also fire the second window at its scheduled hour.
       if (freq === 'twice_daily' && currentHour >= 18) {
         const eveningEn = (todays ?? []).filter((r: any) => r.language === 'en').length;
         const eveningDe = (todays ?? []).filter((r: any) => r.language === 'de').length;
-        if (eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
-        if (eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
+        if (enHours.includes(currentHour) && eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
+        if (deHours.includes(currentHour) && eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
       }
 
       return due;
