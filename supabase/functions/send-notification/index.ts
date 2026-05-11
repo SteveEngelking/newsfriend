@@ -155,12 +155,37 @@ Deno.serve(async (req) => {
       })
     }
 
-    // For daily_report with a specific reportId+language, only email matching subscribers.
-    if (type === 'daily_report' && restrictToLanguage) {
-      validProfiles = validProfiles.filter(p => {
+    // For daily_report with a specific source report, ensure we have content for
+    // every subscriber language. If a subscriber's language differs from the source
+    // report's language, fetch a translation (cached in report_translations) by
+    // invoking the translate-report edge function. If translation fails, fall back
+    // to the source report so the subscriber still gets an email.
+    if (type === 'daily_report' && sourceReportId && sourceLanguage) {
+      const neededLangs = new Set<'en' | 'de'>()
+      for (const p of validProfiles) {
         const lang = ((p as any).preferred_language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
-        return lang === restrictToLanguage
-      })
+        neededLangs.add(lang)
+      }
+      for (const lang of neededLangs) {
+        if (reportsByLanguage[lang]) continue
+        try {
+          const { data: trans, error: transErr } = await supabase.functions.invoke('translate-report', {
+            body: { reportId: sourceReportId, language: lang },
+          })
+          if (transErr) throw transErr
+          const rd = (trans as any)?.report_data
+          if (rd) {
+            reportsByLanguage[lang] = {
+              introduction: (rd.introduction || '').slice(0, 500),
+              themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+              bannerImageUrl: rd.bannerImageUrl || undefined,
+            }
+          }
+        } catch (e) {
+          console.error(`Translation to ${lang} failed, falling back to source:`, e)
+          reportsByLanguage[lang] = reportsByLanguage[sourceLanguage]
+        }
+      }
     }
 
     if (validProfiles.length === 0) {
