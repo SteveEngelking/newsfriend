@@ -38,16 +38,20 @@ Deno.serve(async (req) => {
     }
 
     // For daily_report:
-    //  - If reportId+language are supplied, use that EXACT report and only send to
-    //    subscribers whose preferred language matches (guarantees email content
-    //    matches the report just generated, even if a newer one is produced later).
+    //  - If reportId+language are supplied, that EXACT report is the source.
+    //    Subscribers whose preferred language matches the report receive its
+    //    content directly. Subscribers in other supported languages receive a
+    //    translated version (fetched/generated via the translate-report
+    //    function, cached in report_translations).
     //  - Otherwise fall back to "latest report today per language" (manual triggers).
     let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
-    let restrictToLanguage: 'en' | 'de' | null = null
+    let sourceReportId: string | null = null
+    let sourceLanguage: 'en' | 'de' | null = null
     if (type === 'daily_report') {
       if (reportId && targetLanguage) {
         const normalizedLang = (targetLanguage || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
-        restrictToLanguage = normalizedLang
+        sourceReportId = reportId
+        sourceLanguage = normalizedLang
         const { data: specificReport } = await supabase
           .from('generated_reports')
           .select('report_data')
