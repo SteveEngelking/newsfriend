@@ -18,7 +18,19 @@ const Report = () => {
   const [translating, setTranslating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const { t, language: uiLang } = useLanguage();
+
+  useEffect(() => {
+    if (!translating && !isRegenerating) {
+      setElapsed(0);
+      return;
+    }
+    setElapsed(0);
+    const start = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [translating, isRegenerating]);
 
   useEffect(() => {
     if (!id) return;
@@ -108,9 +120,17 @@ const Report = () => {
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         {(translating || isRegenerating) && (
-          <p className="text-sm text-muted-foreground">
-            {uiLang === 'de' ? 'Übersetze Bericht…' : 'Translating report…'}
-          </p>
+          <div className="text-center space-y-1">
+            <p className="text-sm text-muted-foreground">
+              {uiLang === 'de' ? 'Übersetze Bericht…' : 'Translating report…'}
+            </p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {uiLang === 'de' ? 'Verstrichene Zeit' : 'Elapsed'}: {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
+            </p>
+            <p className="text-xs text-muted-foreground/80">
+              {uiLang === 'de' ? 'Dauert üblicherweise 30–90 Sekunden.' : 'Usually takes 30–90 seconds.'}
+            </p>
+          </div>
         )}
       </div>
     );
