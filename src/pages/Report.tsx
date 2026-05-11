@@ -18,7 +18,19 @@ const Report = () => {
   const [translating, setTranslating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const { t, language: uiLang } = useLanguage();
+
+  useEffect(() => {
+    if (!translating && !isRegenerating) {
+      setElapsed(0);
+      return;
+    }
+    setElapsed(0);
+    const start = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [translating, isRegenerating]);
 
   useEffect(() => {
     if (!id) return;
