@@ -250,14 +250,11 @@ export function ScheduleManager({ sources }: Props) {
   };
 
   const fmtH = (h: number) => String(((h % 24) + 24) % 24).padStart(2, '0') + ':00';
-  const enH = scheduleHourUtc;
   const deH = (scheduleHourUtc + 1) % 24;
-  const enH2 = (scheduleHourUtc + 12) % 24;
-  const deH2 = (scheduleHourUtc + 13) % 24;
   const frequencyLabels: Record<string, string> = {
     immediate: language === 'de' ? '⚡ Sofort (einmalig)' : '⚡ Immediate (one-time)',
-    daily: language === 'de' ? `📅 Täglich (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)` : `📅 Daily (EN ${fmtH(enH)} · DE ${fmtH(deH)} UTC)`,
-    twice_daily: language === 'de' ? `🔄 Zweimal täglich (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)` : `🔄 Twice daily (EN ${fmtH(enH)}/${fmtH(enH2)} · DE ${fmtH(deH)}/${fmtH(deH2)} UTC)`,
+    daily: language === 'de' ? '📅 Täglich' : '📅 Daily',
+    twice_daily: language === 'de' ? '🔄 Zweimal täglich' : '🔄 Twice daily',
   };
 
   return (
