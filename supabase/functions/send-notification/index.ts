@@ -38,16 +38,20 @@ Deno.serve(async (req) => {
     }
 
     // For daily_report:
-    //  - If reportId+language are supplied, use that EXACT report and only send to
-    //    subscribers whose preferred language matches (guarantees email content
-    //    matches the report just generated, even if a newer one is produced later).
+    //  - If reportId+language are supplied, that EXACT report is the source.
+    //    Subscribers whose preferred language matches the report receive its
+    //    content directly. Subscribers in other supported languages receive a
+    //    translated version (fetched/generated via the translate-report
+    //    function, cached in report_translations).
     //  - Otherwise fall back to "latest report today per language" (manual triggers).
     let reportsByLanguage: Record<string, { introduction: string; themeHeadlines: string[]; bannerImageUrl?: string }> = {}
-    let restrictToLanguage: 'en' | 'de' | null = null
+    let sourceReportId: string | null = null
+    let sourceLanguage: 'en' | 'de' | null = null
     if (type === 'daily_report') {
       if (reportId && targetLanguage) {
         const normalizedLang = (targetLanguage || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
-        restrictToLanguage = normalizedLang
+        sourceReportId = reportId
+        sourceLanguage = normalizedLang
         const { data: specificReport } = await supabase
           .from('generated_reports')
           .select('report_data')
@@ -151,12 +155,37 @@ Deno.serve(async (req) => {
       })
     }
 
-    // For daily_report with a specific reportId+language, only email matching subscribers.
-    if (type === 'daily_report' && restrictToLanguage) {
-      validProfiles = validProfiles.filter(p => {
+    // For daily_report with a specific source report, ensure we have content for
+    // every subscriber language. If a subscriber's language differs from the source
+    // report's language, fetch a translation (cached in report_translations) by
+    // invoking the translate-report edge function. If translation fails, fall back
+    // to the source report so the subscriber still gets an email.
+    if (type === 'daily_report' && sourceReportId && sourceLanguage) {
+      const neededLangs = new Set<'en' | 'de'>()
+      for (const p of validProfiles) {
         const lang = ((p as any).preferred_language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en'
-        return lang === restrictToLanguage
-      })
+        neededLangs.add(lang)
+      }
+      for (const lang of neededLangs) {
+        if (reportsByLanguage[lang]) continue
+        try {
+          const { data: trans, error: transErr } = await supabase.functions.invoke('translate-report', {
+            body: { reportId: sourceReportId, language: lang },
+          })
+          if (transErr) throw transErr
+          const rd = (trans as any)?.report_data
+          if (rd) {
+            reportsByLanguage[lang] = {
+              introduction: (rd.introduction || '').slice(0, 500),
+              themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
+              bannerImageUrl: rd.bannerImageUrl || undefined,
+            }
+          }
+        } catch (e) {
+          console.error(`Translation to ${lang} failed, falling back to source:`, e)
+          reportsByLanguage[lang] = reportsByLanguage[sourceLanguage]
+        }
+      }
     }
 
     if (validProfiles.length === 0) {
