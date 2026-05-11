@@ -1,0 +1,1 @@
+DELETE FROM public.report_schedules WHERE id = 'd27709cd-16e3-48d1-957d-6e8b108f527f';
