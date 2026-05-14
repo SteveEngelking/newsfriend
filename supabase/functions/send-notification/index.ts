@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         if (specificReport?.report_data) {
           const rd = specificReport.report_data as any
           reportsByLanguage[normalizedLang] = {
-            introduction: (rd.introduction || '').slice(0, 500),
+            introduction: (rd.introduction || ''),
             themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
             bannerImageUrl: rd.bannerImageUrl || undefined,
           }
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
           if (latestReport?.report_data) {
             const rd = latestReport.report_data as any
             reportsByLanguage[lang] = {
-              introduction: (rd.introduction || '').slice(0, 500),
+              introduction: (rd.introduction || ''),
               themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
               bannerImageUrl: rd.bannerImageUrl || undefined,
             }
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           const rd = (trans as any)?.report_data
           if (rd) {
             reportsByLanguage[lang] = {
-              introduction: (rd.introduction || '').slice(0, 500),
+              introduction: (rd.introduction || ''),
               themeHeadlines: (rd.themes || []).slice(0, 10).map((t: any) => t.headline || '').filter(Boolean),
               bannerImageUrl: rd.bannerImageUrl || undefined,
             }
