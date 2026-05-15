@@ -65,6 +65,7 @@ function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
     sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
     title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
     url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
+    publishedAt: typeof a.publishedAt === 'string' ? a.publishedAt.slice(0, 40) : '',
     content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
   }));
 }
