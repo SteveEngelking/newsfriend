@@ -77,5 +77,7 @@ Disallow: /admin
 Disallow: /account
 Disallow: /unsubscribe
 Disallow: /donation-thank-you
+Disallow: /forgot-password
+Disallow: /reset-password
 
-Sitemap: https://www.newsfriend.org/sitemap.xml
+Sitemap: https://newsfriend.org/sitemap.xml

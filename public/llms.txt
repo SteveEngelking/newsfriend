@@ -1,0 +1,20 @@
+# NewsFriend
+
+> Free, AI-powered daily news analysis presented by the Hugh & Helene Schonfield World Service Trust. Reports synthesize world news across themes with balanced sourcing, ethical perspectives, and Mondcivitan philosophical reflections. Available in English and German.
+
+NewsFriend publishes scheduled daily reports generated from a curated set of global news sources. Each report groups stories into themes, summarizes claims with citations, and adds ethical and philosophical commentary. Reports are produced in English and translated on demand into German.
+
+## Pages
+
+- [Home](/): Latest daily news report and archive of recent reports.
+- [About](/page/about): What NewsFriend is and who runs it.
+- [Comments](/comments): Reader discussion on report themes, with AI-assisted moderation.
+- [Support Us](/support): Donate to fund continued operations (one-time or monthly).
+- [Privacy Policy](/page/privacy-policy): How user data is handled.
+- [Cookie Policy](/page/cookie-policy): Cookie use and consent.
+- [Impressum](/impressum): Legal publisher information.
+
+## Optional
+
+- [Register](/register): Create an account to comment and subscribe.
+- [Login](/login): Sign in to an existing account.
