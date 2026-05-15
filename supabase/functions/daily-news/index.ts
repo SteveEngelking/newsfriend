@@ -65,6 +65,7 @@ function sanitizeArticles(articles: any[], maxTotal = 150): any[] {
     sourceName: typeof a.sourceName === 'string' ? a.sourceName.slice(0, 100) : 'Unknown',
     title: typeof a.title === 'string' ? a.title.slice(0, 300) : '',
     url: typeof a.url === 'string' ? a.url.slice(0, 2000) : '',
+    publishedAt: typeof a.publishedAt === 'string' ? a.publishedAt.slice(0, 40) : '',
     content: typeof a.content === 'string' ? a.content.slice(0, 3000) : '',
   }));
 }
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
     const safeSourceNames = sanitizeSourceNames(allSourceNames);
 
     const articlesSummary = safeArticles.map((a, i) =>
-      `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
+      `<article index="${i + 1}" source="${a.sourceName}" published="${a.publishedAt || 'unknown'}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
     ).join('\n\n');
 
 const mondcivitanInstruction = mondcivitanEnabled ? `
@@ -171,7 +172,7 @@ STYLE GUIDELINES:
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
-- ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
+- ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. Each <article> tag has a "published" attribute — if the published date is more than 48 hours before today's date, OR if the URL path contains an old year (e.g. /2022/, /2023/), you MUST exclude that article entirely. If the published date is "unknown" AND the story references a former head of state or an event clearly tied to a past administration, exclude it. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
 - For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available.
 - Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
 - Be skeptical — note contradictions, sensationalism, and potential spin

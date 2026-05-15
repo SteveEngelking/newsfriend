@@ -225,12 +225,51 @@ Deno.serve(async (req) => {
         if (!resp.ok) return [];
         const data = await resp.json();
         if (!data.success || !Array.isArray(data.data)) return [];
-        return data.data.map((item: any) => ({
-          sourceName: task.source.name,
-          title: item.title || 'Untitled',
-          url: item.url,
-          content: (item.markdown || item.description || '').slice(0, isHighThemes ? 320 : (isImmediateRun ? 320 : 500)),
-        }));
+
+        // Reject URLs whose path clearly contains an old year (e.g. /2022/...)
+        // Google's qdr:d filter occasionally surfaces stale evergreen URLs.
+        const nowYear = new Date().getUTCFullYear();
+        const isOldUrl = (u: string): boolean => {
+          const m = u && u.match(/\/(19|20)(\d{2})\//);
+          if (!m) return false;
+          const y = parseInt(`${m[1]}${m[2]}`, 10);
+          return y < nowYear - 1 || y > nowYear + 1;
+        };
+
+        const extractDate = (item: any): string | null => {
+          const md = item?.metadata || {};
+          const candidates = [
+            md.publishedDate, md.published_date, md.publishedTime, md.published_time,
+            md['article:published_time'], md.datePublished, md.date,
+            item.publishedDate, item.published_date, item.date,
+          ];
+          for (const c of candidates) {
+            if (typeof c === 'string' && c.length >= 4) {
+              const d = new Date(c);
+              if (!isNaN(d.getTime())) return d.toISOString();
+            }
+          }
+          return null;
+        };
+
+        return data.data
+          .filter((item: any) => item.url && !isOldUrl(item.url))
+          .map((item: any) => {
+            const publishedAt = extractDate(item);
+            return {
+              sourceName: task.source.name,
+              title: item.title || 'Untitled',
+              url: item.url,
+              publishedAt, // ISO string or null
+              content: (item.markdown || item.description || '').slice(0, isHighThemes ? 320 : (isImmediateRun ? 320 : 500)),
+            };
+          })
+          .filter((a: any) => {
+            // If we have a publish date, drop anything older than 48h
+            if (!a.publishedAt) return true;
+            const ageMs = Date.now() - new Date(a.publishedAt).getTime();
+            return ageMs <= 48 * 60 * 60 * 1000;
+          });
       }));
 
       for (const fetchResult of fetchResults) {
