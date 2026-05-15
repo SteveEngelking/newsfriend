@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     const safeSourceNames = sanitizeSourceNames(allSourceNames);
 
     const articlesSummary = safeArticles.map((a, i) =>
-      `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
+      `<article index="${i + 1}" source="${a.sourceName}" published="${a.publishedAt || 'unknown'}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
     ).join('\n\n');
 
 const mondcivitanInstruction = mondcivitanEnabled ? `
