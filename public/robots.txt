@@ -80,4 +80,10 @@ Disallow: /donation-thank-you
 Disallow: /forgot-password
 Disallow: /reset-password
 
-Sitemap: https://newsfriend.org/sitemap.xml
+Sitemap: https://www.newsfriend.org/sitemap.xml
+
+# Compliance scanner discovery (Cookiebot, OneTrust, etc.)
+# Static, JS-free cookie declarations:
+#   https://www.newsfriend.org/cookie-declaration.html
+#   https://www.newsfriend.org/cookie-declaration.de.html
+

@@ -42,6 +42,20 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://www.newsfriend.org/cookie-declaration.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/cookie-declaration.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/cookie-declaration.de.html"/>
+  </url>
+  <url>
+    <loc>https://www.newsfriend.org/cookie-declaration.de.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/cookie-declaration.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/cookie-declaration.de.html"/>
+  </url>
+  <url>
     <loc>https://newsfriend.org/impressum</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
