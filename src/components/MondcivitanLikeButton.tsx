@@ -3,6 +3,7 @@ import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { hasConsent } from '@/lib/consent';
 
 interface Props {
   reportId: string;
@@ -12,10 +13,15 @@ interface Props {
 const CLIENT_ID_KEY = 'newsfriend-client-id';
 
 function getClientId(): string {
-  let id = localStorage.getItem(CLIENT_ID_KEY);
+  // Persistent ID only when the user has consented to statistics tracking.
+  // Without consent, fall back to a session-only ID so likes still work in-tab
+  // but no cross-session identifier is stored.
+  const persistAllowed = hasConsent('statistics');
+  const store = persistAllowed ? localStorage : sessionStorage;
+  let id = store.getItem(CLIENT_ID_KEY);
   if (!id) {
     id = (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    localStorage.setItem(CLIENT_ID_KEY, id);
+    try { store.setItem(CLIENT_ID_KEY, id); } catch {}
   }
   return id;
 }
