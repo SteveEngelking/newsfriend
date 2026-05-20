@@ -60,4 +60,23 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://www.newsfriend.org/privacy-policy.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/privacy-policy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/privacy-policy.de.html"/>
+  </url>
+  <url>
+    <loc>https://www.newsfriend.org/privacy-policy.de.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/privacy-policy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/privacy-policy.de.html"/>
+  </url>
+  <url>
+    <loc>https://www.newsfriend.org/impressum.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
 </urlset>
