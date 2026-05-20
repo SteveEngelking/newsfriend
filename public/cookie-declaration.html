@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cookie Declaration — NewsFriend</title>
+<meta name="description" content="Complete, machine-readable declaration of every cookie and browser storage key used by NewsFriend, including purpose, category, provider and retention." />
+<link rel="canonical" href="https://www.newsfriend.org/cookie-declaration.html" />
+<link rel="alternate" hreflang="en" href="https://www.newsfriend.org/cookie-declaration.html" />
+<link rel="alternate" hreflang="de" href="https://www.newsfriend.org/cookie-declaration.de.html" />
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#111;line-height:1.5}
+  h1{font-size:1.6rem}h2{font-size:1.2rem;margin-top:2rem}
+  table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.92rem}
+  th,td{border:1px solid #ddd;padding:.5rem .6rem;text-align:left;vertical-align:top}
+  th{background:#f5f5f5}
+  code{background:#f3f3f3;padding:1px 4px;border-radius:3px;font-size:.88em}
+  .cat{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.8em;font-weight:600}
+  .nec{background:#e6f4ea;color:#1e6f37}
+  .pref{background:#fff4e0;color:#8a5a00}
+  .stat{background:#e0ecff;color:#1e3a8a}
+  .mkt{background:#fde8e8;color:#9b1c1c}
+  p.note{font-size:.9rem;color:#555}
+</style>
+</head>
+<body>
+<h1>Cookie &amp; Local Storage Declaration</h1>
+<p><strong>Domain:</strong> newsfriend.org · <strong>Last updated:</strong> May 2026</p>
+<p>This page lists every cookie and browser storage item set by <strong>NewsFriend</strong> (operated by Mondcivitan). It is published as a static HTML page so that automated consent-compliance scanners (Cookiebot, OneTrust, etc.) can index it without executing JavaScript.</p>
+
+<h2>1. Strictly necessary <span class="cat nec">Always active</span></h2>
+<p>Required for the site to function. Cannot be disabled.</p>
+<table>
+<thead><tr><th>Name</th><th>Storage</th><th>Provider</th><th>Purpose</th><th>Expiry</th></tr></thead>
+<tbody>
+<tr><td><code>cookie-consent-v2</code></td><td>localStorage</td><td>newsfriend.org (first-party)</td><td>Stores your granular consent choices and schema version.</td><td>Persistent until cleared</td></tr>
+<tr><td><code>sb-&lt;project-ref&gt;-auth-token</code></td><td>localStorage</td><td>newsfriend.org (first-party, Supabase Auth)</td><td>Keeps you signed in to your NewsFriend account.</td><td>Until sign-out or token expiry</td></tr>
+<tr><td><code>theme</code></td><td>localStorage</td><td>newsfriend.org (first-party)</td><td>Remembers light/dark theme preference.</td><td>Persistent until cleared</td></tr>
+<tr><td><code>newsfriend-language</code></td><td>localStorage</td><td>newsfriend.org (first-party)</td><td>Remembers your selected UI language (EN/DE).</td><td>Persistent until cleared</td></tr>
+</tbody>
+</table>
+
+<h2>2. Preferences <span class="cat pref">Consent required</span></h2>
+<p>Optional UI preferences. Currently reserved for future use; no items are set today.</p>
+<table>
+<thead><tr><th>Name</th><th>Storage</th><th>Provider</th><th>Purpose</th><th>Expiry</th></tr></thead>
+<tbody><tr><td colspan="5"><em>None at this time.</em></td></tr></tbody>
+</table>
+
+<h2>3. Statistics <span class="cat stat">Consent required</span></h2>
+<p>Anonymous identifier used to attribute "likes" on Mondcivitan reflections and prevent duplicate counts. Contains no personal data.</p>
+<table>
+<thead><tr><th>Name</th><th>Storage</th><th>Provider</th><th>Purpose</th><th>Expiry</th></tr></thead>
+<tbody>
+<tr><td><code>newsfriend-client-id</code></td><td>localStorage (with consent) — sessionStorage (without consent)</td><td>newsfriend.org (first-party)</td><td>Random UUID v4 used to deduplicate reflection likes.</td><td>Persistent (with consent) / Tab session only (without consent)</td></tr>
+</tbody>
+</table>
+
+<h2>4. Marketing <span class="cat mkt">Not used</span></h2>
+<p>NewsFriend does <strong>not</strong> run advertising, retargeting, social-pixel, or third-party marketing trackers. No cookies in this category are ever set.</p>
+
+<h2>5. Third-party services</h2>
+<table>
+<thead><tr><th>Service</th><th>When loaded</th><th>Purpose</th><th>Policy</th></tr></thead>
+<tbody>
+<tr><td>Stripe (checkout.stripe.com)</td><td>Only on the Stripe-hosted donation checkout page, after the user clicks "Donate".</td><td>Payment processing. Any cookies are set on Stripe domains, not on newsfriend.org, and are strictly necessary for fraud prevention.</td><td><a href="https://stripe.com/cookie-settings">stripe.com/cookie-settings</a></td></tr>
+<tr><td>Google Sign-In (accounts.google.com)</td><td>Only when the user clicks "Sign in with Google".</td><td>OAuth authentication. Cookies are set by Google on Google domains.</td><td><a href="https://policies.google.com/technologies/cookies">policies.google.com</a></td></tr>
+</tbody>
+</table>
+
+<h2>6. Managing your choice</h2>
+<p>You can reopen the consent banner at any time by clicking "Cookie settings" in the site footer, or by visiting <a href="https://www.newsfriend.org/page/cookie-policy">the full Cookie Policy</a>.</p>
+
+<p class="note">German version: <a href="/cookie-declaration.de.html">Cookie-Erklärung (Deutsch)</a> · Full policy: <a href="/page/cookie-policy">/page/cookie-policy</a> · Privacy: <a href="/page/privacy-policy">/page/privacy-policy</a></p>
+</body>
+</html>

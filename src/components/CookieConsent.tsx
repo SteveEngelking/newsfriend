@@ -80,7 +80,15 @@ export function CookieConsent() {
                   {t('cookieAnd')}{' '}
                   <Link to="/page/privacy-policy" className="text-primary underline underline-offset-2 hover:text-primary/80">
                     {t('cookiePrivacyLink')}
-                  </Link>.
+                  </Link>.{' '}
+                  <a
+                    href="/cookie-declaration.html"
+                    className="text-muted-foreground underline underline-offset-2 hover:text-foreground text-xs"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Full cookie list
+                  </a>
                 </p>
 
                 {showDetails && (
