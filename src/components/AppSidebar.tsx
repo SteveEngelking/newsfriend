@@ -181,6 +181,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      {!collapsed && (
+        <SidebarFooter className="mt-auto">
+          <div className="flex flex-col items-center gap-2 px-2">
+            <span className="text-xs text-muted-foreground text-center">{t('shareQrCode')}</span>
+            <div className="bg-white p-1.5 rounded-md">
+              <QRCodeSVG value={shareUrl} size={120} level="M" />
+            </div>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
