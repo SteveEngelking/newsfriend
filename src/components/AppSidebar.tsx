@@ -47,6 +47,22 @@ export function AppSidebar() {
   const [navOrder, setNavOrder] = useState<NavOrderItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState(() => (typeof window !== 'undefined' ? window.location.href : ''));
+
+  useEffect(() => {
+    const handle = () => setShareUrl(window.location.href);
+    window.addEventListener('popstate', handle);
+    const interval = setInterval(() => {
+      setShareUrl(prev => {
+        const curr = window.location.href;
+        return prev !== curr ? curr : prev;
+      });
+    }, 1000);
+    return () => {
+      window.removeEventListener('popstate', handle);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     Promise.all([
