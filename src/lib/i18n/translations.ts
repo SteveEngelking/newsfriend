@@ -79,6 +79,7 @@ export const translations = {
     shareWithFriends: 'Share with friends',
     shareLinkCopied: 'Link copied to clipboard!',
     shareReport: 'Share this report',
+    shareQrCode: 'Scan to share',
 
     // ScheduleManager
     scheduleTitle: 'Scheduled Reports',
@@ -688,6 +689,7 @@ export const translations = {
     shareWithFriends: 'Mit Freunden teilen',
     shareLinkCopied: 'Link in die Zwischenablage kopiert!',
     shareReport: 'Diesen Bericht teilen',
+    shareQrCode: 'Scannen zum Teilen',
 
     scheduleTitle: 'Geplante Berichte',
     schedulePastReports: 'Vergangene Berichte',

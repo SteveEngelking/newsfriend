@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Home, Settings, Building2, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,7 @@ import { RenderIcon } from '@/components/IconPicker';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -45,6 +47,22 @@ export function AppSidebar() {
   const [navOrder, setNavOrder] = useState<NavOrderItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState(() => (typeof window !== 'undefined' ? window.location.href : ''));
+
+  useEffect(() => {
+    const handle = () => setShareUrl(window.location.href);
+    window.addEventListener('popstate', handle);
+    const interval = setInterval(() => {
+      setShareUrl(prev => {
+        const curr = window.location.href;
+        return prev !== curr ? curr : prev;
+      });
+    }, 1000);
+    return () => {
+      window.removeEventListener('popstate', handle);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -163,6 +181,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      {!collapsed && (
+        <SidebarFooter className="mt-auto">
+          <div className="flex flex-col items-center gap-2 px-2">
+            <span className="text-xs text-muted-foreground text-center">{t('shareQrCode')}</span>
+            <div className="bg-white p-1.5 rounded-md">
+              <QRCodeSVG value={shareUrl} size={120} level="M" />
+            </div>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
