@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Home, Settings, Building2, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,7 @@ import { RenderIcon } from '@/components/IconPicker';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
