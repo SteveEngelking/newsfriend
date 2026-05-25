@@ -81,6 +81,9 @@ Disallow: /forgot-password
 Disallow: /reset-password
 
 Sitemap: https://www.newsfriend.org/sitemap.xml
+Sitemap: https://www.newsfriend.org/sitemap-static.xml
+Sitemap: https://kitduddwitnsaqfwdpxd.supabase.co/functions/v1/articles-sitemap
+Sitemap: https://kitduddwitnsaqfwdpxd.supabase.co/functions/v1/news-sitemap
 
 # Compliance scanner discovery (Cookiebot, OneTrust, GDPR audits, etc.)
 # Static, JS-free legal pages:
