@@ -53,9 +53,10 @@ function buildPrompts(params: {
   topic: string;
   language: 'en' | 'de';
   mondcivitanEnabled: boolean;
+  mondcivitanPromptOverride?: string;
   articles: Article[];
 }) {
-  const { topic, language, mondcivitanEnabled, articles } = params;
+  const { topic, language, mondcivitanEnabled, mondcivitanPromptOverride, articles } = params;
   const sourceNames = Array.from(new Set(articles.map((a) => a.sourceName)));
   const cappedArticles = articles.slice(0, 24);
   const outputLang = language === 'de' ? 'German' : 'English';
@@ -64,8 +65,7 @@ function buildPrompts(params: {
     `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
   ).join('\n\n');
 
-  const mondcivitanInstruction = mondcivitanEnabled
-    ? `\n\nMONDCIVITAN REFLECTION: Write a substantial mondcivitanReflection paragraph (5-7 sentences) reflecting on this topic from the standpoint of the Mondcivitan Republic — Servant of Mankind.
+  const mondcivitanDefault = `MONDCIVITAN REFLECTION: Write a substantial mondcivitanReflection paragraph (5-7 sentences) reflecting on this topic from the standpoint of the Mondcivitan Republic — Servant of Mankind.
 
 The Mondcivitan Republic EXISTS NOW. It was constituted in 1953 without territory by Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. In the 1970s, it was established as a virtual nation. Citizenship is a personal choice: you decide to join and strive to live according to our principles. We maintain no central register of citizens; instead, we are all Servants of Mankind, serving wherever we have the opportunity and the means. We may be dreamers, but we believe that a great dream is necessary for reality to change. Each of us strives to be an ambassador, mediating conflicts and spreading love and kindness wherever possible. "Join us, and one day the world will be as one!"
 
@@ -73,7 +73,10 @@ It is a living international servant nation in the minds and daily lives of its 
 
 The seven principles its citizens LIVE BY NOW are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
 
-Write in DIRECT PRESENT TENSE as a citizen actively living these principles TODAY. The Republic IS real. The citizens ARE responding to events NOW. NEVER use conditional words like "would", "could", "should", "might", "if", "were", "imagine if", or hypothetical framing like "if nations followed" or "were leaders to adopt". Speak from the LIVED REALITY of Mondcivitan citizens — how they ACTUALLY understand, respond to, and act on this topic right now, and what their principles REVEAL about it.`
+Write in DIRECT PRESENT TENSE as a citizen actively living these principles TODAY. The Republic IS real. The citizens ARE responding to events NOW. NEVER use conditional words like "would", "could", "should", "might", "if", "were", "imagine if", or hypothetical framing like "if nations followed" or "were leaders to adopt". Speak from the LIVED REALITY of Mondcivitan citizens — how they ACTUALLY understand, respond to, and act on this topic right now, and what their principles REVEAL about it.`;
+
+  const mondcivitanInstruction = mondcivitanEnabled
+    ? `\n\n${(mondcivitanPromptOverride || '').trim() || mondcivitanDefault}`
     : '';
 
   const systemPrompt = `You are a senior investigative journalist writing a SPECIAL EDITION deep-dive on a single focused topic. You write in ${outputLang}. ALL output MUST be in ${outputLang}, including every quote, stance summary, bias indicator, and source description. If a source's article is in another language, TRANSLATE its quotes and any cited phrasing into ${outputLang} — never leave foreign-language fragments in the output. Source/outlet names themselves stay as proper nouns.
