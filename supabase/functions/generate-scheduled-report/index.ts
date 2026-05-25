@@ -347,13 +347,14 @@ Deno.serve(async (req) => {
       const ethicalPerspectives = schweitzerEnabled ? allEthicalPerspectives : [];
       const prioritizedEthicalPerspectives = ethicalPerspectives;
 
-      const mondcivitanInstruction = mondcivitanEnabled ? `
+      const mondcivitanDefault = `MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news from the standpoint of the Mondcivitan Republic — Servant of Mankind. Constituted in 1953 by Hugh J. Schonfield and others (embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer; ideals echoed in John Lennon's "Imagine"), it is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens.
 
-MONDCIVITAN REFLECTION: For EACH theme, write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news from the standpoint of the Mondcivitan Republic — Servant of Mankind. Constituted in 1953 by Hugh J. Schonfield and others (embodying the International Arbitration League of Nobel laureate Sir William Randal Cremer; ideals echoed in John Lennon's "Imagine"), it is an international servant nation that exists today in the minds and lives of those who consider themselves its citizens.
+In the 1970s, it was established as a virtual nation. Citizenship is a personal choice: you decide to join and strive to live according to our principles. We maintain no central register of citizens; instead, we are all Servants of Mankind, serving wherever we have the opportunity and the means.
 
-In the 1970s, it was established as a virtual nation. Citizenship is a personal choice: you decide to join and strive to live according to our principles. We maintain no central register of citizens; instead, we are all Servants of Mankind, serving wherever we have the opportunity and the means. We may be dreamers, but we believe that a great dream is necessary for reality to change. Each of us strives to be an ambassador, mediating conflicts and spreading love and kindness wherever possible. "Join us, and one day the world will be as one!"
-
-Its citizens live by seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Write in DIRECT PRESENT TENSE (indicative mood) from the lived perspective of these citizens — how they ACTUALLY understand and respond to each story right now. NEVER use the conditional tense or hypothetical framing. FORBIDDEN words and phrases include: "would", "could", "should", "might", "may", "if", "were", "imagine if", "if nations followed", "were leaders to adopt", "ought to". Write "Mondcivitan principles prioritise civilian protection" — NOT "Mondcivitan principles would prioritise". State what citizens DO, BELIEVE, INSIST, and ACT ON — not what they would do in a hypothetical world.` : '';
+Its citizens live by seven principles: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice. Write in DIRECT PRESENT TENSE (indicative mood) from the lived perspective of these citizens — how they ACTUALLY understand and respond to each story right now. NEVER use the conditional tense or hypothetical framing. FORBIDDEN words and phrases include: "would", "could", "should", "might", "may", "if", "were", "imagine if", "if nations followed", "were leaders to adopt", "ought to". State what citizens DO, BELIEVE, INSIST, and ACT ON.`;
+      const mondcivitanInstruction = mondcivitanEnabled
+        ? `\n\n${mondcivitanPromptOverride || mondcivitanDefault}`
+        : '';
 
       const generatedLanguages: string[] = [];
 
