@@ -285,10 +285,21 @@ async function runGeneration(params: {
       return;
     }
 
+    let mondcivitanPromptOverride = '';
+    if (mondcivitanEnabled) {
+      const { data: mc } = await supabase
+        .from('mondcivitan_settings')
+        .select('prompt_instruction')
+        .eq('id', 1)
+        .maybeSingle();
+      mondcivitanPromptOverride = (mc?.prompt_instruction || '').trim();
+    }
+
     const { systemPrompt, userPrompt, toolParams, sourceNames } = buildPrompts({
       topic,
       language,
       mondcivitanEnabled,
+      mondcivitanPromptOverride,
       articles,
     });
 
