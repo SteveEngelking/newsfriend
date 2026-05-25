@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Save, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function MondcivitanSettingsManager() {
   const [loading, setLoading] = useState(true);
@@ -16,7 +15,6 @@ export function MondcivitanSettingsManager() {
   const [description, setDescription] = useState('');
   const [promptInstruction, setPromptInstruction] = useState('');
   const { toast } = useToast();
-  const { t } = useLanguage();
 
   useEffect(() => {
     (async () => {
@@ -46,9 +44,9 @@ export function MondcivitanSettingsManager() {
         })
         .eq('id', 1);
       if (error) throw error;
-      toast({ title: t('mondcivitanSettingsSaved') || 'Mondcivitan settings saved' });
+      toast({ title: 'Mondcivitan settings saved' });
     } catch (err: any) {
-      toast({ title: t('adminError'), description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -59,11 +57,10 @@ export function MondcivitanSettingsManager() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-amber-600" />
-          {t('mondcivitanSettingsTitle') || 'Mondcivitan Reflection'}
+          Mondcivitan Reflection
         </CardTitle>
         <CardDescription>
-          {t('mondcivitanSettingsDesc') ||
-            'Configure the displayed label and the AI prompt instruction used when generating Mondcivitan reflections. The interpretation is based on this content.'}
+          Configure the displayed label and the AI prompt instruction used when generating Mondcivitan reflections. Interpretation of the news is based on the content below.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -74,30 +71,29 @@ export function MondcivitanSettingsManager() {
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label htmlFor="mc-title" className="text-xs">{t('mondcivitanFieldTitle') || 'Title'}</Label>
+              <Label htmlFor="mc-title" className="text-xs">Title</Label>
               <Input id="mc-title" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mc-desc" className="text-xs">{t('mondcivitanFieldDescription') || 'Short description'}</Label>
+              <Label htmlFor="mc-desc" className="text-xs">Short description</Label>
               <Input id="mc-desc" value={description} onChange={e => setDescription(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="mc-prompt" className="text-xs">{t('mondcivitanFieldPrompt') || 'AI prompt instruction'}</Label>
+              <Label htmlFor="mc-prompt" className="text-xs">AI prompt instruction</Label>
               <Textarea
                 id="mc-prompt"
                 value={promptInstruction}
                 onChange={e => setPromptInstruction(e.target.value)}
-                className="min-h-[240px] font-mono text-xs leading-relaxed"
+                className="min-h-[260px] font-mono text-xs leading-relaxed"
               />
               <p className="text-xs text-muted-foreground">
-                {t('mondcivitanPromptHint') ||
-                  'This text is injected into the report-generation prompt whenever Mondcivitan reflections are enabled on a schedule or special edition. Reflections are based directly on this content.'}
+                This text is injected into the report-generation prompt whenever Mondcivitan reflections are enabled (daily schedules and special editions). Reflections are based directly on this content.
               </p>
             </div>
             <div className="flex justify-end">
               <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {t('saveChanges') || 'Save'}
+                Save
               </Button>
             </div>
           </>
