@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Settings, Building2, Heart, UserPlus, LogIn, User, MessageSquare } from 'lucide-react';
+import { Home, Settings, Building2, Heart, UserPlus, LogIn, User, MessageSquare, Archive } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -33,6 +33,7 @@ interface NavOrderItem {
 
 const STATIC_CONFIG: Record<string, { titleKey: TranslationKey; url: string; icon: typeof Home; end?: boolean }> = {
   home: { titleKey: 'navLatestNews', url: '/', icon: Home, end: true },
+  archive: { titleKey: 'navArchive', url: '/archive', icon: Archive },
   support: { titleKey: 'navSupportUs', url: '/support', icon: Heart },
   comments: { titleKey: 'navComments', url: '/comments', icon: MessageSquare },
   admin: { titleKey: 'navAdmin', url: '/admin', icon: Settings },
@@ -166,6 +167,7 @@ export function AppSidebar() {
                 : (
                   <>
                     {renderItem('/', t('navLatestNews'), Home, true)}
+                    {renderItem('/archive', t('navArchive'), Archive)}
                     {renderItem('/support', t('navSupportUs'), Heart)}
                     {renderItem('/comments', t('navComments'), MessageSquare)}
                     {isLoggedIn

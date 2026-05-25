@@ -7,6 +7,12 @@ export const translations = {
     
     // Sidebar
     navLatestNews: 'Latest News',
+    navArchive: 'Archive',
+    archiveTitle: 'Article Archive',
+    archiveDescription: 'Browse every published NewsFriend report and special edition.',
+    archiveDaily: 'Daily Reports',
+    archiveSpecial: 'Special Editions',
+    archiveEmpty: 'No reports yet.',
     navAdmin: 'Admin',
     navPrivacyPolicy: 'Privacy Policy',
     navCookiePolicy: 'Cookie Policy',
@@ -623,6 +629,12 @@ export const translations = {
     appName: 'NewsFriend',
 
     navLatestNews: 'Aktuelle Nachrichten',
+    navArchive: 'Archiv',
+    archiveTitle: 'Berichtsarchiv',
+    archiveDescription: 'Stöbern Sie durch alle veröffentlichten NewsFriend-Berichte und Sonderausgaben.',
+    archiveDaily: 'Tägliche Berichte',
+    archiveSpecial: 'Sonderausgaben',
+    archiveEmpty: 'Noch keine Berichte.',
     navAdmin: 'Verwaltung',
     navPrivacyPolicy: 'Datenschutz',
     navCookiePolicy: 'Cookie-Richtlinie',

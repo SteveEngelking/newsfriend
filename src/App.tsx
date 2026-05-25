@@ -19,6 +19,7 @@ import Account from "./pages/Account";
 import Unsubscribe from "./pages/Unsubscribe";
 import Comments from "./pages/Comments";
 import Report from "./pages/Report";
+import Archive from "./pages/Archive";
 import NotFound from "./pages/NotFound";
 import { CookieConsent } from "@/components/CookieConsent";
 
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/comments" element={<Comments />} />
               <Route path="/report/:id" element={<Report />} />
+              <Route path="/archive" element={<Archive />} />
               <Route path="/page/:slug" element={<CmsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
