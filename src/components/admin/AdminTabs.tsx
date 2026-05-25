@@ -5,6 +5,7 @@ import { ScheduleManager } from '@/components/ScheduleManager';
 import { ImpressumEditor } from '@/components/ImpressumEditor';
 import { AdminUsersManager } from '@/components/admin/AdminUsersManager';
 import { EthicalPerspectivesManager } from '@/components/admin/EthicalPerspectivesManager';
+import { MondcivitanSettingsManager } from '@/components/admin/MondcivitanSettingsManager';
 import { CmsPageManager } from '@/components/admin/CmsPageManager';
 import { AnnouncementsManager } from '@/components/admin/AnnouncementsManager';
 import { RegisteredUsersManager } from '@/components/admin/RegisteredUsersManager';
