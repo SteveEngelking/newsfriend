@@ -106,8 +106,9 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <SpecialEditionsManager />
       </TabsContent>
 
-      <TabsContent value="ethics">
+      <TabsContent value="ethics" className="space-y-4">
         <EthicalPerspectivesManager />
+        <MondcivitanSettingsManager />
       </TabsContent>
 
       <TabsContent value="announcements">
