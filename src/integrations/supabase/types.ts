@@ -376,6 +376,30 @@ export type Database = {
         }
         Relationships: []
       }
+      mondcivitan_settings: {
+        Row: {
+          description: string
+          id: number
+          prompt_instruction: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          id?: number
+          prompt_instruction?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          id?: number
+          prompt_instruction?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nav_menu_order: {
         Row: {
           created_at: string
