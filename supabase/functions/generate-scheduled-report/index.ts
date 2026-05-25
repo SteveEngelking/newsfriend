@@ -136,6 +136,14 @@ Deno.serve(async (req) => {
       .order('sort_order', { ascending: true });
     const allEthicalPerspectives = ethicalPerspectivesData || [];
 
+    // Fetch admin-editable Mondcivitan prompt instruction
+    const { data: mondcivitanRow } = await supabase
+      .from('mondcivitan_settings')
+      .select('prompt_instruction')
+      .eq('id', 1)
+      .maybeSingle();
+    const mondcivitanPromptOverride = (mondcivitanRow?.prompt_instruction || '').trim();
+
     const results: string[] = [];
 
     const runScheduleWork = async () => {
