@@ -114,18 +114,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch enabled ethical perspectives from DB
+    // Fetch enabled ethical perspectives + mondcivitan settings from DB
     let ethicalPerspectives: any[] = [];
-    if (schweitzerEnabled) {
+    let mondcivitanPromptOverride = '';
+    {
       const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      const { data } = await supabase
-        .from('ethical_perspectives')
-        .select('id, name, prompt_instruction')
-        .eq('enabled', true)
-        .order('sort_order', { ascending: true });
-      ethicalPerspectives = data || [];
+      if (schweitzerEnabled) {
+        const { data } = await supabase
+          .from('ethical_perspectives')
+          .select('id, name, prompt_instruction')
+          .eq('enabled', true)
+          .order('sort_order', { ascending: true });
+        ethicalPerspectives = data || [];
+      }
+      if (mondcivitanEnabled) {
+        const { data: mc } = await supabase
+          .from('mondcivitan_settings')
+          .select('prompt_instruction')
+          .eq('id', 1)
+          .maybeSingle();
+        mondcivitanPromptOverride = (mc?.prompt_instruction || '').trim();
+      }
     }
 
     const safeArticles = sanitizeArticles(articles);
@@ -135,13 +146,14 @@ Deno.serve(async (req) => {
       `<article index="${i + 1}" source="${a.sourceName}" published="${a.publishedAt || 'unknown'}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
     ).join('\n\n');
 
-const mondcivitanInstruction = mondcivitanEnabled ? `
-
-MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic is an international servant nation that EXISTS NOW in the minds and lives of its citizens. It was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. Its ideals also resonate in John Lennon's song "Imagine".
+    const mondcivitanDefault = `MONDCIVITAN REFLECTION: For EACH theme, you MUST also write a "mondcivitanReflection" — a thoughtful paragraph reflecting on the news story from the standpoint of the Mondcivitan Republic — Servant of Mankind. The Mondcivitan Republic is an international servant nation that EXISTS NOW in the minds and lives of its citizens. It was constituted in 1953 without territory on the initiative of Hugh J. Schonfield and others, embodying the International Arbitration League founded by Nobel Peace Prize winner Sir William Randal Cremer. Its ideals also resonate in John Lennon's song "Imagine".
 
 The seven principles its citizens LIVE BY NOW are: No-one is an Enemy, No-one is a Foreigner, Service to All, Complete Impartiality, Work for Peace, True Democracy, Equity and Justice.
 
-Write in DIRECT PRESENT TENSE as a citizen actively living these principles TODAY. The Republic IS real. The citizens ARE responding to events NOW. NEVER use conditional words like "would", "could", "should", "might", "if", "were", "imagine if", or hypothetical framing like "if nations followed" or "were leaders to adopt". Speak from the LIVED REALITY of Mondcivitan citizens — how they ACTUALLY understand, respond to, and act on each story right now, and what their principles REVEAL about it. Be specific about which principles apply to each story.` : '';
+Write in DIRECT PRESENT TENSE as a citizen actively living these principles TODAY. The Republic IS real. The citizens ARE responding to events NOW. NEVER use conditional words like "would", "could", "should", "might", "if", "were", "imagine if", or hypothetical framing like "if nations followed" or "were leaders to adopt". Speak from the LIVED REALITY of Mondcivitan citizens — how they ACTUALLY understand, respond to, and act on each story right now, and what their principles REVEAL about it. Be specific about which principles apply to each story.`;
+    const mondcivitanInstruction = mondcivitanEnabled
+      ? `\n\n${mondcivitanPromptOverride || mondcivitanDefault}`
+      : '';
 
     // Build ethical instruction dynamically from DB
     let ethicalInstruction = '';
