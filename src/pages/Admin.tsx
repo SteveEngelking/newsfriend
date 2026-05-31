@@ -80,9 +80,32 @@ const Admin = () => {
     if (adminState === 'admin') fetchSources().then(setSources);
   }, [adminState]);
 
-  const handleSourcesChange = useCallback((newSources: NewsSource[]) => {
+  const handleSourcesChange = useCallback(async (newSources: NewsSource[]) => {
     setSources(newSources);
     saveEnabledState(newSources);
+    // Propagate enabled source selection to ALL schedules so scheduled report
+    // generation honors the admin's current selection (source_ids is the
+    // authoritative list used by the edge function).
+    try {
+      const enabledIds = newSources.filter(s => s.enabled).map(s => s.id);
+      if (enabledIds.length > 0) {
+        const { data: schedules } = await supabase
+          .from('report_schedules')
+          .select('id, source_ids');
+        if (schedules) {
+          await Promise.all(schedules.map(sch => {
+            const current = (sch.source_ids as string[]) || [];
+            const same = current.length === enabledIds.length && enabledIds.every(id => current.includes(id));
+            if (same) return Promise.resolve();
+            return supabase.from('report_schedules')
+              .update({ source_ids: enabledIds })
+              .eq('id', sch.id);
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to sync enabled sources to schedules:', err);
+    }
   }, []);
 
   const handleClaimAdmin = async () => {
