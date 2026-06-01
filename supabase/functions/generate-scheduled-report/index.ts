@@ -562,6 +562,21 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
           return true;
         }).slice(0, themeCount);
 
+        // Article exclusivity: ensure no article URL is cited in more than one theme.
+        // Keep the first occurrence; strip duplicates from later themes.
+        const seenArticleUrls = new Set<string>();
+        allThemes = allThemes.map((theme: any) => {
+          const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
+          const filtered = sa.filter((s: any) => {
+            const url = String(s?.articleUrl || '').trim();
+            if (!url) return true;
+            if (seenArticleUrls.has(url)) return false;
+            seenArticleUrls.add(url);
+            return true;
+          });
+          return { ...theme, sourceAnalysis: filtered };
+        }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
         if (allThemes.length < minAcceptable) {
