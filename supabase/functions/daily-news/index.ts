@@ -392,10 +392,20 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       generatedAt: new Date().toISOString(),
       language: normalizedLanguage,
       introduction: parsed.introduction,
-      themes: parsed.themes.map((t: any, i: number) => ({
-        id: `theme-${i}`,
-        ...t,
-      })),
+      themes: (() => {
+        const seenUrls = new Set<string>();
+        return parsed.themes.map((t: any, i: number) => {
+          const sa = Array.isArray(t?.sourceAnalysis) ? t.sourceAnalysis : [];
+          const filtered = sa.filter((s: any) => {
+            const url = String(s?.articleUrl || '').trim();
+            if (!url) return true;
+            if (seenUrls.has(url)) return false;
+            seenUrls.add(url);
+            return true;
+          });
+          return { id: `theme-${i}`, ...t, sourceAnalysis: filtered };
+        }).filter((t: any) => Array.isArray(t.sourceAnalysis) && t.sourceAnalysis.length > 0);
+      })(),
       conclusion: parsed.conclusion,
       ...(ethicalConsiderations.length > 0 ? { ethicalConsiderations } : {}),
       ...legacyEthicalFields,
