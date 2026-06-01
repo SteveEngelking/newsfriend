@@ -184,6 +184,7 @@ STYLE GUIDELINES:
 
 CRITICAL RULES:
 - Identify exactly ${themeCount} major themes from the articles provided — ensure DIVERSITY of topics
+- ARTICLE EXCLUSIVITY — ABSOLUTE: Each article (identified by its URL) may be cited in AT MOST ONE theme. Never reuse the same article URL across multiple themes. If an article could plausibly fit several themes, assign it to the single most relevant one. Before finalising, verify that every articleUrl appears in only one theme's sourceAnalysis. If a theme would otherwise have too few sources, prefer fewer sources over reusing an article already used elsewhere.
 - ONLY include stories about CURRENT events happening TODAY or in the last 24 hours. EXCLUDE any articles about past administrations, historical events, or outdated news that is no longer current. Each <article> tag has a "published" attribute — if the published date is more than 48 hours before today's date, OR if the URL path contains an old year (e.g. /2022/, /2023/), you MUST exclude that article entirely. If the published date is "unknown" AND the story references a former head of state or an event clearly tied to a past administration, exclude it. If an article references a past political figure (e.g. a former president) only include it if the story is about a NEW, CURRENT development involving them — not retrospective coverage.
 - For EVERY theme, you MUST include source analysis entries from AS MANY different sources as possible — ideally ALL sources that covered the topic. Aim for at least 3-5 source citations per theme, more when available.
 - Scan ALL provided articles thoroughly for each theme — if multiple sources covered a story, include ALL of them
@@ -391,10 +392,20 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       generatedAt: new Date().toISOString(),
       language: normalizedLanguage,
       introduction: parsed.introduction,
-      themes: parsed.themes.map((t: any, i: number) => ({
-        id: `theme-${i}`,
-        ...t,
-      })),
+      themes: (() => {
+        const seenUrls = new Set<string>();
+        return parsed.themes.map((t: any, i: number) => {
+          const sa = Array.isArray(t?.sourceAnalysis) ? t.sourceAnalysis : [];
+          const filtered = sa.filter((s: any) => {
+            const url = String(s?.articleUrl || '').trim();
+            if (!url) return true;
+            if (seenUrls.has(url)) return false;
+            seenUrls.add(url);
+            return true;
+          });
+          return { id: `theme-${i}`, ...t, sourceAnalysis: filtered };
+        }).filter((t: any) => Array.isArray(t.sourceAnalysis) && t.sourceAnalysis.length > 0);
+      })(),
       conclusion: parsed.conclusion,
       ...(ethicalConsiderations.length > 0 ? { ethicalConsiderations } : {}),
       ...legacyEthicalFields,
