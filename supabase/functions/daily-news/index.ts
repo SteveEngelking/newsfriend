@@ -388,25 +388,30 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
       }
     }
 
+    const dedupedThemes = (() => {
+      const seenUrls = new Set<string>();
+      return parsed.themes.map((t: any, i: number) => {
+        const sa = Array.isArray(t?.sourceAnalysis) ? t.sourceAnalysis : [];
+        const filtered = sa.filter((s: any) => {
+          const url = String(s?.articleUrl || '').trim();
+          if (!url) return true;
+          if (seenUrls.has(url)) return false;
+          seenUrls.add(url);
+          return true;
+        });
+        return { id: `theme-${i}`, ...t, sourceAnalysis: filtered };
+      }).filter((t: any) => Array.isArray(t.sourceAnalysis) && t.sourceAnalysis.length > 0);
+    })();
+
+    // Scrub any source-language leakage (e.g. German quotes in an English report)
+    const scrubbedThemes = await enforceReportLanguage(dedupedThemes, normalizedLanguage);
+
     const report = {
       title: `${titlePrefix} — ${new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
       generatedAt: new Date().toISOString(),
       language: normalizedLanguage,
       introduction: parsed.introduction,
-      themes: (() => {
-        const seenUrls = new Set<string>();
-        return parsed.themes.map((t: any, i: number) => {
-          const sa = Array.isArray(t?.sourceAnalysis) ? t.sourceAnalysis : [];
-          const filtered = sa.filter((s: any) => {
-            const url = String(s?.articleUrl || '').trim();
-            if (!url) return true;
-            if (seenUrls.has(url)) return false;
-            seenUrls.add(url);
-            return true;
-          });
-          return { id: `theme-${i}`, ...t, sourceAnalysis: filtered };
-        }).filter((t: any) => Array.isArray(t.sourceAnalysis) && t.sourceAnalysis.length > 0);
-      })(),
+      themes: scrubbedThemes,
       conclusion: parsed.conclusion,
       ...(ethicalConsiderations.length > 0 ? { ethicalConsiderations } : {}),
       ...legacyEthicalFields,
