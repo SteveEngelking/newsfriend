@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { requireAdminOrService } from '../_shared/auth.ts'
 
 const SITE_NAME = "NewsFriend"
 const SENDER_DOMAIN = "notify.schonfield.org"
@@ -24,6 +25,12 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const auth = await requireAdminOrService(req)
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
