@@ -590,6 +590,9 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
 
+        // Scrub any source-language leakage (e.g. German quotes in an English report)
+        allThemes = await enforceReportLanguage(allThemes, lang.code);
+
         const report: any = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
           generatedAt: now.toISOString(),
