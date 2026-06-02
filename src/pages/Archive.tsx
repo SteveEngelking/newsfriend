@@ -51,7 +51,7 @@ const Archive = () => {
     itemListElement: reports.slice(0, 100).map((r, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: `https://www.newsfriend.org/report/${r.id}`,
+      url: `https://newsfriend.org/report/${r.id}`,
       name: r.title,
     })),
   };

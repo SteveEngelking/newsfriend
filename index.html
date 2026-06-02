@@ -13,10 +13,10 @@
     <meta name="apple-mobile-web-app-title" content="NewsFriend">
     <link rel="apple-touch-icon" href="/favicon.jpg">
 
-    <link rel="canonical" href="https://www.newsfriend.org/" />
-    <link rel="alternate" hreflang="en" href="https://www.newsfriend.org/" />
-    <link rel="alternate" hreflang="de" href="https://www.newsfriend.org/" />
-    <link rel="alternate" hreflang="x-default" href="https://www.newsfriend.org/" />
+    <!-- Per-route canonical and hreflang are injected by <SEO /> via react-helmet-async.
+         Keeping a static canonical here would override every route's canonical for
+         non-JS crawlers, collapsing all pages (e.g. /report/:id) onto the homepage. -->
+    <link rel="alternate" hreflang="x-default" href="https://newsfriend.org/" />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1" />
     <meta name="author" content="Hugh & Helene Schonfield World Service Trust" />
     <meta name="keywords" content="AI news, fact-checking, daily news report, Mondcivitan, Schonfield, ethical news analysis, balanced news, news summary" />
@@ -29,7 +29,7 @@
     <link rel="alternate" type="text/html" hreflang="de" title="Impressum" href="/impressum.html" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.newsfriend.org/" />
+    <meta property="og:url" content="https://newsfriend.org/" />
     <meta property="og:site_name" content="NewsFriend" />
     <meta property="og:locale" content="en_GB" />
     <meta property="og:locale:alternate" content="de_DE" />
@@ -49,10 +49,10 @@
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://www.newsfriend.org/#organization",
+        "@id": "https://newsfriend.org/#organization",
         "name": "NewsFriend",
-        "url": "https://www.newsfriend.org",
-        "logo": "https://www.newsfriend.org/favicon.jpg",
+        "url": "https://newsfriend.org",
+        "logo": "https://newsfriend.org/favicon.jpg",
         "description": "Free, AI-powered daily news analysis and fact-checking presented by the Hugh & Helene Schonfield World Service Trust.",
         "parentOrganization": {
           "@type": "Organization",
@@ -62,14 +62,14 @@
       },
       {
         "@type": "WebSite",
-        "@id": "https://www.newsfriend.org/#website",
-        "url": "https://www.newsfriend.org",
+        "@id": "https://newsfriend.org/#website",
+        "url": "https://newsfriend.org",
         "name": "NewsFriend",
-        "publisher": { "@id": "https://www.newsfriend.org/#organization" },
+        "publisher": { "@id": "https://newsfriend.org/#organization" },
         "inLanguage": ["en", "de"],
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://www.newsfriend.org/?q={search_term_string}",
+          "target": "https://newsfriend.org/?q={search_term_string}",
           "query-input": "required name=search_term_string"
         }
       }

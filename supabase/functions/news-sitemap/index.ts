@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SITE_URL = 'https://www.newsfriend.org';
+const SITE_URL = 'https://newsfriend.org';
 
 function escapeXml(s: string): string {
   return s

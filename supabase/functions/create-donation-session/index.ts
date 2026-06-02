@@ -65,8 +65,8 @@ serve(async (req) => {
       ],
       mode: isRecurring ? "subscription" : "payment",
       ...(!isRecurring ? { submit_type: "donate" } : {}),
-      success_url: successUrl || "https://www.newsfriend.org/donation-thank-you",
-      cancel_url: cancelUrl || "https://www.newsfriend.org/support?cancelled=true",
+      success_url: successUrl || "https://newsfriend.org/donation-thank-you",
+      cancel_url: cancelUrl || "https://newsfriend.org/support?cancelled=true",
     });
 
     if (!session.url) {

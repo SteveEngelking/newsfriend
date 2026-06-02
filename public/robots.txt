@@ -80,16 +80,16 @@ Disallow: /donation-thank-you
 Disallow: /forgot-password
 Disallow: /reset-password
 
-Sitemap: https://www.newsfriend.org/sitemap.xml
-Sitemap: https://www.newsfriend.org/sitemap-static.xml
+Sitemap: https://newsfriend.org/sitemap.xml
+Sitemap: https://newsfriend.org/sitemap-static.xml
 Sitemap: https://kitduddwitnsaqfwdpxd.supabase.co/functions/v1/articles-sitemap
 Sitemap: https://kitduddwitnsaqfwdpxd.supabase.co/functions/v1/news-sitemap
 
 # Compliance scanner discovery (Cookiebot, OneTrust, GDPR audits, etc.)
 # Static, JS-free legal pages:
-#   https://www.newsfriend.org/cookie-declaration.html
-#   https://www.newsfriend.org/cookie-declaration.de.html
-#   https://www.newsfriend.org/privacy-policy.html
-#   https://www.newsfriend.org/privacy-policy.de.html
-#   https://www.newsfriend.org/impressum.html
+#   https://newsfriend.org/cookie-declaration.html
+#   https://newsfriend.org/cookie-declaration.de.html
+#   https://newsfriend.org/privacy-policy.html
+#   https://newsfriend.org/privacy-policy.de.html
+#   https://newsfriend.org/impressum.html
 
