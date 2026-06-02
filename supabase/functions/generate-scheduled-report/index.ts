@@ -6,6 +6,7 @@ const corsHeaders = {
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { callAIChatCompletion } from '../_shared/ai-gateway.ts';
 import { enforceReportLanguage } from '../_shared/language-enforcer.ts';
+import { requireAdminOrService } from '../_shared/auth.ts';
 
 // Convert perspective name to a safe JSON key
 function toFieldKey(name: string): string {
@@ -18,6 +19,12 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const auth = await requireAdminOrService(req);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const requestBody = await req.json().catch(() => null);
     const manualScheduleId = typeof requestBody?.scheduleId === 'string' ? requestBody.scheduleId : null;
     const forceImmediate = requestBody?.forceImmediate === true;

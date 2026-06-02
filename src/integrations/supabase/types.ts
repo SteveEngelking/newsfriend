@@ -838,6 +838,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_reflection_like_count: {
+        Args: { _report_id: string; _theme_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

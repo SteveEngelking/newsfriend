@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { callAIChatCompletion } from "../_shared/ai-gateway.ts";
+import { requireAdminOrService } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,10 +126,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Strict allowlist of supported target languages to prevent
+    // attackers from multiplying AI-credit cost by requesting arbitrary languages.
+    if (!Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, language)) {
+      return new Response(JSON.stringify({ error: "Unsupported language" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // `force: true` bypasses cache and burns AI credits — restrict to admins / service role.
+    let forceRefresh = false;
+    if (force === true) {
+      const auth = await requireAdminOrService(req);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: "Admin required to force re-translation" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      forceRefresh = true;
+    }
+
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Already cached? Skip unless force=true
-    if (!force) {
+    // Already cached? Skip unless force=true (admin-only)
+    if (!forceRefresh) {
       const { data: cached } = await admin
         .from("report_translations")
         .select("title, report_data, language")

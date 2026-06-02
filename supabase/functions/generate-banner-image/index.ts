@@ -7,6 +7,7 @@
 // Returns { url, path, model } on success.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isServiceRoleRequest } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,6 +95,14 @@ async function generateWithRetry(model: string, prompt: string, apiKey: string):
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // Internal-only function: must be invoked with the service-role key
+  // (from other edge functions via supabase.functions.invoke).
+  if (!isServiceRoleRequest(req)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;

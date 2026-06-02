@@ -35,23 +35,31 @@ export function MondcivitanLikeButton({ reportId, themeId }: Props) {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [{ count: total }, { data: own }] = await Promise.all([
-        supabase
-          .from('reflection_likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('report_id', reportId)
-          .eq('theme_id', themeId),
-        supabase
-          .from('reflection_likes')
-          .select('id')
-          .eq('report_id', reportId)
-          .eq('theme_id', themeId)
-          .eq('client_id', clientId)
-          .maybeSingle(),
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const ownUrl = `${supabaseUrl}/rest/v1/reflection_likes` +
+        `?select=id` +
+        `&report_id=eq.${encodeURIComponent(reportId)}` +
+        `&theme_id=eq.${encodeURIComponent(themeId)}` +
+        `&client_id=eq.${encodeURIComponent(clientId)}` +
+        `&limit=1`;
+      const [countRes, ownRes] = await Promise.all([
+        supabase.rpc('get_reflection_like_count', {
+          _report_id: reportId,
+          _theme_id: themeId,
+        }),
+        fetch(ownUrl, {
+          headers: {
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
+            'x-client-id': clientId,
+          },
+        }).then(r => r.ok ? r.json() : []).catch(() => []),
       ]);
       if (!active) return;
-      setCount(total ?? 0);
-      setLiked(!!own);
+      const total = typeof countRes.data === 'number' ? countRes.data : 0;
+      setCount(total);
+      setLiked(Array.isArray(ownRes) && ownRes.length > 0);
     })();
     return () => { active = false; };
   }, [reportId, themeId, clientId]);

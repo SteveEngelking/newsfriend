@@ -22,6 +22,27 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Anti-abuse: only send if the email matches a real auth user created in the
+    // last 10 minutes. This blocks anonymous callers from spamming admin inboxes
+    // with arbitrary addresses while still allowing the signup flow to notify.
+    const normalizedNewEmail = newUserEmail.toLowerCase().trim();
+    const { data: usersList } = await supabase.auth.admin.listUsers();
+    const matchingUser = (usersList?.users || []).find(
+      u => (u.email || '').toLowerCase() === normalizedNewEmail
+    );
+    if (!matchingUser) {
+      return new Response(JSON.stringify({ error: 'Unknown user' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const createdAt = matchingUser.created_at ? new Date(matchingUser.created_at).getTime() : 0;
+    const ageMs = Date.now() - createdAt;
+    if (!createdAt || ageMs > 10 * 60 * 1000) {
+      return new Response(JSON.stringify({ error: 'User is not freshly registered' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Get all admin user_ids
     const { data: roles } = await supabase
       .from('user_roles')
