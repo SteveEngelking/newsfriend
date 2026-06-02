@@ -5,6 +5,7 @@ const corsHeaders = {
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { callAIChatCompletion } from '../_shared/ai-gateway.ts';
+import { enforceReportLanguage } from '../_shared/language-enforcer.ts';
 
 // Convert perspective name to a safe JSON key
 function toFieldKey(name: string): string {
