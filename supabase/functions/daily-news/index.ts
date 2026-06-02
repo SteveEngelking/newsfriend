@@ -5,6 +5,7 @@ const corsHeaders = {
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { callAIChatCompletion } from '../_shared/ai-gateway.ts';
+import { enforceReportLanguage } from '../_shared/language-enforcer.ts';
 
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
