@@ -35,12 +35,11 @@ export function MondcivitanLikeButton({ reportId, themeId }: Props) {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [{ count: total }, { data: own }] = await Promise.all([
-        supabase
-          .from('reflection_likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('report_id', reportId)
-          .eq('theme_id', themeId),
+      const [countRes, ownRes] = await Promise.all([
+        supabase.rpc('get_reflection_like_count', {
+          _report_id: reportId,
+          _theme_id: themeId,
+        }),
         supabase
           .from('reflection_likes')
           .select('id')
@@ -50,8 +49,9 @@ export function MondcivitanLikeButton({ reportId, themeId }: Props) {
           .maybeSingle(),
       ]);
       if (!active) return;
-      setCount(total ?? 0);
-      setLiked(!!own);
+      const total = typeof countRes.data === 'number' ? countRes.data : 0;
+      setCount(total);
+      setLiked(!!ownRes.data);
     })();
     return () => { active = false; };
   }, [reportId, themeId, clientId]);
