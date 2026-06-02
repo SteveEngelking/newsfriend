@@ -244,9 +244,9 @@ const Home = () => {
           publisher: {
             '@type': 'Organization',
             name: 'NewsFriend',
-            logo: { '@type': 'ImageObject', url: 'https://www.newsfriend.org/favicon.jpg' },
+            logo: { '@type': 'ImageObject', url: 'https://newsfriend.org/favicon.jpg' },
           },
-          mainEntityOfPage: 'https://www.newsfriend.org/',
+          mainEntityOfPage: 'https://newsfriend.org/',
         } : undefined}
       />
       {isLoading && (

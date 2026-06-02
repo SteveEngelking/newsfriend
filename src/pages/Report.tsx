@@ -170,9 +170,9 @@ const Report = () => {
           publisher: {
             '@type': 'Organization',
             name: 'NewsFriend',
-            logo: { '@type': 'ImageObject', url: 'https://www.newsfriend.org/favicon.jpg' },
+            logo: { '@type': 'ImageObject', url: 'https://newsfriend.org/favicon.jpg' },
           },
-          mainEntityOfPage: `https://www.newsfriend.org${canonicalPath}`,
+          mainEntityOfPage: `https://newsfriend.org${canonicalPath}`,
         }}
       />
       <div className="w-full max-w-4xl mx-auto space-y-3">
@@ -194,7 +194,7 @@ const Report = () => {
                 {uiLang === 'de' ? 'Neu übersetzen' : 'Regenerate'}
               </Button>
             )}
-            <ShareButtons url={`https://www.newsfriend.org/report/${id}`} />
+            <ShareButtons url={`https://newsfriend.org/report/${id}`} />
           </div>
         </div>
         <DailyNewsReportView report={report} reportId={id} />

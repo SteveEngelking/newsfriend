@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const SITE_URL = 'https://www.newsfriend.org';
+const SITE_URL = 'https://newsfriend.org';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/favicon.jpg`;
 
 interface SEOProps {

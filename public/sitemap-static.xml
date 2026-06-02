@@ -2,90 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://www.newsfriend.org/</loc>
+    <loc>https://newsfriend.org/</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/archive</loc>
+    <loc>https://newsfriend.org/archive</loc>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/page/about</loc>
+    <loc>https://newsfriend.org/page/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/page/books</loc>
+    <loc>https://newsfriend.org/page/books</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/page/ai-discussion</loc>
+    <loc>https://newsfriend.org/page/ai-discussion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/page/mondcivitan-history</loc>
+    <loc>https://newsfriend.org/page/mondcivitan-history</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/comments</loc>
+    <loc>https://newsfriend.org/comments</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/support</loc>
+    <loc>https://newsfriend.org/support</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/register</loc>
+    <loc>https://newsfriend.org/register</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/login</loc>
+    <loc>https://newsfriend.org/login</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/impressum</loc>
+    <loc>https://newsfriend.org/impressum</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/privacy-policy.html</loc>
+    <loc>https://newsfriend.org/privacy-policy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/privacy-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/privacy-policy.de.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://newsfriend.org/privacy-policy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://newsfriend.org/privacy-policy.de.html"/>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/privacy-policy.de.html</loc>
+    <loc>https://newsfriend.org/privacy-policy.de.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/privacy-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/privacy-policy.de.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://newsfriend.org/privacy-policy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://newsfriend.org/privacy-policy.de.html"/>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/cookie-declaration.html</loc>
+    <loc>https://newsfriend.org/cookie-declaration.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/cookie-declaration.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/cookie-declaration.de.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://newsfriend.org/cookie-declaration.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://newsfriend.org/cookie-declaration.de.html"/>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/cookie-declaration.de.html</loc>
+    <loc>https://newsfriend.org/cookie-declaration.de.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.newsfriend.org/cookie-declaration.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.newsfriend.org/cookie-declaration.de.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://newsfriend.org/cookie-declaration.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://newsfriend.org/cookie-declaration.de.html"/>
   </url>
   <url>
-    <loc>https://www.newsfriend.org/impressum.html</loc>
+    <loc>https://newsfriend.org/impressum.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
