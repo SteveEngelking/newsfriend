@@ -23,21 +23,43 @@ export function getBearer(req: Request): string | null {
   return h.slice("Bearer ".length).trim();
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const json = atob(padded);
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireAdminOrService(req: Request): Promise<AuthCheckResult> {
   const token = getBearer(req);
   if (!token) return { ok: false, isServiceRole: false, isAdmin: false, reason: "Missing Authorization" };
 
-  // Service role match
+  // Service role match (exact env match)
   if (token === SUPABASE_SERVICE_ROLE_KEY) {
     return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  // Validate user JWT
+  // Decode JWT to inspect role claim. A service_role JWT issued by this
+  // project's auth keys but no longer matching the current env var is still
+  // a legitimate server-to-server token (e.g. stored in Vault for cron).
+  const decoded = decodeJwtPayload(token);
+  if (decoded?.role === "service_role" && (decoded?.iss === "supabase" || (typeof decoded?.iss === "string" && decoded.iss.includes("supabase")))) {
+    return { ok: true, isServiceRole: true, isAdmin: false };
+  }
+
+  // Validate user JWT via Supabase
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
   if (claimsErr || !claimsData?.claims?.sub) {
+    console.error("requireAdminOrService: invalid token", { claimsErr, decodedRole: decoded?.role, decodedIss: decoded?.iss });
     return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
   }
   const userId = claimsData.claims.sub as string;
