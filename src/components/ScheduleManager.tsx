@@ -263,7 +263,7 @@ export function ScheduleManager({ sources }: Props) {
     'google/gemini-2.5-flash': { in: 0.30, out: 2.50 },
     'google/gemini-3.1-pro-preview': { in: 1.25, out: 10.0 },
   };
-  const enabledSourceCount = sources.filter(s => s.enabled).length;
+  // (sources count not used in estimate; themes drives most token volume)
   const themes = targetThemes > 0 ? targetThemes : 8; // auto ≈ 8
   const price = MODEL_PRICING[aiModel] || { in: 1, out: 5 };
 
