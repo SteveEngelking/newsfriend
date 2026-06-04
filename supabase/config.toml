@@ -29,3 +29,5 @@ project_id = "kitduddwitnsaqfwdpxd"
     verify_jwt = true
   [functions.translate-report]
     verify_jwt = false
+  [functions.scheduler-status]
+    verify_jwt = false
