@@ -703,18 +703,33 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
       }
     };
 
-    // Run the heavy work in the background and return immediately. The database
-    // cron HTTP client times out after ~5s, so scheduled generation must not wait
-    // for the full AI/report pipeline inside the request-response cycle.
-    const backgroundWork = runScheduleWork().catch(e => console.error('background runScheduleWork error:', e));
-    // @ts-ignore EdgeRuntime is provided by Supabase Edge Runtime
-    try { (globalThis as any).EdgeRuntime?.waitUntil?.(backgroundWork); }
-    catch { /* backgroundWork is already running */ }
+    // Keep the HTTP connection alive while generation runs. Database cron calls
+    // otherwise hit the platform's 150s idle timeout before long AI/report work
+    // completes. A tiny progress line every 20s prevents that without changing
+    // the schedule's due-time rules.
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const write = (chunk: string) => controller.enqueue(encoder.encode(`${chunk}\n`));
+        const heartbeat = setInterval(() => write(JSON.stringify({ status: 'running', at: new Date().toISOString() })), 20_000);
+        try {
+          write(JSON.stringify({ status: 'started', schedules: schedules.length, at: now.toISOString() }));
+          await runScheduleWork();
+          write(JSON.stringify({ status: 'complete', message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', results }));
+        } catch (e) {
+          console.error('scheduled report stream error:', e);
+          write(JSON.stringify({ status: 'error', error: e instanceof Error ? e.message : 'Unknown error' }));
+        } finally {
+          clearInterval(heartbeat);
+          controller.close();
+        }
+      },
+    });
 
-    return new Response(
-      JSON.stringify({ message: forceImmediate ? 'Generation started' : 'Scheduled generation started', schedules: schedules.length }),
-      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(stream, {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/x-ndjson; charset=utf-8' },
+    });
   } catch (error) {
     console.error('Scheduled report error:', error);
     return new Response(
