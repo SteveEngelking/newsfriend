@@ -703,17 +703,14 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
       }
     };
 
-    // Run the heavy work in the background and return immediately. The database
-    // cron HTTP client times out after ~5s, so scheduled generation must not wait
-    // for the full AI/report pipeline inside the request-response cycle.
-    const backgroundWork = runScheduleWork().catch(e => console.error('background runScheduleWork error:', e));
-    // @ts-ignore EdgeRuntime is provided by Supabase Edge Runtime
-    try { (globalThis as any).EdgeRuntime?.waitUntil?.(backgroundWork); }
-    catch { /* backgroundWork is already running */ }
+    // Run synchronously so the scheduler only reports success after the report
+    // has actually been generated and notifications have been queued. The cron
+    // job is configured with an extended HTTP timeout for this long-running work.
+    await runScheduleWork();
 
     return new Response(
-      JSON.stringify({ message: forceImmediate ? 'Generation started' : 'Scheduled generation started', schedules: schedules.length }),
-      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', schedules: schedules.length, results }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Scheduled report error:', error);
