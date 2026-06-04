@@ -107,6 +107,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <ScheduleManager sources={sources} />
       </TabsContent>
 
+      <TabsContent value="status">
+        <SchedulerStatusPanel />
+      </TabsContent>
+
       <TabsContent value="special">
         <SpecialEditionsManager />
       </TabsContent>
