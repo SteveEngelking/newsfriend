@@ -14,7 +14,8 @@ import { NavOrderManager } from '@/components/admin/NavOrderManager';
 import { SpecialEditionsManager } from '@/components/admin/SpecialEditionsManager';
 import { GlossaryManager } from '@/components/admin/GlossaryManager';
 import { RegenerateTranslationPanel } from '@/components/admin/RegenerateTranslationPanel';
-import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles, Languages } from 'lucide-react';
+import { SchedulerStatusPanel } from '@/components/admin/SchedulerStatusPanel';
+import { Users, Newspaper, CalendarClock, Scale, FileText, Layout, Megaphone, UserCheck, MessageSquare, Menu, Sparkles, Languages, Activity } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
@@ -51,6 +52,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
         <TabsTrigger value="schedule" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <CalendarClock className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('adminTabSchedule')}</span>
+        </TabsTrigger>
+        <TabsTrigger value="status" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
+          <Activity className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Status</span>
         </TabsTrigger>
         <TabsTrigger value="special" className="gap-1.5 text-xs sm:text-sm px-2.5 py-1.5">
           <Sparkles className="h-3.5 w-3.5" />
@@ -100,6 +105,10 @@ export function AdminTabs({ sources, onSourcesChange }: Props) {
 
       <TabsContent value="schedule">
         <ScheduleManager sources={sources} />
+      </TabsContent>
+
+      <TabsContent value="status">
+        <SchedulerStatusPanel />
       </TabsContent>
 
       <TabsContent value="special">
