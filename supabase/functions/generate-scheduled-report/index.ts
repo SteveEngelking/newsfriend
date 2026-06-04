@@ -703,15 +703,33 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
       }
     };
 
-    // Run synchronously so the scheduler only reports success after the report
-    // has actually been generated and notifications have been queued. The cron
-    // job is configured with an extended HTTP timeout for this long-running work.
-    await runScheduleWork();
+    // Keep the HTTP connection alive while generation runs. Database cron calls
+    // otherwise hit the platform's 150s idle timeout before long AI/report work
+    // completes. A tiny progress line every 20s prevents that without changing
+    // the schedule's due-time rules.
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const write = (chunk: string) => controller.enqueue(encoder.encode(`${chunk}\n`));
+        const heartbeat = setInterval(() => write(JSON.stringify({ status: 'running', at: new Date().toISOString() })), 20_000);
+        try {
+          write(JSON.stringify({ status: 'started', schedules: schedules.length, at: now.toISOString() }));
+          await runScheduleWork();
+          write(JSON.stringify({ status: 'complete', message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', results }));
+        } catch (e) {
+          console.error('scheduled report stream error:', e);
+          write(JSON.stringify({ status: 'error', error: e instanceof Error ? e.message : 'Unknown error' }));
+        } finally {
+          clearInterval(heartbeat);
+          controller.close();
+        }
+      },
+    });
 
-    return new Response(
-      JSON.stringify({ message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', schedules: schedules.length, results }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(stream, {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/x-ndjson; charset=utf-8' },
+    });
   } catch (error) {
     console.error('Scheduled report error:', error);
     return new Response(
