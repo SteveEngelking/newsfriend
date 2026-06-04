@@ -251,6 +251,52 @@ export function ScheduleManager({ sources }: Props) {
 
   const fmtH = (h: number) => String(((h % 24) + 24) % 24).padStart(2, '0') + ':00';
   const deH = (scheduleHourUtc + 1) % 24;
+
+  // ---- Rough cost estimator (client-side, no AI call) ----
+  // Pricing per 1M tokens (input / output) — approximate Lovable AI Gateway list prices.
+  const MODEL_PRICING: Record<string, { in: number; out: number }> = {
+    'openai/gpt-5-mini': { in: 0.25, out: 2.0 },
+    'openai/gpt-5': { in: 1.25, out: 10.0 },
+    'openai/gpt-5.2': { in: 1.25, out: 10.0 },
+    'google/gemini-3-flash-preview': { in: 0.30, out: 2.50 },
+    'google/gemini-2.5-pro': { in: 1.25, out: 10.0 },
+    'google/gemini-2.5-flash': { in: 0.30, out: 2.50 },
+    'google/gemini-3.1-pro-preview': { in: 1.25, out: 10.0 },
+  };
+  // (sources count not used in estimate; themes drives most token volume)
+  const themes = targetThemes > 0 ? targetThemes : 8; // auto ≈ 8
+  const price = MODEL_PRICING[aiModel] || { in: 1, out: 5 };
+
+  // Per language: theme extraction + per-theme synthesis
+  const extractionIn = maxArticles * 300;
+  const extractionOut = themes * 200;
+  const synthesisIn = themes * sourcesPerTheme * 1500;
+  const synthesisOut = themes * 1500;
+  let tokenCostPerLang =
+    ((extractionIn + synthesisIn) / 1_000_000) * price.in +
+    ((extractionOut + synthesisOut) / 1_000_000) * price.out;
+  if (mondcivitanEnabled) {
+    tokenCostPerLang += (themes * 500 / 1_000_000) * price.in + (themes * 800 / 1_000_000) * price.out;
+  }
+  if (schweitzerEnabled) {
+    tokenCostPerLang += (themes * 500 / 1_000_000) * price.in + (themes * 800 / 1_000_000) * price.out;
+  }
+  // Theme comments use a cheap model (~gpt-5-nano-ish)
+  const commentsCostPerLang = themeCommentsEnabled
+    ? (themes * 200 / 1_000_000) * 0.05 + (themes * 400 / 1_000_000) * 0.40
+    : 0;
+  // Banner image (per language run)
+  const bannerCostPerLang = bannerImagesEnabled ? 0.04 : 0;
+
+  const costPerLangRun = tokenCostPerLang + commentsCostPerLang + bannerCostPerLang;
+  const languagesPerRun = frequency === 'immediate'
+    ? (immediateLanguage === 'both' ? 2 : 1)
+    : 2;
+  const costPerRun = costPerLangRun * languagesPerRun;
+  const runsPerMonth = frequency === 'daily' ? 30 : frequency === 'twice_daily' ? 60 : 0;
+  const costPerMonth = costPerRun * runsPerMonth;
+  const fmt$ = (n: number) => n < 0.01 ? `< $0.01` : `$${n.toFixed(2)}`;
+
   const frequencyLabels: Record<string, string> = {
     immediate: language === 'de' ? '⚡ Sofort (einmalig)' : '⚡ Immediate (one-time)',
     daily: language === 'de' ? '📅 Täglich' : '📅 Daily',
@@ -451,7 +497,32 @@ export function ScheduleManager({ sources }: Props) {
               </p>
             </div>
           </div>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+            <div className="text-sm font-medium">
+              {language === 'de' ? 'Geschätzte KI-Kosten' : 'Estimated AI cost'}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {language === 'de'
+                ? `Pro Lauf (${languagesPerRun} Sprache${languagesPerRun > 1 ? 'n' : ''}): `
+                : `Per run (${languagesPerRun} language${languagesPerRun > 1 ? 's' : ''}): `}
+              <span className="font-mono text-foreground">{fmt$(costPerRun)}</span>
+              {runsPerMonth > 0 && (
+                <>
+                  {' • '}
+                  {language === 'de' ? 'Pro Monat: ' : 'Per month: '}
+                  <span className="font-mono text-foreground">{fmt$(costPerMonth)}</span>
+                  <span className="opacity-70"> ({runsPerMonth}×)</span>
+                </>
+              )}
+            </div>
+            <div className="text-[11px] text-muted-foreground italic">
+              {language === 'de'
+                ? 'Grobe Schätzung basierend auf Modell-Listenpreisen und typischen Token-Mengen. Tatsächliche Kosten können abweichen.'
+                : 'Rough estimate based on model list prices and typical token volumes. Actual cost may vary.'}
+            </div>
+          </div>
           {schedule && (
+
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
               {frequencyLabels[schedule.frequency] || frequencyLabels.daily} • {t('scheduleUsingSources')} {schedule.source_ids.length} {t('scheduleSources')}
