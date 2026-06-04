@@ -497,7 +497,32 @@ export function ScheduleManager({ sources }: Props) {
               </p>
             </div>
           </div>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+            <div className="text-sm font-medium">
+              {language === 'de' ? 'Geschätzte KI-Kosten' : 'Estimated AI cost'}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {language === 'de'
+                ? `Pro Lauf (${languagesPerRun} Sprache${languagesPerRun > 1 ? 'n' : ''}): `
+                : `Per run (${languagesPerRun} language${languagesPerRun > 1 ? 's' : ''}): `}
+              <span className="font-mono text-foreground">{fmt$(costPerRun)}</span>
+              {runsPerMonth > 0 && (
+                <>
+                  {' • '}
+                  {language === 'de' ? 'Pro Monat: ' : 'Per month: '}
+                  <span className="font-mono text-foreground">{fmt$(costPerMonth)}</span>
+                  <span className="opacity-70"> ({runsPerMonth}×)</span>
+                </>
+              )}
+            </div>
+            <div className="text-[11px] text-muted-foreground italic">
+              {language === 'de'
+                ? 'Grobe Schätzung basierend auf Modell-Listenpreisen und typischen Token-Mengen. Tatsächliche Kosten können abweichen.'
+                : 'Rough estimate based on model list prices and typical token volumes. Actual cost may vary.'}
+            </div>
+          </div>
           {schedule && (
+
             <p className="text-xs text-muted-foreground">
               <Clock className="inline h-3 w-3 mr-1" />
               {frequencyLabels[schedule.frequency] || frequencyLabels.daily} • {t('scheduleUsingSources')} {schedule.source_ids.length} {t('scheduleSources')}
