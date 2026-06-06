@@ -132,6 +132,57 @@ Deno.serve(async (req) => {
     has_message_id: !!payload.message_id,
   })
 
+  // 3. Notify admins (best-effort, non-blocking on failure).
+  // Skip unsubscribes — those are expected user actions, not problems.
+  if (payload.reason !== 'unsubscribe') {
+    try {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin')
+
+      if (roles?.length) {
+        const { data: listData } = await supabase.auth.admin.listUsers()
+        const adminEmails = (listData?.users || [])
+          .filter((u) => roles.some((r) => r.user_id === u.id))
+          .map((u) => u.email)
+          .filter((e): e is string => !!e)
+
+        const occurredAt = new Date().toUTCString()
+        const reasonMessage = mapReasonToMessage(payload.reason)
+        const eventKey = payload.message_id || `${normalizedEmail}-${Date.now()}`
+
+        for (const adminEmail of adminEmails) {
+          const idempotencyKey = `suppression-admin-${eventKey}-${adminEmail.toLowerCase()}`
+          const { error: notifyError } = await supabase.functions.invoke(
+            'send-transactional-email',
+            {
+              body: {
+                templateName: 'suppression-admin',
+                recipientEmail: adminEmail,
+                idempotencyKey,
+                templateData: {
+                  suppressedEmail: normalizedEmail,
+                  reason: payload.reason,
+                  reasonMessage,
+                  occurredAt,
+                },
+              },
+            },
+          )
+          if (notifyError) {
+            console.warn('Failed to notify admin of suppression', {
+              admin_redacted: adminEmail[0] + '***@' + adminEmail.split('@')[1],
+              error: notifyError,
+            })
+          }
+        }
+      }
+    } catch (notifyErr) {
+      console.warn('Admin suppression notification failed', { error: notifyErr })
+    }
+  }
+
   return jsonResponse({ success: true })
 })
 
