@@ -16,6 +16,7 @@ import { template as announcementNotification } from './announcement-notificatio
 import { template as dailyReportNotification } from './daily-report-notification.tsx'
 import { template as specialEditionNotification } from './special-edition-notification.tsx'
 import { template as newUserAdmin } from './new-user-admin.tsx'
+import { template as suppressionAdmin } from './suppression-admin.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
@@ -25,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'announcement-notification': announcementNotification,
   'daily-report-notification': dailyReportNotification,
   'special-edition-notification': specialEditionNotification,
+  'suppression-admin': suppressionAdmin,
 }
