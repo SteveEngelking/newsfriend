@@ -5,8 +5,8 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { requireAdminOrService } from '../_shared/auth.ts'
 
 const SITE_NAME = "NewsFriend"
-const SENDER_DOMAIN = "notify.schonfield.org"
-const FROM_DOMAIN = "notify.schonfield.org"
+const SENDER_DOMAIN = "notify.newsfriend.org"
+const FROM_DOMAIN = "notify.newsfriend.org"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
