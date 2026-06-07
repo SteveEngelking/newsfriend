@@ -399,7 +399,10 @@ Be critical and insightful. This is investigative journalism, not stenography.`;
           seenUrls.add(url);
           return true;
         });
-        return { id: `theme-${i}`, ...t, sourceAnalysis: filtered };
+        // Never drop a theme: if dedup removed all sources (model reused URLs),
+        // keep the original sourceAnalysis so theme count is preserved.
+        const finalSources = filtered.length > 0 ? filtered : sa;
+        return { id: `theme-${i}`, ...t, sourceAnalysis: finalSources };
       }).filter((t: any) => Array.isArray(t.sourceAnalysis) && t.sourceAnalysis.length > 0);
     })();
 
