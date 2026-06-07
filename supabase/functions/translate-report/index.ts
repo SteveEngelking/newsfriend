@@ -42,11 +42,34 @@ function buildGlossaryBlock(rows: GlossaryRow[], lang: string): string {
   return block;
 }
 
-async function translateChunk(
+function tryParseJson(content: string): unknown | null {
+  try {
+    return JSON.parse(content);
+  } catch {}
+  // Try to extract JSON object — find first { and matching last }
+  const first = content.indexOf("{");
+  const last = content.lastIndexOf("}");
+  if (first >= 0 && last > first) {
+    try {
+      return JSON.parse(content.slice(first, last + 1));
+    } catch {}
+  }
+  // Strip markdown code fences
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenced) {
+    try {
+      return JSON.parse(fenced[1]);
+    } catch {}
+  }
+  return null;
+}
+
+async function translateChunkOnce(
   obj: unknown,
   targetLanguage: string,
   glossaryBlock: string,
   description: string,
+  model: string,
 ): Promise<unknown> {
   const langName = LANGUAGE_NAMES[targetLanguage] ?? targetLanguage;
   const isGerman = targetLanguage === "de";
@@ -81,7 +104,7 @@ async function translateChunk(
     glossaryBlock;
 
   const body = {
-    model: "google/gemini-2.5-flash",
+    model,
     messages: [
       { role: "system", content: system },
       {
@@ -104,15 +127,44 @@ async function translateChunk(
   const json = await response.json();
   const content = json?.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI returned no content");
-  try {
-    return JSON.parse(content);
-  } catch {
-    // Try to extract JSON object from the content
-    const m = content.match(/\{[\s\S]*\}/);
-    if (m) return JSON.parse(m[0]);
-    throw new Error("AI returned invalid JSON");
+  const parsed = tryParseJson(content);
+  if (parsed === null) {
+    const err = new Error(`AI returned invalid JSON (${provider}, ${model})`) as Error & { parseError?: boolean };
+    err.parseError = true;
+    throw err;
   }
+  return parsed;
 }
+
+async function translateChunk(
+  obj: unknown,
+  targetLanguage: string,
+  glossaryBlock: string,
+  description: string,
+): Promise<unknown> {
+  const models = [
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-pro",
+  ];
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < models.length; attempt++) {
+    try {
+      return await translateChunkOnce(obj, targetLanguage, glossaryBlock, description, models[attempt]);
+    } catch (e) {
+      lastErr = e;
+      const status = (e as { status?: number })?.status;
+      const isParseErr = (e as { parseError?: boolean })?.parseError;
+      // Retry on parse errors and transient 5xx / 429; bail on auth/credit errors
+      if (status === 401 || status === 402 || status === 403) break;
+      console.warn(`[translate-report] attempt ${attempt + 1} failed for "${description}": ${(e as Error).message}. Retrying...`);
+      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      if (!isParseErr && status && status < 500 && status !== 429) break;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
