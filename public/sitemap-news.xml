@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  <url>
+    <loc>https://newsfriend.org/report/881c3152-b9dd-4c5b-924d-5ca0888053d2</loc>
+    <news:news>
+      <news:publication>
+        <news:name>NewsFriend</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-06-08T09:03:16.298Z</news:publication_date>
+      <news:title>News of the Day — Monday 8 June 2026 (UTC)</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://newsfriend.org/report/88727e6b-c3e2-416e-87fb-bf24208a9c30</loc>
+    <news:news>
+      <news:publication>
+        <news:name>NewsFriend</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-06-07T06:03:49.791Z</news:publication_date>
+      <news:title>News of the Day — Sunday 7 June 2026 (UTC)</news:title>
+    </news:news>
+  </url>
+</urlset>
