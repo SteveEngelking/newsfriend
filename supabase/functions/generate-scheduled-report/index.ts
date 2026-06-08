@@ -119,18 +119,25 @@ Deno.serve(async (req) => {
 
       const due: typeof EN_LANG[] = [];
 
-      // Strict time-of-day trigger only — no hourly catch-up. The hourly cron
-      // would otherwise re-fire a missed run on every subsequent hour, which
-      // produces multiple updates per day and ignores the configured hour.
-      if (enHours.includes(currentHour) && !producedToday.has('en')) due.push(EN_LANG);
-      if (deHours.includes(currentHour) && !producedToday.has('de')) due.push(DE_LANG);
+      // Catch-up trigger: once the scheduled hour has passed for the day,
+      // fire on any subsequent hourly tick UNTIL a report exists for the day.
+      // The `producedToday` check makes this idempotent — only one EN and one
+      // DE report per UTC day per schedule — so a missed cron tick at the
+      // exact hour no longer skips the day entirely.
+      const enDue = enHours.some(h => currentHour >= h) && !producedToday.has('en');
+      const deDue = deHours.some(h => currentHour >= h) && !producedToday.has('de');
+      if (enDue) due.push(EN_LANG);
+      if (deDue) due.push(DE_LANG);
 
-      // For twice_daily, also fire the second window at its scheduled hour.
-      if (freq === 'twice_daily' && currentHour >= 18) {
-        const eveningEn = (todays ?? []).filter((r: any) => r.language === 'en').length;
-        const eveningDe = (todays ?? []).filter((r: any) => r.language === 'de').length;
-        if (enHours.includes(currentHour) && eveningEn < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
-        if (deHours.includes(currentHour) && eveningDe < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
+      // For twice_daily, allow a second run in the evening window once the
+      // second scheduled hour has passed.
+      if (freq === 'twice_daily' && enHours.length > 1) {
+        const eveningEnHour = enHours[1];
+        const eveningDeHour = deHours[1];
+        const enCount = (todays ?? []).filter((r: any) => r.language === 'en').length;
+        const deCount = (todays ?? []).filter((r: any) => r.language === 'de').length;
+        if (currentHour >= eveningEnHour && enCount < 2 && !due.some(l => l.code === 'en')) due.push(EN_LANG);
+        if (currentHour >= eveningDeHour && deCount < 2 && !due.some(l => l.code === 'de')) due.push(DE_LANG);
       }
 
       return due;
