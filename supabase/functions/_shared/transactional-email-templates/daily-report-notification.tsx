@@ -85,17 +85,17 @@ const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language, 
           <Text style={subtitle}>{subheading}</Text>
 
           {/* Introduction / Summary */}
-          {introduction && (
+          {cleanIntroduction && (
             <Section style={summaryBox}>
-              <Text style={summaryText}>{introduction}</Text>
+              <Text style={summaryText}>{cleanIntroduction}</Text>
             </Section>
           )}
 
           {/* Theme headlines */}
-          {themeHeadlines && themeHeadlines.length > 0 && (
+          {cleanHeadlines.length > 0 && (
             <Section style={themesSection}>
               <Text style={themesHeading}>{todaysTopics}</Text>
-              {themeHeadlines.map((headline, i) => (
+              {cleanHeadlines.map((headline, i) => (
                 <Text key={i} style={themeItem}>• {headline}</Text>
               ))}
             </Section>
