@@ -16,7 +16,35 @@ interface DailyReportProps {
   bannerImageUrl?: string
 }
 
+// Strip emojis, flag regional indicators, variation selectors, ZWJ, and any
+// unpaired/lone surrogates that render as "��" in many email clients.
+const sanitizeForEmail = (s: string): string => {
+  if (!s) return ''
+  return s
+    // Lone/unpaired surrogates -> replacement of "��" source
+    .replace(/[\uD800-\uDFFF]/g, (ch, i, str) => {
+      const code = ch.charCodeAt(0)
+      if (code >= 0xD800 && code <= 0xDBFF) {
+        const next = str.charCodeAt(i + 1)
+        if (next >= 0xDC00 && next <= 0xDFFF) return ch
+      } else {
+        const prev = str.charCodeAt(i - 1)
+        if (prev >= 0xD800 && prev <= 0xDBFF) return ch
+      }
+      return ''
+    })
+    // Emoji & pictographs, regional indicators (flags), symbols, dingbats
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, '')
+    .replace(/[\u200D\uFE0F\uFE0E]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 const DailyReportNotificationEmail = ({ introduction, themeHeadlines, language, bannerImageUrl }: DailyReportProps) => {
+  const cleanHeadlines = (themeHeadlines || []).map(sanitizeForEmail).filter(Boolean)
+  const cleanIntroduction = introduction ? sanitizeForEmail(introduction) : introduction
   const isDE = language === 'de'
   const readNow = isDE ? 'Jetzt lesen' : 'Read Now'
   const previewText = isDE
