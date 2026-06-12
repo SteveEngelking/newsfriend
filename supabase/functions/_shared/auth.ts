@@ -40,26 +40,19 @@ export async function requireAdminOrService(req: Request): Promise<AuthCheckResu
   const token = getBearer(req);
   if (!token) return { ok: false, isServiceRole: false, isAdmin: false, reason: "Missing Authorization" };
 
-  // Service role match (exact env match)
+  // Service role match (exact env match) — the ONLY accepted service-role path.
+  // Never trust an unverified JWT payload to grant service-role access.
   if (token === SUPABASE_SERVICE_ROLE_KEY) {
     return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  // Decode JWT to inspect role claim. A service_role JWT issued by this
-  // project's auth keys but no longer matching the current env var is still
-  // a legitimate server-to-server token (e.g. stored in Vault for cron).
-  const decoded = decodeJwtPayload(token);
-  if (decoded?.role === "service_role" && (decoded?.iss === "supabase" || (typeof decoded?.iss === "string" && decoded.iss.includes("supabase")))) {
-    return { ok: true, isServiceRole: true, isAdmin: false };
-  }
-
-  // Validate user JWT via Supabase
+  // Validate user JWT via Supabase (cryptographically verified)
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
   if (claimsErr || !claimsData?.claims?.sub) {
-    console.error("requireAdminOrService: invalid token", { claimsErr, decodedRole: decoded?.role, decodedIss: decoded?.iss });
+    console.error("requireAdminOrService: invalid token", { claimsErr });
     return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
   }
   const userId = claimsData.claims.sub as string;
