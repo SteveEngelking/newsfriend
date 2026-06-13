@@ -40,22 +40,33 @@ export async function requireAdminOrService(req: Request): Promise<AuthCheckResu
   const token = getBearer(req);
   if (!token) return { ok: false, isServiceRole: false, isAdmin: false, reason: "Missing Authorization" };
 
-  // Service role match (exact env match) — the ONLY accepted service-role path.
-  // Never trust an unverified JWT payload to grant service-role access.
+  // Fast path: exact env match for service role.
   if (token === SUPABASE_SERVICE_ROLE_KEY) {
     return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  // Validate user JWT via Supabase (cryptographically verified)
+  // Cryptographically validate the JWT via Supabase. This covers both
+  // user JWTs and service-role JWTs that don't byte-match the env var
+  // (e.g. rotated keys, vault-stored copies used by pg_cron/pg_net).
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-  if (claimsErr || !claimsData?.claims?.sub) {
+  if (claimsErr || !claimsData?.claims) {
     console.error("requireAdminOrService: invalid token", { claimsErr });
     return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
   }
-  const userId = claimsData.claims.sub as string;
+
+  // Verified service-role JWT (signed by the project's JWT key). Service-role
+  // tokens have role=service_role and no sub claim — accept here.
+  if ((claimsData.claims as any).role === "service_role") {
+    return { ok: true, isServiceRole: true, isAdmin: false };
+  }
+
+  const userId = claimsData.claims.sub as string | undefined;
+  if (!userId) {
+    return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
+  }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const { data: role } = await admin
