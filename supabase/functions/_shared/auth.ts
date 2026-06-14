@@ -4,6 +4,7 @@
 //   - an authenticated admin user.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { jwtVerify, createLocalJWKSet, createRemoteJWKSet } from "https://esm.sh/jose@5.9.6";
 
 export interface AuthCheckResult {
   ok: boolean;
