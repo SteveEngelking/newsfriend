@@ -78,7 +78,7 @@ export function SchedulerStatusPanel() {
       toast({ title: 'Triggering report…', description: 'This can take several minutes.' });
       const { error: err } = await supabase.functions.invoke('generate-scheduled-report', {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { scheduleId, force: true },
+        body: { scheduleId, forceImmediate: true },
       });
       if (err) throw err;
       toast({ title: 'Report generation triggered' });

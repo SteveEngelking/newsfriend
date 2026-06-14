@@ -63,6 +63,29 @@ async function verifyJwt(token: string): Promise<Record<string, unknown> | null>
   }
 }
 
+async function verifyServiceRoleWithBackend(token: string): Promise<boolean> {
+  const decoded = decodeJwtPayload(token);
+  if (decoded?.role !== "service_role") return false;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_roles?select=id&limit=0`, {
+      headers: {
+        apikey: token,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      await res.body?.cancel();
+      return false;
+    }
+    await res.text();
+    return true;
+  } catch (e) {
+    console.error("service role backend verification failed", e);
+    return false;
+  }
+}
+
 export async function requireAdminOrService(req: Request): Promise<AuthCheckResult> {
   const token = getBearer(req);
   if (!token) return { ok: false, isServiceRole: false, isAdmin: false, reason: "Missing Authorization" };
@@ -72,16 +95,28 @@ export async function requireAdminOrService(req: Request): Promise<AuthCheckResu
     return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
+  if (await verifyServiceRoleWithBackend(token)) {
+    return { ok: true, isServiceRole: true, isAdmin: false };
+  }
+
   // Cryptographically verify JWT signature using project JWKS. This works for
   // both user JWTs and service-role JWTs (which have role=service_role and no
   // sub claim — supabase-js's getClaims rejects those, so we use jose directly).
-  const claims = await verifyJwt(token);
-  if (!claims) {
-    return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
+  let claims = await verifyJwt(token);
+
+  if ((claims as any)?.role === "service_role") {
+    return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  if ((claims as any).role === "service_role") {
-    return { ok: true, isServiceRole: true, isAdmin: false };
+  if (!claims) {
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
+    }
+    claims = claimsData.claims as Record<string, unknown>;
   }
 
   const userId = claims.sub as string | undefined;
