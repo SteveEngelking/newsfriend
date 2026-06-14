@@ -24,19 +24,6 @@ export function getBearer(req: Request): string | null {
   return h.slice("Bearer ".length).trim();
 }
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-    const json = atob(padded);
-    return JSON.parse(json) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
 const SUPABASE_JWKS_RAW = Deno.env.get("SUPABASE_JWKS");
 let jwks: ReturnType<typeof createLocalJWKSet> | ReturnType<typeof createRemoteJWKSet> | null = null;
 function getJwks() {
