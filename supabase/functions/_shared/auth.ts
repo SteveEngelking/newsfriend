@@ -64,11 +64,8 @@ async function verifyJwt(token: string): Promise<Record<string, unknown> | null>
 }
 
 async function verifyServiceRoleWithBackend(token: string): Promise<boolean> {
-  const decoded = decodeJwtPayload(token);
-  if (decoded?.role !== "service_role") return false;
-
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_roles?select=id&limit=0`, {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=1`, {
       headers: {
         apikey: token,
         Authorization: `Bearer ${token}`,
