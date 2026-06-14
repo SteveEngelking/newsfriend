@@ -710,33 +710,24 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
       }
     };
 
-    // Keep the HTTP connection alive while generation runs. Database cron calls
-    // otherwise hit the platform's 150s idle timeout before long AI/report work
-    // completes. A tiny progress line every 20s prevents that without changing
-    // the schedule's due-time rules.
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        const write = (chunk: string) => controller.enqueue(encoder.encode(`${chunk}\n`));
-        const heartbeat = setInterval(() => write(JSON.stringify({ status: 'running', at: new Date().toISOString() })), 20_000);
-        try {
-          write(JSON.stringify({ status: 'started', schedules: schedules.length, at: now.toISOString() }));
-          await runScheduleWork();
-          write(JSON.stringify({ status: 'complete', message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', results }));
-        } catch (e) {
-          console.error('scheduled report stream error:', e);
-          write(JSON.stringify({ status: 'error', error: e instanceof Error ? e.message : 'Unknown error' }));
-        } finally {
-          clearInterval(heartbeat);
-          controller.close();
-        }
-      },
-    });
+    const work = runScheduleWork()
+      .then(() => console.log('scheduled report background complete:', results))
+      .catch((e) => console.error('scheduled report background error:', e));
 
-    return new Response(stream, {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/x-ndjson; charset=utf-8' },
-    });
+    const waitUntil = (globalThis as any).EdgeRuntime?.waitUntil;
+    if (typeof waitUntil === 'function') {
+      waitUntil(work);
+      return new Response(
+        JSON.stringify({ status: 'accepted', message: forceImmediate ? 'Generation started' : 'Scheduled generation started', schedules: schedules.length }),
+        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    await work;
+    return new Response(
+      JSON.stringify({ status: 'complete', message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', results }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Scheduled report error:', error);
     return new Response(

@@ -4,7 +4,6 @@
 //   - an authenticated admin user.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { jwtVerify, createLocalJWKSet, createRemoteJWKSet } from "https://esm.sh/jose@5.9.6";
 
 export interface AuthCheckResult {
   ok: boolean;
@@ -24,42 +23,23 @@ export function getBearer(req: Request): string | null {
   return h.slice("Bearer ".length).trim();
 }
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
+async function verifyServiceRoleWithBackend(token: string): Promise<boolean> {
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-    const json = atob(padded);
-    return JSON.parse(json) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-const SUPABASE_JWKS_RAW = Deno.env.get("SUPABASE_JWKS");
-let jwks: ReturnType<typeof createLocalJWKSet> | ReturnType<typeof createRemoteJWKSet> | null = null;
-function getJwks() {
-  if (jwks) return jwks;
-  if (SUPABASE_JWKS_RAW) {
-    try {
-      jwks = createLocalJWKSet(JSON.parse(SUPABASE_JWKS_RAW));
-      return jwks;
-    } catch (e) {
-      console.error("Failed to parse SUPABASE_JWKS, falling back to remote", e);
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=1`, {
+      headers: {
+        apikey: token,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      await res.body?.cancel();
+      return false;
     }
-  }
-  jwks = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
-  return jwks;
-}
-
-async function verifyJwt(token: string): Promise<Record<string, unknown> | null> {
-  try {
-    const { payload } = await jwtVerify(token, getJwks());
-    return payload as Record<string, unknown>;
+    await res.text();
+    return true;
   } catch (e) {
-    console.error("verifyJwt failed", e);
-    return null;
+    console.error("service role backend verification failed", e);
+    return false;
   }
 }
 
@@ -72,16 +52,18 @@ export async function requireAdminOrService(req: Request): Promise<AuthCheckResu
     return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  // Cryptographically verify JWT signature using project JWKS. This works for
-  // both user JWTs and service-role JWTs (which have role=service_role and no
-  // sub claim — supabase-js's getClaims rejects those, so we use jose directly).
-  const claims = await verifyJwt(token);
-  if (!claims) {
-    return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+  const claims = claimsData?.claims as Record<string, unknown> | undefined;
+
+  if ((claimsError || !claims?.sub) && await verifyServiceRoleWithBackend(token)) {
+    return { ok: true, isServiceRole: true, isAdmin: false };
   }
 
-  if ((claims as any).role === "service_role") {
-    return { ok: true, isServiceRole: true, isAdmin: false };
+  if (claimsError || !claims) {
+    return { ok: false, isServiceRole: false, isAdmin: false, reason: "Invalid token" };
   }
 
   const userId = claims.sub as string | undefined;
