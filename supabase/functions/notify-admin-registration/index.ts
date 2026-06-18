@@ -11,29 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Require an authenticated caller (the newly-registered user's JWT).
-    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.slice('Bearer '.length).trim();
-    const { data: claimsData, error: claimsErr } = await callerClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims?.sub) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    const callerEmail = (claimsData.claims.email as string | undefined)?.toLowerCase();
 
     const { newUserEmail, newUserName } = await req.json();
     if (!newUserEmail || typeof newUserEmail !== 'string') {
@@ -42,19 +21,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // The caller may only request notifications about their own registration.
-    if (!callerEmail || callerEmail !== newUserEmail.toLowerCase().trim()) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Anti-abuse: only send if the email matches a real auth user created in the
     // last 10 minutes. This blocks anonymous callers from spamming admin inboxes
-    // with arbitrary addresses while still allowing the signup flow to notify.
+    // with arbitrary addresses while still allowing the signup flow to notify
+    // (the client has no session yet because email confirmation is pending).
     const normalizedNewEmail = newUserEmail.toLowerCase().trim();
+
     const { data: usersList } = await supabase.auth.admin.listUsers();
     const matchingUser = (usersList?.users || []).find(
       u => (u.email || '').toLowerCase() === normalizedNewEmail
