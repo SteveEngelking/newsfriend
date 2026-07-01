@@ -42,10 +42,7 @@ export function EthicalPerspectivesManager() {
   useEffect(() => { loadPerspectives(); }, []);
 
   const loadPerspectives = async () => {
-    const { data } = await supabase
-      .from('ethical_perspectives')
-      .select('*')
-      .order('sort_order', { ascending: true });
+    const { data } = await (supabase as any).rpc('admin_get_ethical_perspectives');
     if (data) setPerspectives(data as unknown as EthicalPerspective[]);
   };
 
