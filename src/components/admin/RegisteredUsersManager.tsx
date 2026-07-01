@@ -17,6 +17,7 @@ interface UserProfile {
   notify_announcements?: boolean;
   is_admin?: boolean;
   email_verified?: boolean;
+  last_sign_in_at?: string | null;
 }
 
 export function RegisteredUsersManager() {
@@ -51,7 +52,7 @@ export function RegisteredUsersManager() {
         .select('user_id');
 
       // Load email verification status
-      let verifications: Record<string, { confirmed: boolean }> = {};
+      let verifications: Record<string, { confirmed: boolean; last_sign_in_at?: string | null }> = {};
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const { data: verData } = await supabase.functions.invoke('list-user-verification', {
@@ -69,6 +70,7 @@ export function RegisteredUsersManager() {
         notify_announcements: prefsMap.get(p.user_id)?.notify_announcements ?? false,
         is_admin: adminSet.has(p.user_id),
         email_verified: verifications[p.user_id]?.confirmed ?? false,
+        last_sign_in_at: verifications[p.user_id]?.last_sign_in_at ?? null,
       }));
 
       setUsers(merged);
@@ -142,7 +144,12 @@ export function RegisteredUsersManager() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                     <span>{user.display_name || '—'}</span>
                     <span>•</span>
-                    <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                    <span title="Registered">{new Date(user.created_at).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span title="Last sign-in">
+                      Last seen:{' '}
+                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : '—'}
+                    </span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       {user.notify_daily_reports ? (

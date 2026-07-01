@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     }
 
     // Paginate auth.admin.listUsers
-    const verifications: Record<string, { confirmed: boolean; confirmed_at: string | null }> = {};
+    const verifications: Record<string, { confirmed: boolean; confirmed_at: string | null; last_sign_in_at: string | null }> = {};
     let page = 1;
     const perPage = 1000;
     while (true) {
@@ -52,7 +52,8 @@ Deno.serve(async (req) => {
       const users = data?.users || [];
       for (const u of users) {
         const confirmedAt = (u as any).email_confirmed_at || (u as any).confirmed_at || null;
-        verifications[u.id] = { confirmed: !!confirmedAt, confirmed_at: confirmedAt };
+        const lastSignInAt = (u as any).last_sign_in_at || null;
+        verifications[u.id] = { confirmed: !!confirmedAt, confirmed_at: confirmedAt, last_sign_in_at: lastSignInAt };
       }
       if (users.length < perPage) break;
       page++;
