@@ -147,7 +147,7 @@ export function RegisteredUsersManager() {
                     <span title="Registered">{new Date(user.created_at).toLocaleDateString()}</span>
                     <span>•</span>
                     <span title="Last sign-in">
-                      {t('adminRegisteredLastSeen') || 'Last seen'}:{' '}
+                      Last seen:{' '}
                       {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : '—'}
                     </span>
                     <span>•</span>
