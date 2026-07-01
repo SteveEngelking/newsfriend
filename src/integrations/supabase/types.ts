@@ -823,6 +823,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_ethical_perspectives: {
+        Args: never
+        Returns: {
+          color_bg: string
+          color_border: string
+          color_heading: string
+          color_text: string
+          created_at: string
+          description: string
+          enabled: boolean
+          icon: string
+          id: string
+          name: string
+          prompt_instruction: string
+          sort_order: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ethical_perspectives"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_get_mondcivitan_settings: {
+        Args: never
+        Returns: {
+          description: string
+          id: number
+          prompt_instruction: string
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mondcivitan_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

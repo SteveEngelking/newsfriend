@@ -18,11 +18,7 @@ export function MondcivitanSettingsManager() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase as any)
-        .from('mondcivitan_settings')
-        .select('title, description, prompt_instruction')
-        .eq('id', 1)
-        .maybeSingle();
+      const { data } = await (supabase as any).rpc('admin_get_mondcivitan_settings');
       if (data) {
         setTitle(data.title || '');
         setDescription(data.description || '');
