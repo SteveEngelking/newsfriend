@@ -85,6 +85,50 @@ serve(async (req) => {
 
     if (updateError) throw updateError;
 
+    // Notify admins about the new theme comment
+    try {
+      const { data: adminRoles } = await adminClient
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRoles && adminRoles.length > 0) {
+        const adminUserIds = adminRoles.map((r: any) => r.user_id);
+        const { data: adminProfiles } = await adminClient
+          .from("profiles")
+          .select("email")
+          .in("user_id", adminUserIds);
+
+        const { data: submitterProfile } = await adminClient
+          .from("profiles")
+          .select("email, display_name")
+          .eq("user_id", user.id)
+          .single();
+
+        const submitterName =
+          submitterProfile?.display_name || submitterProfile?.email || "A user";
+        const trimmed = content.trim();
+        const preview = trimmed.substring(0, 200) + (trimmed.length > 200 ? "..." : "");
+
+        if (adminProfiles) {
+          for (const admin of adminProfiles) {
+            if (admin.email) {
+              await adminClient.functions.invoke("send-transactional-email", {
+                body: {
+                  templateName: "new-comment-admin",
+                  recipientEmail: admin.email,
+                  idempotencyKey: `new-theme-comment-${commentId}-${admin.email}`,
+                  templateData: { submitterName, questionPreview: preview },
+                },
+              });
+            }
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.error("Failed to notify admins:", notifErr);
+    }
+
     return new Response(JSON.stringify({ analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
