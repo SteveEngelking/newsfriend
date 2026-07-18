@@ -27,6 +27,8 @@ project_id = "kitduddwitnsaqfwdpxd"
     verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = true
+  [functions.send-notification]
+    verify_jwt = false
   [functions.translate-report]
     verify_jwt = false
   [functions.scheduler-status]
