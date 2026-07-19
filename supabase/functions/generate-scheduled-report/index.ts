@@ -161,6 +161,39 @@ Deno.serve(async (req) => {
 
     const results: string[] = [];
 
+    const triggerDailyNotification = async (
+      scheduleId: string,
+      reportId: string,
+      language: string,
+      context: 'post-generation' | 'catch-up',
+    ): Promise<boolean> => {
+      try {
+        const { data, error } = await supabase.functions.invoke('send-notification', {
+          body: { type: 'daily_report', reportId, language },
+        });
+
+        if (error) {
+          console.error(`Schedule ${scheduleId}: ${context} notification invocation failed for ${language}:`, error);
+          results.push(`Schedule ${scheduleId}: notification FAILED for ${language} (${context})`);
+          return false;
+        }
+
+        const sent = typeof data?.sent === 'number' ? data.sent : 0;
+        if (sent === 0) {
+          console.warn(`Schedule ${scheduleId}: ${context} notification queued 0 emails for ${language}:`, data);
+          results.push(`Schedule ${scheduleId}: notification queued 0 emails for ${language} (${context})`);
+          return false;
+        }
+
+        console.log(`Schedule ${scheduleId}: ${context} notification queued ${sent} emails for ${language} (report ${reportId})`);
+        return true;
+      } catch (error) {
+        console.error(`Schedule ${scheduleId}: ${context} notification threw for ${language}:`, error);
+        results.push(`Schedule ${scheduleId}: notification FAILED for ${language} (${context})`);
+        return false;
+      }
+    };
+
     const runScheduleWork = async () => {
       for (const schedule of schedules) {
       // Use new time-of-day trigger logic with catch-up
@@ -174,6 +207,41 @@ Deno.serve(async (req) => {
         languagesDue = languagesDue.filter(l => l.code === scheduleLang);
       }
       if (languagesDue.length === 0) {
+        // A report may have been stored near the edge-runtime limit before its
+        // notification call completed. On later hourly ticks, retry any report
+        // that has no email log rows yet instead of treating the day as done.
+        const { data: latestReport } = await supabase
+          .from('generated_reports')
+          .select('id, language, created_at')
+          .eq('schedule_id', schedule.id)
+          .gte('created_at', startOfTodayUtc.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (latestReport?.id) {
+          const { data: existingNotification } = await supabase
+            .from('email_send_log')
+            .select('id')
+            .eq('template_name', 'daily-report-notification')
+            .gte('created_at', latestReport.created_at)
+            .limit(1)
+            .maybeSingle();
+
+          if (!existingNotification) {
+            const queued = await triggerDailyNotification(
+              schedule.id,
+              latestReport.id,
+              latestReport.language || scheduleLang || 'en',
+              'catch-up',
+            );
+            if (queued) {
+              results.push(`Schedule ${schedule.id}: notification catch-up completed`);
+              continue;
+            }
+          }
+        }
+
         results.push(`Schedule ${schedule.id}: not due yet`);
         continue;
       }
@@ -675,13 +743,11 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
         // Fire notification (subscribers receive their preferred-language email).
         // send-notification is idempotent per (template, recipient, date), so being
         // called twice in a single run (once per language) is safe.
-        try {
-          await supabase.functions.invoke('send-notification', {
-            body: { type: 'daily_report', reportId: newReportId, language: lang.code },
-          });
-          console.log(`Schedule ${schedule.id}: notification triggered after ${lang.code} (report ${newReportId})`);
-        } catch (notifErr) {
-          console.error(`Schedule ${schedule.id}: notification failed after ${lang.code}:`, notifErr);
+        if (newReportId) {
+          await triggerDailyNotification(schedule.id, newReportId, lang.code, 'post-generation');
+        } else {
+          console.error(`Schedule ${schedule.id}: report stored without an id; notification cannot be triggered for ${lang.code}`);
+          results.push(`Schedule ${schedule.id}: notification FAILED for ${lang.code} (missing report id)`);
         }
       };
 
