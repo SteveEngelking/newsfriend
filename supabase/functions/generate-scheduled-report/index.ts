@@ -168,12 +168,25 @@ Deno.serve(async (req) => {
       context: 'post-generation' | 'catch-up',
     ): Promise<boolean> => {
       try {
-        const { data, error } = await supabase.functions.invoke('send-notification', {
-          body: { type: 'daily_report', reportId, language },
+        // Use an explicit server-to-server request. Nested functions.invoke calls
+        // have intermittently forwarded the wrong Authorization header here,
+        // causing send-notification to reject the scheduler with HTTP 401.
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            'apikey': SUPABASE_SERVICE_ROLE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ type: 'daily_report', reportId, language }),
         });
+        const data = await response.json().catch(() => null);
 
-        if (error) {
-          console.error(`Schedule ${scheduleId}: ${context} notification invocation failed for ${language}:`, error);
+        if (!response.ok) {
+          console.error(`Schedule ${scheduleId}: ${context} notification invocation failed for ${language}:`, {
+            status: response.status,
+            data,
+          });
           results.push(`Schedule ${scheduleId}: notification FAILED for ${language} (${context})`);
           return false;
         }
