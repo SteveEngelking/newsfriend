@@ -176,11 +176,33 @@ Deno.serve(async (req) => {
       for (const lang of neededLangs) {
         if (reportsByLanguage[lang]) continue
         try {
-          const { data: trans, error: transErr } = await supabase.functions.invoke('translate-report', {
-            body: { reportId: sourceReportId, language: lang },
-          })
-          if (transErr) throw transErr
-          const rd = (trans as any)?.report_data
+          // Prefer an existing translation, then allow only a short bounded
+          // attempt to generate one. Email dispatch must not be held hostage by
+          // a slow AI translation; on timeout we send the source-language
+          // briefing so every subscriber still receives the daily notification.
+          const { data: cachedTranslation } = await supabase
+            .from('report_translations')
+            .select('report_data')
+            .eq('report_id', sourceReportId)
+            .eq('language', lang)
+            .maybeSingle()
+
+          let rd = (cachedTranslation as any)?.report_data
+          if (!rd) {
+            const response = await fetch(`${supabaseUrl}/functions/v1/translate-report`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${serviceKey}`,
+                'apikey': serviceKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ reportId: sourceReportId, language: lang }),
+              signal: AbortSignal.timeout(15_000),
+            })
+            if (!response.ok) throw new Error(`Translation returned HTTP ${response.status}`)
+            rd = (await response.json())?.report_data
+          }
+
           if (rd) {
             reportsByLanguage[lang] = {
               introduction: (rd.introduction || ''),
