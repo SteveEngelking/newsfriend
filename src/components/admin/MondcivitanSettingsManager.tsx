@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Loader2, Save, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 export function MondcivitanSettingsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [enabled, setEnabled] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [promptInstruction, setPromptInstruction] = useState('');
@@ -18,15 +20,35 @@ export function MondcivitanSettingsManager() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase as any).rpc('admin_get_mondcivitan_settings');
+      const [{ data }, { data: schedules }] = await Promise.all([
+        (supabase as any).rpc('admin_get_mondcivitan_settings'),
+        supabase.from('report_schedules').select('mondcivitan_enabled'),
+      ]);
       if (data) {
         setTitle(data.title || '');
         setDescription(data.description || '');
         setPromptInstruction(data.prompt_instruction || '');
       }
+      if (schedules?.length) {
+        setEnabled(schedules.some((s: any) => s.mondcivitan_enabled));
+      }
       setLoading(false);
     })();
   }, []);
+
+  const handleToggle = async (checked: boolean) => {
+    setEnabled(checked);
+    const { error } = await supabase
+      .from('report_schedules')
+      .update({ mondcivitan_enabled: checked })
+      .not('id', 'is', null);
+    if (error) {
+      setEnabled(!checked);
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: checked ? 'Mondcivitan reflections enabled' : 'Mondcivitan reflections disabled' });
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -66,7 +88,17 @@ export function MondcivitanSettingsManager() {
           </div>
         ) : (
           <>
+            <div className="flex items-center justify-between rounded-md border border-border/60 p-3">
+              <div className="space-y-0.5 pr-4">
+                <Label htmlFor="mc-enabled" className="text-sm">Include Mondcivitan reflections</Label>
+                <p className="text-xs text-muted-foreground">
+                  When on, every generated report theme includes a Mondcivitan reflection. Applies to all schedules.
+                </p>
+              </div>
+              <Switch id="mc-enabled" checked={enabled} onCheckedChange={handleToggle} />
+            </div>
             <div className="space-y-1.5">
+
               <Label htmlFor="mc-title" className="text-xs">Title</Label>
               <Input id="mc-title" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
