@@ -88,7 +88,17 @@ export function MondcivitanSettingsManager() {
           </div>
         ) : (
           <>
+            <div className="flex items-center justify-between rounded-md border border-border/60 p-3">
+              <div className="space-y-0.5 pr-4">
+                <Label htmlFor="mc-enabled" className="text-sm">Include Mondcivitan reflections</Label>
+                <p className="text-xs text-muted-foreground">
+                  When on, every generated report theme includes a Mondcivitan reflection. Applies to all schedules.
+                </p>
+              </div>
+              <Switch id="mc-enabled" checked={enabled} onCheckedChange={handleToggle} />
+            </div>
             <div className="space-y-1.5">
+
               <Label htmlFor="mc-title" className="text-xs">Title</Label>
               <Input id="mc-title" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
