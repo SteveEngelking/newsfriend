@@ -430,6 +430,8 @@ Deno.serve(async (req) => {
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
       // Honor admin's sources_per_theme as-is, only clamped by available sources.
       const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
+      // 0 = unlimited: how many times a single publication may be cited across the whole edition
+      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
@@ -487,7 +489,7 @@ CONCLUSION RULE — ABSOLUTE: The conclusion MUST NOT reference any specific cou
 SOURCE-SPECIFIC ANALYSIS RULE — ABSOLUTE: For every source analysis, the "stance" field MUST describe how that specific publication framed THIS specific theme — not a generic boilerplate description of the outlet. NEVER output generic outlet self-descriptions such as "Latest news, sport, business, comment, analysis and reviews from the Guardian, the world's leading liberal voice." or anything resembling marketing copy or a publication's tagline. The stance must reference concrete details from the article (angle, framing, what they emphasised or omitted, tone) and be unique to this theme.
 SOURCE DIVERSITY RULE: Across the ${batchThemeCount} themes you produce, vary which publications you cite. Do NOT reuse the same two publications for every theme when other relevant sources are available. Each theme should ideally feature a different combination of publications drawn from the article list.
 ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ONE theme's sourceAnalysis across the entire report. NEVER cite the same article URL in two different themes. If an article could fit several themes, assign it to the single most relevant one. Prefer fewer citations in a theme over reusing an article already used in another theme.
-RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
+${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sourceName) may be cited AT MOST ${maxUsesPerSource} time(s) across the ENTIRE report. Spread citations across as many different publications as possible.\n` : ''}RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
         const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
@@ -672,6 +674,24 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
           });
           return { ...theme, sourceAnalysis: filtered };
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+
+        // Per-source usage cap across the whole edition (0 = unlimited).
+        // Always keep at least one citation per theme so the theme survives.
+        if (maxUsesPerSource > 0) {
+          const sourceUseCount = new Map<string, number>();
+          allThemes = allThemes.map((theme: any) => {
+            const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
+            const kept: any[] = [];
+            for (const entry of sa) {
+              const name = String(entry?.sourceName || '').trim().toLowerCase();
+              const used = name ? (sourceUseCount.get(name) || 0) : 0;
+              if (name && used >= maxUsesPerSource && kept.length > 0) continue;
+              if (name) sourceUseCount.set(name, used + 1);
+              kept.push(entry);
+            }
+            return { ...theme, sourceAnalysis: kept };
+          });
+        }
 
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
