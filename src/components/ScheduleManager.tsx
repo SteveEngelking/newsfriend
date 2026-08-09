@@ -422,6 +422,26 @@ export function ScheduleManager({ sources }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="text-sm font-medium">
+              {language === 'de' ? 'Max. Verwendungen pro Quelle' : 'Max uses per source'}
+            </label>
+            <Select value={String(maxUsesPerSource)} onValueChange={(v) => setMaxUsesPerSource(Number(v))}>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">{language === 'de' ? 'Unbegrenzt' : 'Unlimited'}</SelectItem>
+                {[1, 2, 3, 4, 5, 6, 8, 10].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">
+              {language === 'de'
+                ? 'Wie oft eine einzelne Quelle pro Ausgabe zitiert werden darf'
+                : 'How often a single source may be cited per edition'}
+            </span>
+          </div>
+
           <div className="flex items-center gap-2">
             <Checkbox id="mondcivitan" checked={mondcivitanEnabled} onCheckedChange={(checked) => setMondcivitanEnabled(checked === true)} />
             <label htmlFor="mondcivitan" className="text-sm cursor-pointer">
