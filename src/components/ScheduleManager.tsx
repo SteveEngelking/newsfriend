@@ -28,6 +28,7 @@ interface Schedule {
   schweitzer_enabled: boolean;
   target_themes: number;
   sources_per_theme: number;
+  max_uses_per_source: number;
   report_style: string;
   schedule_hour_utc: number;
   last_run_at: string | null;
@@ -51,6 +52,7 @@ export function ScheduleManager({ sources }: Props) {
   const [maxArticles, setMaxArticles] = useState(80);
   const [targetThemes, setTargetThemes] = useState(0);
   const [sourcesPerTheme, setSourcesPerTheme] = useState(2);
+  const [maxUsesPerSource, setMaxUsesPerSource] = useState(0);
   const [aiModel, setAiModel] = useState('openai/gpt-5-mini');
   const [reportStyle, setReportStyle] = useState('analytical');
   const [scheduleHourUtc, setScheduleHourUtc] = useState(6);
@@ -88,6 +90,7 @@ export function ScheduleManager({ sources }: Props) {
       setMaxArticles((sched as any).max_articles ?? 80);
       setTargetThemes((sched as any).target_themes ?? 0);
       setSourcesPerTheme((sched as any).sources_per_theme ?? 2);
+      setMaxUsesPerSource((sched as any).max_uses_per_source ?? 0);
       setAiModel((sched as any).ai_model || 'openai/gpt-5-mini');
       setReportStyle((sched as any).report_style || 'analytical');
       setScheduleHourUtc(Number.isInteger((sched as any).schedule_hour_utc) ? (sched as any).schedule_hour_utc : 6);
@@ -120,7 +123,7 @@ export function ScheduleManager({ sources }: Props) {
     const sourceIds = enabledSources.map(s => s.id);
 
     if (schedule) {
-      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc };
+      const updateData: Record<string, unknown> = { frequency, language, source_ids: sourceIds, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, max_uses_per_source: maxUsesPerSource, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc };
       if (frequency === 'immediate') updateData.last_run_at = null;
       const { error } = await supabase.from('report_schedules').update(updateData as any).eq('id', schedule.id);
       if (error) {
@@ -133,7 +136,7 @@ export function ScheduleManager({ sources }: Props) {
     } else {
       const { data, error } = await supabase
         .from('report_schedules')
-        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc } as any)
+        .insert({ frequency, language: language, source_ids: sourceIds, articles_per_source: 8, enabled: true, mondcivitan_enabled: mondcivitanEnabled, schweitzer_enabled: schweitzerEnabled, max_articles: maxArticles, target_themes: targetThemes, sources_per_theme: sourcesPerTheme, max_uses_per_source: maxUsesPerSource, ai_model: aiModel, report_style: reportStyle, schedule_hour_utc: scheduleHourUtc } as any)
         .select('id')
         .single();
       if (error) {
