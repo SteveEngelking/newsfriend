@@ -410,12 +410,16 @@ Deno.serve(async (req) => {
       }
       const sourceNames = Object.keys(bySource);
       const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 60) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
-      const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
+      // 0 = unlimited: how many times a single publication may be cited across the whole edition
+      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
+      // Hard cap the candidate pool itself so the model physically cannot over-cite a source.
+      const poolCapPerSource = maxUsesPerSource > 0 ? maxUsesPerSource : Infinity;
+      const perSource = Math.min(poolCapPerSource, Math.max(1, Math.floor(maxTotal / sourceNames.length)));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
       if (balanced.length < maxTotal) {
         for (const src of sourceNames) {
-          for (const a of bySource[src].slice(perSource)) {
+          for (const a of bySource[src].slice(perSource, poolCapPerSource === Infinity ? undefined : poolCapPerSource)) {
             if (balanced.length >= maxTotal) break;
             balanced.push(a);
           }
@@ -430,8 +434,7 @@ Deno.serve(async (req) => {
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
       // Honor admin's sources_per_theme as-is, only clamped by available sources.
       const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
-      // 0 = unlimited: how many times a single publication may be cited across the whole edition
-      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
+
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
