@@ -410,12 +410,16 @@ Deno.serve(async (req) => {
       }
       const sourceNames = Object.keys(bySource);
       const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 60) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
-      const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
+      // 0 = unlimited: how many times a single publication may be cited across the whole edition
+      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
+      // Hard cap the candidate pool itself so the model physically cannot over-cite a source.
+      const poolCapPerSource = maxUsesPerSource > 0 ? maxUsesPerSource : Infinity;
+      const perSource = Math.min(poolCapPerSource, Math.max(1, Math.floor(maxTotal / sourceNames.length)));
       const balanced: any[] = [];
       for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
       if (balanced.length < maxTotal) {
         for (const src of sourceNames) {
-          for (const a of bySource[src].slice(perSource)) {
+          for (const a of bySource[src].slice(perSource, poolCapPerSource === Infinity ? undefined : poolCapPerSource)) {
             if (balanced.length >= maxTotal) break;
             balanced.push(a);
           }
@@ -430,8 +434,7 @@ Deno.serve(async (req) => {
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
       // Honor admin's sources_per_theme as-is, only clamped by available sources.
       const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
-      // 0 = unlimited: how many times a single publication may be cited across the whole edition
-      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
+
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
@@ -675,23 +678,38 @@ ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sou
           return { ...theme, sourceAnalysis: filtered };
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
 
-        // Per-source usage cap across the whole edition (0 = unlimited).
-        // Always keep at least one citation per theme so the theme survives.
+        // Per-source usage cap across the whole edition (0 = unlimited). Absolute:
+        // keyed by article domain when available (falls back to a normalised publication
+        // name) so spelling variants of the same outlet cannot slip past the cap.
         if (maxUsesPerSource > 0) {
+          const sourceKey = (entry: any): string => {
+            const url = String(entry?.articleUrl || '').trim();
+            if (url) {
+              try {
+                return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+              } catch { /* fall through to name */ }
+            }
+            return String(entry?.sourceName || '')
+              .toLowerCase()
+              .replace(/^the\s+/, '')
+              .replace(/[^a-z0-9]/g, '');
+          };
           const sourceUseCount = new Map<string, number>();
           allThemes = allThemes.map((theme: any) => {
             const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
             const kept: any[] = [];
             for (const entry of sa) {
-              const name = String(entry?.sourceName || '').trim().toLowerCase();
-              const used = name ? (sourceUseCount.get(name) || 0) : 0;
-              if (name && used >= maxUsesPerSource && kept.length > 0) continue;
-              if (name) sourceUseCount.set(name, used + 1);
+              const key = sourceKey(entry);
+              if (!key) { kept.push(entry); continue; }
+              const used = sourceUseCount.get(key) || 0;
+              if (used >= maxUsesPerSource) continue;
+              sourceUseCount.set(key, used + 1);
               kept.push(entry);
             }
             return { ...theme, sourceAnalysis: kept };
-          });
+          }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
         }
+
 
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
