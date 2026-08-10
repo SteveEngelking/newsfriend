@@ -678,23 +678,38 @@ ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sou
           return { ...theme, sourceAnalysis: filtered };
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
 
-        // Per-source usage cap across the whole edition (0 = unlimited).
-        // Always keep at least one citation per theme so the theme survives.
+        // Per-source usage cap across the whole edition (0 = unlimited). Absolute:
+        // keyed by article domain when available (falls back to a normalised publication
+        // name) so spelling variants of the same outlet cannot slip past the cap.
         if (maxUsesPerSource > 0) {
+          const sourceKey = (entry: any): string => {
+            const url = String(entry?.articleUrl || '').trim();
+            if (url) {
+              try {
+                return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+              } catch { /* fall through to name */ }
+            }
+            return String(entry?.sourceName || '')
+              .toLowerCase()
+              .replace(/^the\s+/, '')
+              .replace(/[^a-z0-9]/g, '');
+          };
           const sourceUseCount = new Map<string, number>();
           allThemes = allThemes.map((theme: any) => {
             const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
             const kept: any[] = [];
             for (const entry of sa) {
-              const name = String(entry?.sourceName || '').trim().toLowerCase();
-              const used = name ? (sourceUseCount.get(name) || 0) : 0;
-              if (name && used >= maxUsesPerSource && kept.length > 0) continue;
-              if (name) sourceUseCount.set(name, used + 1);
+              const key = sourceKey(entry);
+              if (!key) { kept.push(entry); continue; }
+              const used = sourceUseCount.get(key) || 0;
+              if (used >= maxUsesPerSource) continue;
+              sourceUseCount.set(key, used + 1);
               kept.push(entry);
             }
             return { ...theme, sourceAnalysis: kept };
-          });
+          }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
         }
+
 
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
