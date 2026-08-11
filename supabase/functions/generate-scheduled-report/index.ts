@@ -414,17 +414,37 @@ Deno.serve(async (req) => {
       const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
       // Hard cap the candidate pool itself so the model physically cannot over-cite a source.
       const poolCapPerSource = maxUsesPerSource > 0 ? maxUsesPerSource : Infinity;
-      const perSource = Math.min(poolCapPerSource, Math.max(1, Math.floor(maxTotal / sourceNames.length)));
+      const perSource = Math.min(poolCapPerSource, Math.max(1, Math.ceil(maxTotal / sourceNames.length)));
       const balanced: any[] = [];
-      for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
-      if (balanced.length < maxTotal) {
+      // Interleave publications one article at a time. Grouping articles by outlet here
+      // made each high-theme batch contain only a small block of publications, which
+      // encouraged the model to repeatedly favour those outlets.
+      for (let round = 0; round < perSource && balanced.length < maxTotal; round++) {
         for (const src of sourceNames) {
-          for (const a of bySource[src].slice(perSource, poolCapPerSource === Infinity ? undefined : poolCapPerSource)) {
-            if (balanced.length >= maxTotal) break;
-            balanced.push(a);
-          }
+          const article = bySource[src][round];
+          if (article) balanced.push(article);
           if (balanced.length >= maxTotal) break;
         }
+      }
+
+      const availableSourceNames = [...new Set(balanced.map((article: any) => article.sourceName))];
+      const normalizeArticleUrl = (value: unknown): string => {
+        try {
+          const parsed = new URL(String(value || '').trim());
+          parsed.hash = '';
+          parsed.hostname = parsed.hostname.replace(/^www\./, '').toLowerCase();
+          parsed.pathname = parsed.pathname.replace(/\/$/, '') || '/';
+          return parsed.toString();
+        } catch {
+          return '';
+        }
+      };
+      // The model may pair a real URL with the wrong publication name. Keep an
+      // authoritative URL→publication map so limits are enforced on fetched sources.
+      const candidateByUrl = new Map<string, any>();
+      for (const article of balanced) {
+        const key = normalizeArticleUrl(article.url);
+        if (key) candidateByUrl.set(key, article);
       }
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
@@ -433,7 +453,7 @@ Deno.serve(async (req) => {
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
       // Honor admin's sources_per_theme as-is, only clamped by available sources.
-      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
+      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, availableSourceNames.length)));
 
 
       const articlesSummary = balanced.map((a: any, i: number) =>
@@ -490,12 +510,12 @@ LANGUAGE RULE — ABSOLUTE, NO EXCEPTIONS: Every single field you output (title,
 INTRODUCTION RULE — ABSOLUTE: The introduction MUST NOT mention any specific number of themes, topics, or articles (e.g. never write "ten themes", "20 topics", "the following 15 stories"). Write a natural editorial introduction without counting.
 CONCLUSION RULE — ABSOLUTE: The conclusion MUST NOT reference any specific count of themes, topics, or articles either (never write "these ten themes", "the twenty stories above", "across these 15 topics"). Refer to the coverage in general terms only (e.g. "today's themes", "the stories above").
 SOURCE-SPECIFIC ANALYSIS RULE — ABSOLUTE: For every source analysis, the "stance" field MUST describe how that specific publication framed THIS specific theme — not a generic boilerplate description of the outlet. NEVER output generic outlet self-descriptions such as "Latest news, sport, business, comment, analysis and reviews from the Guardian, the world's leading liberal voice." or anything resembling marketing copy or a publication's tagline. The stance must reference concrete details from the article (angle, framing, what they emphasised or omitted, tone) and be unique to this theme.
-SOURCE DIVERSITY RULE: Across the ${batchThemeCount} themes you produce, vary which publications you cite. Do NOT reuse the same two publications for every theme when other relevant sources are available. Each theme should ideally feature a different combination of publications drawn from the article list.
+SOURCE DIVERSITY RULE — ABSOLUTE: Use the widest possible range of publications before reusing any publication. Do NOT favour outlets merely because they have several relevant articles. Across the batch, every available publication should receive one citation before any publication receives a second citation, whenever topic relevance permits.
 ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ONE theme's sourceAnalysis across the entire report. NEVER cite the same article URL in two different themes. If an article could fit several themes, assign it to the single most relevant one. Prefer fewer citations in a theme over reusing an article already used in another theme.
-${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sourceName) may be cited AT MOST ${maxUsesPerSource} time(s) across the ENTIRE report. Spread citations across as many different publications as possible.\n` : ''}RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
+        ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sourceName) may be cited AT MOST ${maxUsesPerSource} time(s) across the ENTIRE report. Spread citations across as many different publications as possible.\n` : ''}RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl exactly as supplied; never invent a URL or pair it with another publication. Use only these exact sourceName values when citing publications: ${availableSourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
+        const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${availableSourceNames.join(', ')}`;
 
         const primaryModel = schedule.ai_model || 'openai/gpt-5-mini';
         const fallbackModel = 'openai/gpt-5-mini';
@@ -531,7 +551,7 @@ ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sou
                             items: {
                               type: 'object',
                               properties: {
-                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` },
+                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${availableSourceNames.join(', ')}` },
                                 stance: { type: 'string', description: 'How THIS publication framed THIS specific theme. Must reference concrete article details. Never a generic outlet description or tagline.' },
                                 keyQuotes: { type: 'array', items: { type: 'string', description: `A short representative quote, FULLY TRANSLATED into ${lang.outputLang}. If the original quote is in another language (French, German, Spanish, etc.), translate it — do NOT output the original-language text. No bilingual output.` }, minItems: 1, maxItems: 1 },
                                 biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
@@ -663,6 +683,18 @@ ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sou
           return true;
         }).slice(0, themeCount);
 
+        // Validate every citation against the fetched candidate pool and restore the
+        // authoritative publication name from its URL before exclusivity/cap checks.
+        allThemes = allThemes.map((theme: any) => {
+          const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
+          const validated = sa.flatMap((entry: any) => {
+            const candidate = candidateByUrl.get(normalizeArticleUrl(entry?.articleUrl));
+            if (!candidate) return [];
+            return [{ ...entry, sourceName: candidate.sourceName, articleUrl: candidate.url }];
+          });
+          return { ...theme, sourceAnalysis: validated };
+        }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+
         // Article exclusivity: ensure no article URL is cited in more than one theme.
         // Keep the first occurrence; strip duplicates from later themes.
         const seenArticleUrls = new Set<string>();
@@ -679,16 +711,9 @@ ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sou
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
 
         // Per-source usage cap across the whole edition (0 = unlimited). Absolute:
-        // keyed by article domain when available (falls back to a normalised publication
-        // name) so spelling variants of the same outlet cannot slip past the cap.
+        // keyed by the authoritative publication attached to the fetched URL.
         if (maxUsesPerSource > 0) {
           const sourceKey = (entry: any): string => {
-            const url = String(entry?.articleUrl || '').trim();
-            if (url) {
-              try {
-                return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
-              } catch { /* fall through to name */ }
-            }
             return String(entry?.sourceName || '')
               .toLowerCase()
               .replace(/^the\s+/, '')
