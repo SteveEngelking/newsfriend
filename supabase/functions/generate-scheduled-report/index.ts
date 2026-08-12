@@ -448,12 +448,30 @@ Deno.serve(async (req) => {
       }
 
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const themeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
+      const requestedThemeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
+      // Every retained theme must cite at least one verified, exclusive article.
+      // If today's searches return fewer current articles than the configured theme
+      // target, scale the edition down rather than asking the model for an impossible
+      // result and then aborting the entire report during citation validation.
+      const themeCount = Math.min(requestedThemeCount, balanced.length);
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
-      // Honor admin's sources_per_theme as-is, only clamped by available sources.
-      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, availableSourceNames.length)));
+      // Article exclusivity also means the citation count must fit the verified pool.
+      // Preserve the admin setting whenever possible, otherwise degrade gracefully.
+      const feasibleSourcesPerTheme = Math.max(1, Math.floor(balanced.length / Math.max(1, themeCount)));
+      const sourcesPerTheme = Math.max(1, Math.min(
+        requestedSourcesPerTheme,
+        Math.max(1, availableSourceNames.length),
+        feasibleSourcesPerTheme,
+      ));
+
+      if (themeCount < requestedThemeCount || sourcesPerTheme < requestedSourcesPerTheme) {
+        console.warn(
+          `Schedule ${schedule.id}: adapting ${requestedThemeCount} themes × ${requestedSourcesPerTheme} sources ` +
+          `to ${themeCount} themes × ${sourcesPerTheme} sources for ${balanced.length} verified articles`,
+        );
+      }
 
 
       const articlesSummary = balanced.map((a: any, i: number) =>
@@ -619,7 +637,7 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
         const ethicalConsiderations: any[] = [];
         const legacyFields: Record<string, any> = {};
 
-        if (isHighThemes) {
+        if (themeCount > 10) {
           // Split into two batches
           const half1 = Math.ceil(themeCount / 2);
           const half2 = themeCount - half1;
