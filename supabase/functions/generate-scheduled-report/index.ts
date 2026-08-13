@@ -277,19 +277,14 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
-      // For high theme counts, use more diverse queries but fewer results each
+      // Keep the query set broad. Sending six searches for every publication at
+      // once caused Firecrawl throttling, leaving only a handful of usable articles.
       const queries = isHighThemes ? [
-        'latest news today breaking',
-        'world politics economy technology',
-        'health science environment culture',
-        'aktuelle nachrichten heute eilmeldung',
-        'welt politik wirtschaft technologie',
-        'gesundheit wissenschaft umwelt kultur',
+        'latest news today breaking world politics economy technology health science environment culture',
+        'aktuelle nachrichten heute eilmeldung welt politik wirtschaft technologie gesundheit wissenschaft umwelt kultur',
       ] : [
-        'latest news today breaking',
-        'world politics economy technology health science',
-        'aktuelle nachrichten heute eilmeldung',
-        'welt politik wirtschaft technologie gesundheit wissenschaft',
+        'latest news today breaking world politics economy technology health science',
+        'aktuelle nachrichten heute eilmeldung welt politik wirtschaft technologie gesundheit wissenschaft',
       ];
 
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
@@ -300,7 +295,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
+      const fetchArticles = async (task: typeof fetchTasks[number]) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
@@ -313,20 +308,25 @@ Deno.serve(async (req) => {
         }
 
         const searchQuery = `${task.query} site:${hostname}`;
-        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: searchQuery,
-            limit: task.perQuery,
-            tbs: 'qdr:d',
-          }),
-        });
+        let resp: Response | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          resp = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: searchQuery,
+              limit: task.perQuery,
+              tbs: 'qdr:d',
+            }),
+          });
+          if (resp.ok || (resp.status !== 429 && resp.status < 500)) break;
+          await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
+        }
 
-        if (!resp.ok) return [];
+        if (!resp?.ok) return [];
         const data = await resp.json();
         if (!data.success || !Array.isArray(data.data)) return [];
 
@@ -374,7 +374,23 @@ Deno.serve(async (req) => {
             const ageMs = Date.now() - new Date(a.publishedAt).getTime();
             return ageMs <= 48 * 60 * 60 * 1000;
           });
-      }));
+      };
+
+      // Bound concurrency so searches succeed instead of being rate-limited. The
+      // previous unbounded Promise.all launched hundreds of requests together.
+      const fetchResults: PromiseSettledResult<any[]>[] = new Array(fetchTasks.length);
+      let nextFetchTask = 0;
+      const workers = Array.from({ length: Math.min(10, fetchTasks.length) }, async () => {
+        while (nextFetchTask < fetchTasks.length) {
+          const index = nextFetchTask++;
+          try {
+            fetchResults[index] = { status: 'fulfilled', value: await fetchArticles(fetchTasks[index]) };
+          } catch (reason) {
+            fetchResults[index] = { status: 'rejected', reason };
+          }
+        }
+      });
+      await Promise.all(workers);
 
       for (const fetchResult of fetchResults) {
         if (fetchResult.status === 'fulfilled' && Array.isArray(fetchResult.value)) {
@@ -451,26 +467,22 @@ Deno.serve(async (req) => {
       const requestedThemeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
-      // Every retained theme must cite at least one verified, exclusive article.
-      // If today's searches return fewer current articles than the configured theme
-      // target, scale the edition down rather than asking the model for an impossible
-      // result and then aborting the entire report during citation validation.
-      const themeCount = Math.min(requestedThemeCount, balanced.length);
+      const themeCount = requestedThemeCount;
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
-      // Article exclusivity also means the citation count must fit the verified pool.
-      // Preserve the admin setting whenever possible, otherwise degrade gracefully.
-      const feasibleSourcesPerTheme = Math.max(1, Math.floor(balanced.length / Math.max(1, themeCount)));
-      const sourcesPerTheme = Math.max(1, Math.min(
-        requestedSourcesPerTheme,
-        Math.max(1, availableSourceNames.length),
-        feasibleSourcesPerTheme,
-      ));
-
-      if (themeCount < requestedThemeCount || sourcesPerTheme < requestedSourcesPerTheme) {
-        console.warn(
-          `Schedule ${schedule.id}: adapting ${requestedThemeCount} themes × ${requestedSourcesPerTheme} sources ` +
-          `to ${themeCount} themes × ${sourcesPerTheme} sources for ${balanced.length} verified articles`,
+      const sourcesPerTheme = requestedSourcesPerTheme;
+      const requiredCitations = themeCount * sourcesPerTheme;
+      const requiredPublications = maxUsesPerSource > 0
+        ? Math.ceil(requiredCitations / maxUsesPerSource)
+        : sourcesPerTheme;
+      if (balanced.length < requiredCitations || availableSourceNames.length < requiredPublications) {
+        console.error(
+          `Schedule ${schedule.id}: insufficient verified material for configured ` +
+          `${themeCount} themes × ${sourcesPerTheme} sources ` +
+          `(${balanced.length} articles from ${availableSourceNames.length} publications; ` +
+          `need ${requiredCitations} articles from at least ${requiredPublications} publications)`,
         );
+        results.push(`Schedule ${schedule.id}: insufficient verified articles for configured report size`);
+        continue;
       }
 
 
@@ -711,7 +723,7 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
             return [{ ...entry, sourceName: candidate.sourceName, articleUrl: candidate.url }];
           });
           return { ...theme, sourceAnalysis: validated };
-        }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+        }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length >= sourcesPerTheme);
 
         // Article exclusivity: ensure no article URL is cited in more than one theme.
         // Keep the first occurrence; strip duplicates from later themes.
@@ -750,18 +762,15 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
               kept.push(entry);
             }
             return { ...theme, sourceAnalysis: kept };
-          }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+          }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length >= sourcesPerTheme);
         }
 
-
-        // Accept partial results: at least 4 themes or half the target
-        const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
-        if (allThemes.length < minAcceptable) {
-          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} themes, need at least ${minAcceptable} of ${themeCount}`);
-          return;
-        }
+        // Never publish an undersized edition or themes with fewer sources than the
+        // administrator configured. Keeping the prior edition is preferable to
+        // silently replacing it with a seven-item, single-source report.
         if (allThemes.length < themeCount) {
-          console.warn(`Schedule ${schedule.id}: ${lang.code} partial — ${allThemes.length}/${themeCount} themes, proceeding`);
+          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} fully validated themes, need ${themeCount}`);
+          return;
         }
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
