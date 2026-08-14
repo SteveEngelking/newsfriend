@@ -401,13 +401,26 @@ Deno.serve(async (req) => {
             const ageMs = Date.now() - new Date(a.publishedAt).getTime();
             return ageMs <= 48 * 60 * 60 * 1000;
           });
-      }));
+      };
 
-      for (const fetchResult of fetchResults) {
-        if (fetchResult.status === 'fulfilled' && Array.isArray(fetchResult.value)) {
-          allArticles.push(...fetchResult.value);
+      // Bounded concurrency so Firecrawl doesn't rate-limit us into a
+      // 3-publication report when dozens of sources are enabled.
+      const CONCURRENCY = 8;
+      let taskIndex = 0;
+      const workers = Array.from({ length: Math.min(CONCURRENCY, fetchTasks.length) }, async () => {
+        while (taskIndex < fetchTasks.length) {
+          const task = fetchTasks[taskIndex++];
+          try {
+            const items = await runTask(task);
+            if (Array.isArray(items)) allArticles.push(...items);
+          } catch {
+            fetchFailures++;
+          }
         }
-      }
+      });
+      await Promise.all(workers);
+
+      console.log(`Schedule ${schedule.id}: fetched ${allArticles.length} articles from ${sources.length} sources (${fetchTasks.length} queries, ${fetchFailures} failed)`);
 
       // Deduplicate by URL
       const seenUrls = new Set<string>();
