@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
       // For high theme counts, use more diverse queries but fewer results each
-      const queries = isHighThemes ? [
+      const allQueries = isHighThemes ? [
         'latest news today breaking',
         'world politics economy technology',
         'health science environment culture',
@@ -292,6 +292,17 @@ Deno.serve(async (req) => {
         'welt politik wirtschaft technologie gesundheit wissenschaft',
       ];
 
+      // With many enabled sources, firing every source x every query at once
+      // rate-limits Firecrawl and most requests fail — which silently collapses
+      // the report down to a handful of publications. Scale queries per source
+      // down as the source list grows, and cap concurrency.
+      const langQueries = schedule.language === 'de'
+        ? allQueries.filter(q => /nachrichten|welt politik|gesundheit wissenschaft/.test(q))
+        : allQueries.filter(q => !/nachrichten|welt politik|gesundheit wissenschaft/.test(q));
+      const baseQueries = langQueries.length ? langQueries : allQueries;
+      const queriesPerSource = sources.length > 30 ? 1 : sources.length > 15 ? 2 : baseQueries.length;
+      const queries = baseQueries.slice(0, queriesPerSource);
+
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
         const perQuery = Math.max(2, Math.ceil(schedule.articles_per_source / queries.length));
@@ -300,7 +311,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
+      let fetchFailures = 0;
+      const runTask = async (task: typeof fetchTasks[0]) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
