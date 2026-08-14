@@ -540,7 +540,6 @@ export type Database = {
           language: string
           last_run_at: string | null
           max_articles: number
-          max_uses_per_source: number
           mondcivitan_enabled: boolean
           report_style: string
           schedule_hour_utc: number
@@ -559,7 +558,6 @@ export type Database = {
           language?: string
           last_run_at?: string | null
           max_articles?: number
-          max_uses_per_source?: number
           mondcivitan_enabled?: boolean
           report_style?: string
           schedule_hour_utc?: number
@@ -578,7 +576,6 @@ export type Database = {
           language?: string
           last_run_at?: string | null
           max_articles?: number
-          max_uses_per_source?: number
           mondcivitan_enabled?: boolean
           report_style?: string
           schedule_hour_utc?: number

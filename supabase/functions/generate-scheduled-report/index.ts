@@ -277,14 +277,19 @@ Deno.serve(async (req) => {
 
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
-      // Keep the query set broad. Sending six searches for every publication at
-      // once caused Firecrawl throttling, leaving only a handful of usable articles.
+      // For high theme counts, use more diverse queries but fewer results each
       const queries = isHighThemes ? [
-        'latest news today breaking world politics economy technology health science environment culture',
-        'aktuelle nachrichten heute eilmeldung welt politik wirtschaft technologie gesundheit wissenschaft umwelt kultur',
+        'latest news today breaking',
+        'world politics economy technology',
+        'health science environment culture',
+        'aktuelle nachrichten heute eilmeldung',
+        'welt politik wirtschaft technologie',
+        'gesundheit wissenschaft umwelt kultur',
       ] : [
-        'latest news today breaking world politics economy technology health science',
-        'aktuelle nachrichten heute eilmeldung welt politik wirtschaft technologie gesundheit wissenschaft',
+        'latest news today breaking',
+        'world politics economy technology health science',
+        'aktuelle nachrichten heute eilmeldung',
+        'welt politik wirtschaft technologie gesundheit wissenschaft',
       ];
 
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
@@ -295,7 +300,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const fetchArticles = async (task: typeof fetchTasks[number]) => {
+      const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
@@ -308,25 +313,20 @@ Deno.serve(async (req) => {
         }
 
         const searchQuery = `${task.query} site:${hostname}`;
-        let resp: Response | null = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          resp = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: searchQuery,
-              limit: task.perQuery,
-              tbs: 'qdr:d',
-            }),
-          });
-          if (resp.ok || (resp.status !== 429 && resp.status < 500)) break;
-          await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
-        }
+        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: task.perQuery,
+            tbs: 'qdr:d',
+          }),
+        });
 
-        if (!resp?.ok) return [];
+        if (!resp.ok) return [];
         const data = await resp.json();
         if (!data.success || !Array.isArray(data.data)) return [];
 
@@ -374,23 +374,7 @@ Deno.serve(async (req) => {
             const ageMs = Date.now() - new Date(a.publishedAt).getTime();
             return ageMs <= 48 * 60 * 60 * 1000;
           });
-      };
-
-      // Bound concurrency so searches succeed instead of being rate-limited. The
-      // previous unbounded Promise.all launched hundreds of requests together.
-      const fetchResults: PromiseSettledResult<any[]>[] = new Array(fetchTasks.length);
-      let nextFetchTask = 0;
-      const workers = Array.from({ length: Math.min(10, fetchTasks.length) }, async () => {
-        while (nextFetchTask < fetchTasks.length) {
-          const index = nextFetchTask++;
-          try {
-            fetchResults[index] = { status: 'fulfilled', value: await fetchArticles(fetchTasks[index]) };
-          } catch (reason) {
-            fetchResults[index] = { status: 'rejected', reason };
-          }
-        }
-      });
-      await Promise.all(workers);
+      }));
 
       for (const fetchResult of fetchResults) {
         if (fetchResult.status === 'fulfilled' && Array.isArray(fetchResult.value)) {
@@ -426,65 +410,26 @@ Deno.serve(async (req) => {
       }
       const sourceNames = Object.keys(bySource);
       const maxTotal = isHighThemes ? Math.min(schedule.max_articles || 80, 60) : (isImmediateRun ? Math.min(schedule.max_articles || 80, 48) : (schedule.max_articles || 80));
-      // 0 = unlimited: how many times a single publication may be cited across the whole edition
-      const maxUsesPerSource = Math.max(0, Number(schedule.max_uses_per_source) || 0);
-      // Hard cap the candidate pool itself so the model physically cannot over-cite a source.
-      const poolCapPerSource = maxUsesPerSource > 0 ? maxUsesPerSource : Infinity;
-      const perSource = Math.min(poolCapPerSource, Math.max(1, Math.ceil(maxTotal / sourceNames.length)));
+      const perSource = Math.max(1, Math.floor(maxTotal / sourceNames.length));
       const balanced: any[] = [];
-      // Interleave publications one article at a time. Grouping articles by outlet here
-      // made each high-theme batch contain only a small block of publications, which
-      // encouraged the model to repeatedly favour those outlets.
-      for (let round = 0; round < perSource && balanced.length < maxTotal; round++) {
+      for (const src of sourceNames) balanced.push(...bySource[src].slice(0, perSource));
+      if (balanced.length < maxTotal) {
         for (const src of sourceNames) {
-          const article = bySource[src][round];
-          if (article) balanced.push(article);
+          for (const a of bySource[src].slice(perSource)) {
+            if (balanced.length >= maxTotal) break;
+            balanced.push(a);
+          }
           if (balanced.length >= maxTotal) break;
         }
       }
 
-      const availableSourceNames = [...new Set(balanced.map((article: any) => article.sourceName))];
-      const normalizeArticleUrl = (value: unknown): string => {
-        try {
-          const parsed = new URL(String(value || '').trim());
-          parsed.hash = '';
-          parsed.hostname = parsed.hostname.replace(/^www\./, '').toLowerCase();
-          parsed.pathname = parsed.pathname.replace(/\/$/, '') || '/';
-          return parsed.toString();
-        } catch {
-          return '';
-        }
-      };
-      // The model may pair a real URL with the wrong publication name. Keep an
-      // authoritative URL→publication map so limits are enforced on fetched sources.
-      const candidateByUrl = new Map<string, any>();
-      for (const article of balanced) {
-        const key = normalizeArticleUrl(article.url);
-        if (key) candidateByUrl.set(key, article);
-      }
-
       const preferredLanguage = schedule.language === 'de' ? 'de' : 'en';
-      const requestedThemeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
+      const themeCount = (schedule.target_themes && schedule.target_themes >= 4 && schedule.target_themes <= 20)
         ? schedule.target_themes
         : Math.min(8, Math.max(4, Math.round(balanced.length / 6)));
-      const themeCount = requestedThemeCount;
       const requestedSourcesPerTheme = Number(schedule.sources_per_theme) || 2;
-      const sourcesPerTheme = requestedSourcesPerTheme;
-      const requiredCitations = themeCount * sourcesPerTheme;
-      const requiredPublications = maxUsesPerSource > 0
-        ? Math.ceil(requiredCitations / maxUsesPerSource)
-        : sourcesPerTheme;
-      if (balanced.length < requiredCitations || availableSourceNames.length < requiredPublications) {
-        console.error(
-          `Schedule ${schedule.id}: insufficient verified material for configured ` +
-          `${themeCount} themes × ${sourcesPerTheme} sources ` +
-          `(${balanced.length} articles from ${availableSourceNames.length} publications; ` +
-          `need ${requiredCitations} articles from at least ${requiredPublications} publications)`,
-        );
-        results.push(`Schedule ${schedule.id}: insufficient verified articles for configured report size`);
-        continue;
-      }
-
+      // Honor admin's sources_per_theme as-is, only clamped by available sources.
+      const sourcesPerTheme = Math.max(1, Math.min(requestedSourcesPerTheme, Math.max(1, sourceNames.length)));
 
       const articlesSummary = balanced.map((a: any, i: number) =>
         `<article index="${i + 1}" source="${a.sourceName}">\n<title>${a.title}</title>\n<url>${a.url}</url>\n<content>${a.content}</content>\n</article>`
@@ -540,12 +485,12 @@ LANGUAGE RULE — ABSOLUTE, NO EXCEPTIONS: Every single field you output (title,
 INTRODUCTION RULE — ABSOLUTE: The introduction MUST NOT mention any specific number of themes, topics, or articles (e.g. never write "ten themes", "20 topics", "the following 15 stories"). Write a natural editorial introduction without counting.
 CONCLUSION RULE — ABSOLUTE: The conclusion MUST NOT reference any specific count of themes, topics, or articles either (never write "these ten themes", "the twenty stories above", "across these 15 topics"). Refer to the coverage in general terms only (e.g. "today's themes", "the stories above").
 SOURCE-SPECIFIC ANALYSIS RULE — ABSOLUTE: For every source analysis, the "stance" field MUST describe how that specific publication framed THIS specific theme — not a generic boilerplate description of the outlet. NEVER output generic outlet self-descriptions such as "Latest news, sport, business, comment, analysis and reviews from the Guardian, the world's leading liberal voice." or anything resembling marketing copy or a publication's tagline. The stance must reference concrete details from the article (angle, framing, what they emphasised or omitted, tone) and be unique to this theme.
-SOURCE DIVERSITY RULE — ABSOLUTE: Use the widest possible range of publications before reusing any publication. Do NOT favour outlets merely because they have several relevant articles. Across the batch, every available publication should receive one citation before any publication receives a second citation, whenever topic relevance permits.
+SOURCE DIVERSITY RULE: Across the ${batchThemeCount} themes you produce, vary which publications you cite. Do NOT reuse the same two publications for every theme when other relevant sources are available. Each theme should ideally feature a different combination of publications drawn from the article list.
 ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ONE theme's sourceAnalysis across the entire report. NEVER cite the same article URL in two different themes. If an article could fit several themes, assign it to the single most relevant one. Prefer fewer citations in a theme over reusing an article already used in another theme.
-        ${maxUsesPerSource > 0 ? `SOURCE USAGE LIMIT — ABSOLUTE: Each publication (sourceName) may be cited AT MOST ${maxUsesPerSource} time(s) across the ENTIRE report. Spread citations across as many different publications as possible.\n` : ''}RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl exactly as supplied; never invent a URL or pair it with another publication. Use only these exact sourceName values when citing publications: ${availableSourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
+RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sourcesPerTheme} source analyses per theme, each from a DIFFERENT publication. Only CURRENT news from today/last 24h. Be skeptical. Include articleUrl. Use only these exact sourceName values when citing publications: ${sourceNames.join(', ')}. Respond via tool calling.${mondcivitanEnabled ? '\nInclude a detailed mondcivitanReflection paragraph per theme applying Mondcivitan Republic principles thoughtfully.' : ''}${ethicalInstruction}`;
 
         const todayUTC = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${availableSourceNames.join(', ')}`;
+        const userMsg = `DATE: ${todayUTC} (UTC). ${batchLabel}. Create exactly ${batchThemeCount} themes in ${lang.outputLang}.\n\n${batchArticles}\n\nSources: ${sourceNames.join(', ')}`;
 
         const primaryModel = schedule.ai_model || 'openai/gpt-5-mini';
         const fallbackModel = 'openai/gpt-5-mini';
@@ -581,7 +526,7 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
                             items: {
                               type: 'object',
                               properties: {
-                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${availableSourceNames.join(', ')}` },
+                                sourceName: { type: 'string', description: `Must exactly match one of these original publication names: ${sourceNames.join(', ')}` },
                                 stance: { type: 'string', description: 'How THIS publication framed THIS specific theme. Must reference concrete article details. Never a generic outlet description or tagline.' },
                                 keyQuotes: { type: 'array', items: { type: 'string', description: `A short representative quote, FULLY TRANSLATED into ${lang.outputLang}. If the original quote is in another language (French, German, Spanish, etc.), translate it — do NOT output the original-language text. No bilingual output.` }, minItems: 1, maxItems: 1 },
                                 biasIndicators: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1 },
@@ -649,7 +594,7 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
         const ethicalConsiderations: any[] = [];
         const legacyFields: Record<string, any> = {};
 
-        if (themeCount > 10) {
+        if (isHighThemes) {
           // Split into two batches
           const half1 = Math.ceil(themeCount / 2);
           const half2 = themeCount - half1;
@@ -713,18 +658,6 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
           return true;
         }).slice(0, themeCount);
 
-        // Validate every citation against the fetched candidate pool and restore the
-        // authoritative publication name from its URL before exclusivity/cap checks.
-        allThemes = allThemes.map((theme: any) => {
-          const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
-          const validated = sa.flatMap((entry: any) => {
-            const candidate = candidateByUrl.get(normalizeArticleUrl(entry?.articleUrl));
-            if (!candidate) return [];
-            return [{ ...entry, sourceName: candidate.sourceName, articleUrl: candidate.url }];
-          });
-          return { ...theme, sourceAnalysis: validated };
-        }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length >= sourcesPerTheme);
-
         // Article exclusivity: ensure no article URL is cited in more than one theme.
         // Keep the first occurrence; strip duplicates from later themes.
         const seenArticleUrls = new Set<string>();
@@ -740,37 +673,14 @@ ARTICLE EXCLUSIVITY RULE — ABSOLUTE: Each article URL may appear in AT MOST ON
           return { ...theme, sourceAnalysis: filtered };
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
 
-        // Per-source usage cap across the whole edition (0 = unlimited). Absolute:
-        // keyed by the authoritative publication attached to the fetched URL.
-        if (maxUsesPerSource > 0) {
-          const sourceKey = (entry: any): string => {
-            return String(entry?.sourceName || '')
-              .toLowerCase()
-              .replace(/^the\s+/, '')
-              .replace(/[^a-z0-9]/g, '');
-          };
-          const sourceUseCount = new Map<string, number>();
-          allThemes = allThemes.map((theme: any) => {
-            const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
-            const kept: any[] = [];
-            for (const entry of sa) {
-              const key = sourceKey(entry);
-              if (!key) { kept.push(entry); continue; }
-              const used = sourceUseCount.get(key) || 0;
-              if (used >= maxUsesPerSource) continue;
-              sourceUseCount.set(key, used + 1);
-              kept.push(entry);
-            }
-            return { ...theme, sourceAnalysis: kept };
-          }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length >= sourcesPerTheme);
-        }
-
-        // Never publish an undersized edition or themes with fewer sources than the
-        // administrator configured. Keeping the prior edition is preferable to
-        // silently replacing it with a seven-item, single-source report.
-        if (allThemes.length < themeCount) {
-          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} fully validated themes, need ${themeCount}`);
+        // Accept partial results: at least 4 themes or half the target
+        const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));
+        if (allThemes.length < minAcceptable) {
+          console.error(`Schedule ${schedule.id}: ${lang.code} aborted — got ${allThemes.length} themes, need at least ${minAcceptable} of ${themeCount}`);
           return;
+        }
+        if (allThemes.length < themeCount) {
+          console.warn(`Schedule ${schedule.id}: ${lang.code} partial — ${allThemes.length}/${themeCount} themes, proceeding`);
         }
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);

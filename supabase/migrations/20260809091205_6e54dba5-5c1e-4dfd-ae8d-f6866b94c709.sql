@@ -1,1 +1,0 @@
-ALTER TABLE public.report_schedules ADD COLUMN IF NOT EXISTS max_uses_per_source integer NOT NULL DEFAULT 0;
