@@ -325,22 +325,37 @@ Deno.serve(async (req) => {
         }
 
         const searchQuery = `${task.query} site:${hostname}`;
-        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: searchQuery,
-            limit: task.perQuery,
-            tbs: 'qdr:d',
-          }),
-        });
+        let data: any = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: searchQuery,
+              limit: task.perQuery,
+              tbs: 'qdr:d',
+            }),
+          }).catch(() => null);
 
-        if (!resp.ok) return [];
-        const data = await resp.json();
-        if (!data.success || !Array.isArray(data.data)) return [];
+          if (resp?.ok) {
+            data = await resp.json().catch(() => null);
+            break;
+          }
+          // Retry rate limits / transient upstream errors with backoff
+          if (resp && resp.status !== 429 && resp.status < 500) {
+            fetchFailures++;
+            return [];
+          }
+          await new Promise(r => setTimeout(r, 1200 * (attempt + 1) + Math.random() * 400));
+        }
+
+        if (!data?.success || !Array.isArray(data.data)) {
+          fetchFailures++;
+          return [];
+        }
 
         // Reject URLs whose path clearly contains an old year (e.g. /2022/...)
         // Google's qdr:d filter occasionally surfaces stale evergreen URLs.
