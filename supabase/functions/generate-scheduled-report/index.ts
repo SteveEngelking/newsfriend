@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
       // Search articles from each source via Firecrawl
       const allArticles: any[] = [];
       // For high theme counts, use more diverse queries but fewer results each
-      const queries = isHighThemes ? [
+      const allQueries = isHighThemes ? [
         'latest news today breaking',
         'world politics economy technology',
         'health science environment culture',
@@ -292,6 +292,17 @@ Deno.serve(async (req) => {
         'welt politik wirtschaft technologie gesundheit wissenschaft',
       ];
 
+      // With many enabled sources, firing every source x every query at once
+      // rate-limits Firecrawl and most requests fail — which silently collapses
+      // the report down to a handful of publications. Scale queries per source
+      // down as the source list grows, and cap concurrency.
+      const langQueries = schedule.language === 'de'
+        ? allQueries.filter(q => /nachrichten|welt politik|gesundheit wissenschaft/.test(q))
+        : allQueries.filter(q => !/nachrichten|welt politik|gesundheit wissenschaft/.test(q));
+      const baseQueries = langQueries.length ? langQueries : allQueries;
+      const queriesPerSource = sources.length > 30 ? 1 : sources.length > 15 ? 2 : baseQueries.length;
+      const queries = baseQueries.slice(0, queriesPerSource);
+
       const fetchTasks: { source: typeof sources[0]; query: string; perQuery: number }[] = [];
       for (const source of sources) {
         const perQuery = Math.max(2, Math.ceil(schedule.articles_per_source / queries.length));
@@ -300,7 +311,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      const fetchResults = await Promise.allSettled(fetchTasks.map(async (task) => {
+      let fetchFailures = 0;
+      const runTask = async (task: typeof fetchTasks[0]) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
@@ -313,22 +325,37 @@ Deno.serve(async (req) => {
         }
 
         const searchQuery = `${task.query} site:${hostname}`;
-        const resp = await fetch('https://api.firecrawl.dev/v1/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: searchQuery,
-            limit: task.perQuery,
-            tbs: 'qdr:d',
-          }),
-        });
+        let data: any = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: searchQuery,
+              limit: task.perQuery,
+              tbs: 'qdr:d',
+            }),
+          }).catch(() => null);
 
-        if (!resp.ok) return [];
-        const data = await resp.json();
-        if (!data.success || !Array.isArray(data.data)) return [];
+          if (resp?.ok) {
+            data = await resp.json().catch(() => null);
+            break;
+          }
+          // Retry rate limits / transient upstream errors with backoff
+          if (resp && resp.status !== 429 && resp.status < 500) {
+            fetchFailures++;
+            return [];
+          }
+          await new Promise(r => setTimeout(r, 1200 * (attempt + 1) + Math.random() * 400));
+        }
+
+        if (!data?.success || !Array.isArray(data.data)) {
+          fetchFailures++;
+          return [];
+        }
 
         // Reject URLs whose path clearly contains an old year (e.g. /2022/...)
         // Google's qdr:d filter occasionally surfaces stale evergreen URLs.
@@ -374,13 +401,26 @@ Deno.serve(async (req) => {
             const ageMs = Date.now() - new Date(a.publishedAt).getTime();
             return ageMs <= 48 * 60 * 60 * 1000;
           });
-      }));
+      };
 
-      for (const fetchResult of fetchResults) {
-        if (fetchResult.status === 'fulfilled' && Array.isArray(fetchResult.value)) {
-          allArticles.push(...fetchResult.value);
+      // Bounded concurrency so Firecrawl doesn't rate-limit us into a
+      // 3-publication report when dozens of sources are enabled.
+      const CONCURRENCY = 8;
+      let taskIndex = 0;
+      const workers = Array.from({ length: Math.min(CONCURRENCY, fetchTasks.length) }, async () => {
+        while (taskIndex < fetchTasks.length) {
+          const task = fetchTasks[taskIndex++];
+          try {
+            const items = await runTask(task);
+            if (Array.isArray(items)) allArticles.push(...items);
+          } catch {
+            fetchFailures++;
+          }
         }
-      }
+      });
+      await Promise.all(workers);
+
+      console.log(`Schedule ${schedule.id}: fetched ${allArticles.length} articles from ${sources.length} sources (${fetchTasks.length} queries, ${fetchFailures} failed)`);
 
       // Deduplicate by URL
       const seenUrls = new Set<string>();
