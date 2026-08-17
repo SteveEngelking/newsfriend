@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, ArrowRight, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,13 +17,24 @@ const SupportUs = () => {
   const [amount, setAmount] = useState('10');
   const [recurring, setRecurring] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [manageEmail, setManageEmail] = useState('');
   const [manageLoading, setManageLoading] = useState(false);
   const [currency] = useState('eur');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const params = new URLSearchParams(window.location.search);
   const success = params.get('success') === 'true';
   const cancelled = params.get('cancelled') === 'true';
+
 
   const handleDonate = async () => {
     const numAmount = parseFloat(amount);
