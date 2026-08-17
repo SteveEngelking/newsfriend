@@ -424,7 +424,7 @@ export const translations = {
     supportManageTitle: 'Already a monthly supporter?',
     supportManageDesc: 'Manage or cancel your recurring donation here.',
     supportManageBtn: 'Manage Subscription',
-    supportManageNoEmail: 'Please enter your email to manage your subscription.',
+    supportManageNoEmail: 'Please sign in with the account you donated with to manage your subscription.',
     supportManageError: 'Could not open subscription management. Please ensure you have an active subscription.',
 
     // Registration & Account
@@ -1026,7 +1026,7 @@ export const translations = {
     supportManageTitle: 'Bereits monatlicher Unterstützer?',
     supportManageDesc: 'Verwalten oder kündigen Sie Ihre wiederkehrende Spende hier.',
     supportManageBtn: 'Abonnement verwalten',
-    supportManageNoEmail: 'Bitte geben Sie Ihre E-Mail-Adresse ein, um Ihr Abonnement zu verwalten.',
+    supportManageNoEmail: 'Bitte melden Sie sich mit dem Konto an, mit dem Sie gespendet haben, um Ihr Abonnement zu verwalten.',
     supportManageError: 'Abonnementverwaltung konnte nicht geöffnet werden. Bitte stellen Sie sicher, dass Sie ein aktives Abonnement haben.',
 
     // Registration & Account
