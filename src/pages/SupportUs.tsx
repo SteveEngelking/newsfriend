@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, ArrowRight, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,13 +17,24 @@ const SupportUs = () => {
   const [amount, setAmount] = useState('10');
   const [recurring, setRecurring] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [manageEmail, setManageEmail] = useState('');
   const [manageLoading, setManageLoading] = useState(false);
   const [currency] = useState('eur');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   const params = new URLSearchParams(window.location.search);
   const success = params.get('success') === 'true';
   const cancelled = params.get('cancelled') === 'true';
+
 
   const handleDonate = async () => {
     const numAmount = parseFloat(amount);
@@ -63,7 +74,7 @@ const SupportUs = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!manageEmail.trim()) {
+    if (!userEmail) {
       toast.error(t('supportManageNoEmail'));
       return;
     }
@@ -71,8 +82,9 @@ const SupportUs = () => {
     setManageLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { email: manageEmail.trim() },
+        body: {},
       });
+
 
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -199,21 +211,23 @@ const SupportUs = () => {
           <CardDescription>{t('supportManageDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={manageEmail}
-              onChange={(e) => setManageEmail(e.target.value)}
-              placeholder="your@email.com"
-            />
-          </div>
+          {userEmail ? (
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" value={userEmail} readOnly disabled />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t('supportManageNoEmail')}
+            </p>
+          )}
           <Button
             variant="outline"
             onClick={handleManageSubscription}
-            disabled={manageLoading || !manageEmail.trim()}
+            disabled={manageLoading || !userEmail}
             className="w-full gap-2"
           >
+
             {manageLoading ? t('supportProcessing') : (
               <>
                 <Settings className="h-4 w-4" />
