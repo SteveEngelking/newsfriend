@@ -211,21 +211,23 @@ const SupportUs = () => {
           <CardDescription>{t('supportManageDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={manageEmail}
-              onChange={(e) => setManageEmail(e.target.value)}
-              placeholder="your@email.com"
-            />
-          </div>
+          {userEmail ? (
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" value={userEmail} readOnly disabled />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t('supportManageNoEmail')}
+            </p>
+          )}
           <Button
             variant="outline"
             onClick={handleManageSubscription}
-            disabled={manageLoading || !manageEmail.trim()}
+            disabled={manageLoading || !userEmail}
             className="w-full gap-2"
           >
+
             {manageLoading ? t('supportProcessing') : (
               <>
                 <Settings className="h-4 w-4" />
