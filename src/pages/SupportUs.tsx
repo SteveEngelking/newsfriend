@@ -74,7 +74,7 @@ const SupportUs = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!manageEmail.trim()) {
+    if (!userEmail) {
       toast.error(t('supportManageNoEmail'));
       return;
     }
@@ -82,8 +82,9 @@ const SupportUs = () => {
     setManageLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { email: manageEmail.trim() },
+        body: {},
       });
+
 
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
