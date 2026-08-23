@@ -743,6 +743,29 @@ Respond via tool calling.`;
           }
         }
 
+        // If the main call was truncated (missing conclusion, introduction or ethical
+        // sections), regenerate just those framing sections so the report never ends
+        // abruptly at the "Conclusion" heading.
+        const ethicalMissing = prioritizedEthicalPerspectives.length > 0 && ethicalConsiderations.length === 0;
+        if (allThemes.length > 0 && (!conclusion?.trim() || !introduction?.trim() || ethicalMissing)) {
+          console.warn(`Schedule ${schedule.id}: ${lang.code} wrap-up recovery (intro=${!!introduction} conclusion=${!!conclusion} ethical=${ethicalConsiderations.length})`);
+          const wrapup = await callWrapup(lang, allThemes.map((t: any) => String(t?.headline || '')).filter(Boolean));
+          if (wrapup) {
+            if (!introduction?.trim()) introduction = wrapup.introduction || '';
+            if (!conclusion?.trim()) conclusion = wrapup.conclusion || '';
+            if (ethicalMissing) {
+              for (const p of prioritizedEthicalPerspectives) {
+                const key = toFieldKey(p.name);
+                if (wrapup[key]) {
+                  ethicalConsiderations.push({ id: p.id, name: p.name, content: wrapup[key] });
+                  legacyFields[key] = wrapup[key];
+                }
+              }
+            }
+          }
+        }
+
+
         const seenHeadlines = new Set<string>();
         allThemes = allThemes.filter((theme: any) => {
           const key = String(theme?.headline || '').trim().toLowerCase();
