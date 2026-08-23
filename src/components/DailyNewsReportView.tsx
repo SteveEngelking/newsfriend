@@ -216,11 +216,15 @@ export function DailyNewsReportView({ report, reportId }: Props) {
           </article>
         ))}
 
-        <Separator className="my-8" />
-        <section className="bg-muted/50 rounded-lg p-6">
-          <h2 className="text-lg font-bold mb-3">{t('dailyConclusion')}</h2>
-          <p className="text-base leading-relaxed whitespace-pre-line">{report.conclusion}</p>
-        </section>
+        {report.conclusion?.trim() && (
+          <>
+            <Separator className="my-8" />
+            <section className="bg-muted/50 rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-3">{t('dailyConclusion')}</h2>
+              <p className="text-base leading-relaxed whitespace-pre-line">{report.conclusion}</p>
+            </section>
+          </>
+        )}
 
         {ethicalItems.length > 0 && (
           <>
