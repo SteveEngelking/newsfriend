@@ -543,7 +543,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
           // Going straight to Lovable AI (gpt-5-mini) is reliable for this workload.
           const { response: aiResp, provider } = await callAIChatCompletion({
             model,
-            max_completion_tokens: 16384,
+            max_completion_tokens: 32768,
             messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
             tools: [{
               type: 'function',
