@@ -627,6 +627,59 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
         try { return JSON.parse(args); } catch { console.error('Failed to parse tool_call args'); return null; }
       };
 
+      // Helper: generate ONLY introduction + conclusion + ethical considerations.
+      // Used as a recovery pass when the main call was truncated by the token limit
+      // (which previously left the report ending abruptly at "Conclusion").
+      const callWrapup = async (lang: typeof languages[0], headlines: string[]) => {
+        const ethicalProperties: Record<string, any> = {};
+        const ethicalRequired: string[] = [];
+        for (const p of prioritizedEthicalPerspectives) {
+          const key = toFieldKey(p.name);
+          ethicalProperties[key] = { type: 'string', description: `${p.name} — ethical analysis` };
+          ethicalRequired.push(key);
+        }
+        const ethicalInstruction = prioritizedEthicalPerspectives.length > 0
+          ? `\n\nETHICAL CONSIDERATIONS: Write a thoughtful, detailed paragraph (at least 4-6 sentences) for EACH perspective below:\n${prioritizedEthicalPerspectives.map((p, i) => `${i+1}. "${toFieldKey(p.name)}" — ${p.prompt_instruction}`).join('\n')}`
+          : '';
+        const sysPrompt = `You are a senior investigative journalist writing the framing sections of a daily news briefing entirely in ${lang.outputLang}. ZERO words in any other language.
+Write an editorial introduction and a conclusion. Neither may mention any specific count of themes, topics or articles.${ethicalInstruction}
+Respond via tool calling.`;
+        const userMsg = `Today's report covers these themes:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}\n\nWrite the introduction, the conclusion${ethicalRequired.length ? ', and each ethical consideration' : ''} in ${lang.outputLang}.`;
+
+        try {
+          const { response } = await callAIChatCompletion({
+            model: 'openai/gpt-5-mini',
+            max_completion_tokens: 16384,
+            messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'generate_wrapup',
+                description: 'Generate introduction, conclusion and ethical considerations',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    introduction: { type: 'string' },
+                    conclusion: { type: 'string' },
+                    ...ethicalProperties,
+                  },
+                  required: ['introduction', 'conclusion', ...ethicalRequired],
+                },
+              },
+            }],
+            tool_choice: { type: 'function', function: { name: 'generate_wrapup' } },
+          }, { preferFree: false });
+          if (!response.ok) { console.error(`[wrapup] failed status=${response.status}`); return null; }
+          const data = await response.json();
+          const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+          if (!args) { console.error('[wrapup] no tool_call'); return null; }
+          return JSON.parse(args);
+        } catch (e) {
+          console.error('[wrapup] error', e);
+          return null;
+        }
+      };
+
       const generateForLang = async (lang: typeof languages[0]) => {
         let allThemes: any[] = [];
         let introduction = '';
