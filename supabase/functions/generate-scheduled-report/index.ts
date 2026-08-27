@@ -312,7 +312,9 @@ Deno.serve(async (req) => {
       }
 
       let fetchFailures = 0;
-      const runTask = async (task: typeof fetchTasks[0]) => {
+      const articlesBySourceId: Record<string, number> = {};
+      const runTask = async (task: typeof fetchTasks[0], attempts = 3, pace = 0) => {
+        if (pace) await new Promise(r => setTimeout(r, pace));
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
