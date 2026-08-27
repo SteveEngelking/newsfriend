@@ -412,22 +412,54 @@ Deno.serve(async (req) => {
 
       // Bounded concurrency so Firecrawl doesn't rate-limit us into a
       // 3-publication report when dozens of sources are enabled.
-      const CONCURRENCY = 8;
-      let taskIndex = 0;
-      const workers = Array.from({ length: Math.min(CONCURRENCY, fetchTasks.length) }, async () => {
-        while (taskIndex < fetchTasks.length) {
-          const task = fetchTasks[taskIndex++];
-          try {
-            const items = await runTask(task);
-            if (Array.isArray(items)) allArticles.push(...items);
-          } catch {
-            fetchFailures++;
+      const CONCURRENCY = 6;
+      const runPass = async (tasks: typeof fetchTasks, concurrency: number, attempts: number, pace: number) => {
+        let idx = 0;
+        const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, async () => {
+          while (idx < tasks.length) {
+            const task = tasks[idx++];
+            try {
+              const items = await runTask(task, attempts, pace);
+              if (Array.isArray(items) && items.length) {
+                articlesBySourceId[task.source.id] = (articlesBySourceId[task.source.id] || 0) + items.length;
+                allArticles.push(...items);
+              }
+            } catch {
+              fetchFailures++;
+            }
           }
-        }
-      });
-      await Promise.all(workers);
+        });
+        await Promise.all(workers);
+      };
 
-      console.log(`Schedule ${schedule.id}: fetched ${allArticles.length} articles from ${sources.length} sources (${fetchTasks.length} queries, ${fetchFailures} failed)`);
+      await runPass(fetchTasks, CONCURRENCY, 3, 0);
+
+      // Recovery pass: any source that returned nothing at all was almost
+      // certainly rate-limited or timed out. Without this, a bad Firecrawl
+      // window collapses the whole report onto one publication.
+      const emptySources = sources.filter(s => !articlesBySourceId[s.id]);
+      if (emptySources.length) {
+        console.log(`Schedule ${schedule.id}: retrying ${emptySources.length} empty sources (pass 2)`);
+        const retryTasks = emptySources.map(source => ({
+          source,
+          query: queries[0],
+          perQuery: Math.max(2, Math.ceil(schedule.articles_per_source / queries.length)),
+        }));
+        await runPass(retryTasks, 3, 4, 400);
+      }
+
+      const publicationsWithArticles = Object.keys(articlesBySourceId).length;
+      console.log(`Schedule ${schedule.id}: fetched ${allArticles.length} articles from ${publicationsWithArticles}/${sources.length} sources (${fetchTasks.length} queries, ${fetchFailures} failed)`);
+
+      // Guard against publishing a single-publication report when many sources
+      // are configured — better to abort and let the hourly catch-up retry.
+      const diversityFloor = Math.min(4, sources.length);
+      if (publicationsWithArticles < diversityFloor) {
+        console.error(`Schedule ${schedule.id}: aborting — only ${publicationsWithArticles} of ${sources.length} sources returned articles`);
+        results.push(`Schedule ${schedule.id}: aborted, insufficient source diversity (${publicationsWithArticles}/${sources.length})`);
+        continue;
+      }
+
 
       // Deduplicate by URL
       const seenUrls = new Set<string>();
