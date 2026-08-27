@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
 
         const searchQuery = `${task.query} site:${hostname}`;
         let data: any = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < attempts; attempt++) {
           const resp = await fetch('https://api.firecrawl.dev/v1/search', {
             method: 'POST',
             headers: {
@@ -349,10 +349,15 @@ Deno.serve(async (req) => {
           // Retry rate limits / transient upstream errors with backoff
           if (resp && resp.status !== 429 && resp.status < 500) {
             fetchFailures++;
+            console.warn(`Fetch ${task.source.name}: HTTP ${resp.status} — giving up`);
             return [];
           }
-          await new Promise(r => setTimeout(r, 1200 * (attempt + 1) + Math.random() * 400));
+          if (attempt === attempts - 1) {
+            console.warn(`Fetch ${task.source.name}: exhausted retries (last status ${resp?.status ?? 'network error'})`);
+          }
+          await new Promise(r => setTimeout(r, 1500 * (attempt + 1) + Math.random() * 600));
         }
+
 
         if (!data?.success || !Array.isArray(data.data)) {
           fetchFailures++;
