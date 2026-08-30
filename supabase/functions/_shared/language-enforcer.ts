@@ -55,7 +55,7 @@ export async function enforceReportLanguage(
         { role: "user", content: JSON.stringify({ items }) },
       ],
       response_format: { type: "json_object" },
-    });
+    }, { timeoutMs: 45_000 });
     if (!response.ok) {
       console.error("[enforceReportLanguage] AI call failed:", response.status);
       return themes;
