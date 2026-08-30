@@ -33,6 +33,8 @@ export interface AICallOptions {
   preferFree?: boolean;
   /** Override the model used when calling Google directly (useful to force a cheaper free model). */
   googleModelOverride?: string;
+  /** Abort an individual provider request instead of allowing it to consume the edge runtime. */
+  timeoutMs?: number;
 }
 
 export interface AICallResult {
@@ -56,6 +58,7 @@ export async function callAIChatCompletion(
 
   const requestedModel = typeof body.model === "string" ? body.model : "google/gemini-3-flash-preview";
   const preferFree = opts.preferFree !== false && Boolean(GEMINI_API_KEY);
+  const timeoutMs = opts.timeoutMs ?? 90_000;
 
   // Attempt 1: free Google API
   if (preferFree) {
@@ -71,6 +74,7 @@ export async function callAIChatCompletion(
             "Content-Type": "application/json",
           },
           body: JSON.stringify(googleBody),
+          signal: AbortSignal.timeout(timeoutMs),
         });
 
         // Success → return immediately.
@@ -107,6 +111,7 @@ export async function callAIChatCompletion(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   return { response: resp, provider: "lovable" };

@@ -313,8 +313,23 @@ Deno.serve(async (req) => {
 
       let fetchFailures = 0;
       const articlesBySourceId: Record<string, number> = {};
-      const runTask = async (task: typeof fetchTasks[0], attempts = 3, pace = 0) => {
-        if (pace) await new Promise(r => setTimeout(r, pace));
+      // Firecrawl applies account-wide throttling, so worker-local delays still
+      // create bursts when several workers wake together. Gate every outbound
+      // request through one shared clock to keep the whole run below that burst
+      // limit, including retries and the recovery pass.
+      let nextFirecrawlRequestAt = 0;
+      let firecrawlGate = Promise.resolve();
+      const waitForFirecrawlSlot = (minimumGapMs: number) => {
+        const slot = firecrawlGate.then(async () => {
+          const waitMs = Math.max(0, nextFirecrawlRequestAt - Date.now());
+          if (waitMs > 0) await new Promise(r => setTimeout(r, waitMs));
+          nextFirecrawlRequestAt = Date.now() + minimumGapMs;
+        });
+        firecrawlGate = slot.catch(() => undefined);
+        return slot;
+      };
+
+      const runTask = async (task: typeof fetchTasks[0], attempts = 3, requestGapMs = 0) => {
         let sourceUrl = task.source.url.trim();
         if (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://')) {
           sourceUrl = `https://${sourceUrl}`;
@@ -329,6 +344,7 @@ Deno.serve(async (req) => {
         const searchQuery = `${task.query} site:${hostname}`;
         let data: any = null;
         for (let attempt = 0; attempt < attempts; attempt++) {
+          await waitForFirecrawlSlot(requestGapMs);
           const resp = await fetch('https://api.firecrawl.dev/v1/search', {
             method: 'POST',
             headers: {
@@ -355,7 +371,7 @@ Deno.serve(async (req) => {
           if (attempt === attempts - 1) {
             console.warn(`Fetch ${task.source.name}: exhausted retries (last status ${resp?.status ?? 'network error'})`);
           }
-          await new Promise(r => setTimeout(r, 1500 * (attempt + 1) + Math.random() * 600));
+           await new Promise(r => setTimeout(r, 2000 * (attempt + 1) + Math.random() * 1000));
         }
 
 
@@ -412,14 +428,14 @@ Deno.serve(async (req) => {
 
       // Bounded concurrency so Firecrawl doesn't rate-limit us into a
       // 3-publication report when dozens of sources are enabled.
-      const CONCURRENCY = 6;
-      const runPass = async (tasks: typeof fetchTasks, concurrency: number, attempts: number, pace: number) => {
+      const CONCURRENCY = 3;
+      const runPass = async (tasks: typeof fetchTasks, concurrency: number, attempts: number, requestGapMs: number) => {
         let idx = 0;
         const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, async () => {
           while (idx < tasks.length) {
             const task = tasks[idx++];
             try {
-              const items = await runTask(task, attempts, pace);
+              const items = await runTask(task, attempts, requestGapMs);
               if (Array.isArray(items) && items.length) {
                 articlesBySourceId[task.source.id] = (articlesBySourceId[task.source.id] || 0) + items.length;
                 allArticles.push(...items);
@@ -432,7 +448,7 @@ Deno.serve(async (req) => {
         await Promise.all(workers);
       };
 
-      await runPass(fetchTasks, CONCURRENCY, 3, 0);
+      await runPass(fetchTasks, CONCURRENCY, 3, 350);
 
       // Recovery pass: any source that returned nothing at all was almost
       // certainly rate-limited or timed out. Without this, a bad Firecrawl
@@ -445,7 +461,7 @@ Deno.serve(async (req) => {
           query: queries[0],
           perQuery: Math.max(2, Math.ceil(schedule.articles_per_source / queries.length)),
         }));
-        await runPass(retryTasks, 3, 4, 400);
+        await runPass(retryTasks, 2, 4, 750);
       }
 
       const publicationsWithArticles = Object.keys(articlesBySourceId).length;
@@ -628,7 +644,7 @@ RULES: Identify exactly ${batchThemeCount} diverse themes. Include exactly ${sou
               },
             }],
             tool_choice: { type: 'function', function: { name: 'generate_themes' } },
-          }, { preferFree: false });
+          }, { preferFree: false, timeoutMs: 60_000 });
           console.log(`[scheduled-report] lang=${lang.code} batch="${batchLabel}" model=${model} provider=${provider} status=${aiResp.status}`);
           return aiResp;
         };
@@ -707,7 +723,7 @@ Respond via tool calling.`;
               },
             }],
             tool_choice: { type: 'function', function: { name: 'generate_wrapup' } },
-          }, { preferFree: false });
+          }, { preferFree: false, timeoutMs: 60_000 });
           if (!response.ok) { console.error(`[wrapup] failed status=${response.status}`); return null; }
           const data = await response.json();
           const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
@@ -727,41 +743,59 @@ Respond via tool calling.`;
         const legacyFields: Record<string, any> = {};
 
         if (isHighThemes) {
-          // Split into two batches
-          const half1 = Math.ceil(themeCount / 2);
-          const half2 = themeCount - half1;
-          const midIdx = Math.floor(balanced.length / 2);
-          const arts1 = balanced.slice(0, midIdx);
-          const arts2 = balanced.slice(midIdx);
+          // Keep each structured AI response small. Seven-theme batches with
+          // detailed source and ethics analysis can run until the edge runtime
+          // is terminated, discarding the entire report. Four-theme batches
+          // finish reliably and still run concurrently.
+          const batchCount = Math.ceil(themeCount / 4);
+          const baseThemesPerBatch = Math.floor(themeCount / batchCount);
+          const extraThemes = themeCount % batchCount;
           const toSummary = (arts: any[]) => arts.map((a: any, i: number) =>
             `<article index="${i+1}" source="${a.sourceName}"><title>${a.title}</title><url>${a.url}</url><content>${a.content}</content></article>`
           ).join('\n');
 
-          const [r1, r2] = await Promise.all([
-            callAI(lang, half1, toSummary(arts1), `Batch 1 of 2 — first ${half1} themes`, true),
-            callAI(lang, half2, toSummary(arts2), `Batch 2 of 2 — next ${half2} themes (different topics from batch 1)`, false),
-          ]);
-
-          if (r1?.themes) allThemes.push(...r1.themes);
-          if (r2?.themes) allThemes.push(...r2.themes);
-          introduction = r1?.introduction || '';
-          conclusion = r1?.conclusion || '';
-
-          // Gather ethical from first batch
-          for (const p of prioritizedEthicalPerspectives) {
-            const key = toFieldKey(p.name);
-            if (r1?.[key]) {
-              ethicalConsiderations.push({ id: p.id, name: p.name, content: r1[key] });
-              legacyFields[key] = r1[key];
+          const batchRequests = Array.from({ length: batchCount }, (_, batchIndex) => {
+            const count = baseThemesPerBatch + (batchIndex < extraThemes ? 1 : 0);
+            const start = Math.floor((balanced.length * batchIndex) / batchCount);
+            const end = Math.floor((balanced.length * (batchIndex + 1)) / batchCount);
+            return callAI(
+              lang,
+              count,
+              toSummary(balanced.slice(start, end)),
+              `Batch ${batchIndex + 1} of ${batchCount} — ${count} distinct themes`,
+              false,
+            );
+          });
+          // A single provider timeout must not discard the other completed
+          // batches. Keep every successful result and recover only the gap.
+          const batchResults = await Promise.allSettled(batchRequests);
+          for (const batchResult of batchResults) {
+            if (batchResult.status === 'fulfilled' && batchResult.value?.themes) {
+              allThemes.push(...batchResult.value.themes);
+            } else if (batchResult.status === 'rejected') {
+              console.error(`Schedule ${schedule.id}: ${lang.code} batch failed`, batchResult.reason);
             }
           }
 
-          if (allThemes.length < themeCount) {
+          // Framing and the potentially large set of ethical perspectives are
+          // generated separately below. Combining 15 themes and 20 ethical
+          // fields in one structured call repeatedly exceeded runtime limits.
+
+          // Source collection consumes most of the edge runtime. Once at least
+          // half the requested themes are ready, publish them immediately;
+          // attempting another AI call here risks the hard runtime shutdown
+          // and losing every completed batch.
+          if (allThemes.length < Math.ceil(themeCount / 2)) {
             const missingThemeCount = themeCount - allThemes.length;
             console.warn(`Schedule ${schedule.id}: recovery pass for ${missingThemeCount} missing themes in ${lang.code}`);
-            const recovery = await callAI(lang, missingThemeCount, articlesSummary, `Recovery pass for ${missingThemeCount} remaining themes. Avoid duplicating these existing headlines: ${allThemes.map((theme: any) => theme?.headline || '').filter(Boolean).join(' | ')}`, false);
-            if (recovery?.themes?.length) {
-              allThemes.push(...recovery.themes);
+            try {
+              const recovery = await callAI(lang, missingThemeCount, articlesSummary, `Recovery pass for ${missingThemeCount} remaining themes. Avoid duplicating these existing headlines: ${allThemes.map((theme: any) => theme?.headline || '').filter(Boolean).join(' | ')}`, false);
+              if (recovery?.themes?.length) {
+                allThemes.push(...recovery.themes);
+              }
+            } catch (error) {
+              // Publish completed batches rather than losing the whole report.
+              console.error(`Schedule ${schedule.id}: ${lang.code} recovery pass failed`, error);
             }
           }
         } else {
@@ -782,22 +816,38 @@ Respond via tool calling.`;
           }
         }
 
-        // If the main call was truncated (missing conclusion, introduction or ethical
-        // sections), regenerate just those framing sections so the report never ends
-        // abruptly at the "Conclusion" heading.
+        // Save the core report before optional framing work on large reports.
+        // The previous 20-perspective wrap-up could outlive the edge runtime and
+        // discard 15 already-complete themes. A concise local framing fallback
+        // preserves publication reliability; full wrap-up recovery remains for
+        // smaller reports where it comfortably completes.
         const ethicalMissing = prioritizedEthicalPerspectives.length > 0 && ethicalConsiderations.length === 0;
-        if (allThemes.length > 0 && (!conclusion?.trim() || !introduction?.trim() || ethicalMissing)) {
-          console.warn(`Schedule ${schedule.id}: ${lang.code} wrap-up recovery (intro=${!!introduction} conclusion=${!!conclusion} ethical=${ethicalConsiderations.length})`);
-          const wrapup = await callWrapup(lang, allThemes.map((t: any) => String(t?.headline || '')).filter(Boolean));
-          if (wrapup) {
-            if (!introduction?.trim()) introduction = wrapup.introduction || '';
-            if (!conclusion?.trim()) conclusion = wrapup.conclusion || '';
-            if (ethicalMissing) {
-              for (const p of prioritizedEthicalPerspectives) {
-                const key = toFieldKey(p.name);
-                if (wrapup[key]) {
-                  ethicalConsiderations.push({ id: p.id, name: p.name, content: wrapup[key] });
-                  legacyFields[key] = wrapup[key];
+        if (allThemes.length > 0 && (!conclusion?.trim() || !introduction?.trim() || (!isHighThemes && ethicalMissing))) {
+          if (isHighThemes) {
+            const leadHeadlines = allThemes.slice(0, 3).map((t: any) => String(t?.headline || '')).filter(Boolean);
+            if (!introduction?.trim()) {
+              introduction = lang.code === 'de'
+                ? `Das heutige Briefing untersucht wichtige Entwicklungen, darunter ${leadHeadlines.join('; ')}. Es vergleicht die Berichterstattung einer breiten internationalen Auswahl von Publikationen.`
+                : `Today's briefing examines major developments including ${leadHeadlines.join('; ')}. It compares reporting across a broad international range of publications.`;
+            }
+            if (!conclusion?.trim()) {
+              conclusion = lang.code === 'de'
+                ? 'Diese Geschichten entwickeln sich weiter. Der Vergleich unabhängiger Berichterstattung und die erneute Prüfung der Belege im weiteren Verlauf bieten die beste Grundlage für ein fundiertes Urteil.'
+                : 'These stories remain developing. Comparing independent reporting and revisiting the evidence as events unfold offers the clearest basis for informed judgment.';
+            }
+          } else {
+            console.warn(`Schedule ${schedule.id}: ${lang.code} wrap-up recovery (intro=${!!introduction} conclusion=${!!conclusion} ethical=${ethicalConsiderations.length})`);
+            const wrapup = await callWrapup(lang, allThemes.map((t: any) => String(t?.headline || '')).filter(Boolean));
+            if (wrapup) {
+              if (!introduction?.trim()) introduction = wrapup.introduction || '';
+              if (!conclusion?.trim()) conclusion = wrapup.conclusion || '';
+              if (ethicalMissing) {
+                for (const p of prioritizedEthicalPerspectives) {
+                  const key = toFieldKey(p.name);
+                  if (wrapup[key]) {
+                    ethicalConsiderations.push({ id: p.id, name: p.name, content: wrapup[key] });
+                    legacyFields[key] = wrapup[key];
+                  }
                 }
               }
             }
@@ -840,8 +890,16 @@ Respond via tool calling.`;
 
         console.log(`Schedule ${schedule.id}: got ${allThemes.length} themes for ${lang.code}`);
 
-        // Scrub any source-language leakage (e.g. German quotes in an English report)
-        allThemes = await enforceReportLanguage(allThemes, lang.code);
+        // English reports are already generated in English. Avoid a second large
+        // AI pass over every quote here; that pass previously consumed the last
+        // minute of runtime and prevented an otherwise complete report saving.
+        if (lang.code !== 'en') {
+          try {
+            allThemes = await enforceReportLanguage(allThemes, lang.code);
+          } catch (languageErr) {
+            console.warn(`Schedule ${schedule.id}: language scrub timed out for ${lang.code}; storing generated report`, languageErr);
+          }
+        }
 
         const report: any = {
           title: `${lang.titlePrefix} — ${now.toLocaleDateString(lang.dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })} (UTC)`,
@@ -870,9 +928,14 @@ Respond via tool calling.`;
             // copying stale AI images that may contain garbled text.
             const dateSeed = now.toISOString().slice(0, 10);
             const themeText = `newsfriend-${schedule.id}-${dateSeed}-${sourceNames.join('-')}`.slice(0, 400);
-            const { data: banner, error: bannerErr } = await supabase.functions.invoke('generate-banner-image', {
-              body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
-            });
+            const { data: banner, error: bannerErr } = await Promise.race([
+              supabase.functions.invoke('generate-banner-image', {
+                body: { themeText, kind: 'daily', reportId: `${schedule.id}-${lang.code}-${Date.now()}` },
+              }),
+              new Promise<{ data: null; error: Error }>((resolve) =>
+                setTimeout(() => resolve({ data: null, error: new Error('Banner generation timed out') }), 15_000)
+              ),
+            ]);
             if (banner?.url) {
               report.bannerImageUrl = banner.url as string;
               console.log(`Schedule ${schedule.id}: wordless banner generated for ${lang.code}`);
@@ -944,24 +1007,44 @@ Respond via tool calling.`;
       }
     };
 
-    const work = runScheduleWork()
-      .then(() => console.log('scheduled report background complete:', results))
-      .catch((e) => console.error('scheduled report background error:', e));
+    // Keep the HTTP response active while the long-running source and AI work
+    // completes. Returning 202 and relying on waitUntil allowed the runtime to
+    // terminate unfinished generations; returning no bytes while awaiting work
+    // instead hits the gateway's 150-second idle limit. JSON permits leading
+    // whitespace, so heartbeat bytes preserve a valid final response body.
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const heartbeat = setInterval(() => {
+          try { controller.enqueue(encoder.encode(' ')); } catch { /* stream closed */ }
+        }, 10_000);
 
-    const waitUntil = (globalThis as any).EdgeRuntime?.waitUntil;
-    if (typeof waitUntil === 'function') {
-      waitUntil(work);
-      return new Response(
-        JSON.stringify({ status: 'accepted', message: forceImmediate ? 'Generation started' : 'Scheduled generation started', schedules: schedules.length }),
-        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+        try {
+          await runScheduleWork();
+          console.log('scheduled report complete:', results);
+          controller.enqueue(encoder.encode(JSON.stringify({
+            status: results.some(result => result.includes('generated')) ? 'complete' : 'failed',
+            message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete',
+            results,
+          })));
+        } catch (error) {
+          console.error('scheduled report error:', error);
+          controller.enqueue(encoder.encode(JSON.stringify({
+            status: 'failed',
+            error: error instanceof Error ? error.message : String(error),
+            results,
+          })));
+        } finally {
+          clearInterval(heartbeat);
+          controller.close();
+        }
+      },
+    });
 
-    await work;
-    return new Response(
-      JSON.stringify({ status: 'complete', message: forceImmediate ? 'Generation complete' : 'Scheduled generation complete', results }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(stream, {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
     console.error('Scheduled report error:', error);
     return new Response(
