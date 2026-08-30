@@ -781,7 +781,11 @@ Respond via tool calling.`;
           // generated separately below. Combining 15 themes and 20 ethical
           // fields in one structured call repeatedly exceeded runtime limits.
 
-          if (allThemes.length < themeCount) {
+          // Source collection consumes most of the edge runtime. Once at least
+          // half the requested themes are ready, publish them immediately;
+          // attempting another AI call here risks the hard runtime shutdown
+          // and losing every completed batch.
+          if (allThemes.length < Math.ceil(themeCount / 2)) {
             const missingThemeCount = themeCount - allThemes.length;
             console.warn(`Schedule ${schedule.id}: recovery pass for ${missingThemeCount} missing themes in ${lang.code}`);
             try {
