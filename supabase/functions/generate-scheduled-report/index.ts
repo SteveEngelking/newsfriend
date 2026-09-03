@@ -822,37 +822,36 @@ Respond via tool calling.`;
         // preserves publication reliability; full wrap-up recovery remains for
         // smaller reports where it comfortably completes.
         const ethicalMissing = prioritizedEthicalPerspectives.length > 0 && ethicalConsiderations.length === 0;
-        if (allThemes.length > 0 && (!conclusion?.trim() || !introduction?.trim() || (!isHighThemes && ethicalMissing))) {
-          if (isHighThemes) {
-            const leadHeadlines = allThemes.slice(0, 3).map((t: any) => String(t?.headline || '')).filter(Boolean);
-            if (!introduction?.trim()) {
-              introduction = lang.code === 'de'
-                ? `Das heutige Briefing untersucht wichtige Entwicklungen, darunter ${leadHeadlines.join('; ')}. Es vergleicht die Berichterstattung einer breiten internationalen Auswahl von Publikationen.`
-                : `Today's briefing examines major developments including ${leadHeadlines.join('; ')}. It compares reporting across a broad international range of publications.`;
-            }
-            if (!conclusion?.trim()) {
-              conclusion = lang.code === 'de'
-                ? 'Diese Geschichten entwickeln sich weiter. Der Vergleich unabhängiger Berichterstattung und die erneute Prüfung der Belege im weiteren Verlauf bieten die beste Grundlage für ein fundiertes Urteil.'
-                : 'These stories remain developing. Comparing independent reporting and revisiting the evidence as events unfold offers the clearest basis for informed judgment.';
-            }
-          } else {
-            console.warn(`Schedule ${schedule.id}: ${lang.code} wrap-up recovery (intro=${!!introduction} conclusion=${!!conclusion} ethical=${ethicalConsiderations.length})`);
-            const wrapup = await callWrapup(lang, allThemes.map((t: any) => String(t?.headline || '')).filter(Boolean));
-            if (wrapup) {
-              if (!introduction?.trim()) introduction = wrapup.introduction || '';
-              if (!conclusion?.trim()) conclusion = wrapup.conclusion || '';
-              if (ethicalMissing) {
-                for (const p of prioritizedEthicalPerspectives) {
-                  const key = toFieldKey(p.name);
-                  if (wrapup[key]) {
-                    ethicalConsiderations.push({ id: p.id, name: p.name, content: wrapup[key] });
-                    legacyFields[key] = wrapup[key];
-                  }
+        if (allThemes.length > 0 && (!conclusion?.trim() || !introduction?.trim() || ethicalMissing)) {
+          console.warn(`Schedule ${schedule.id}: ${lang.code} wrap-up recovery (intro=${!!introduction} conclusion=${!!conclusion} ethical=${ethicalConsiderations.length})`);
+          const wrapup = await callWrapup(lang, allThemes.map((t: any) => String(t?.headline || '')).filter(Boolean));
+          if (wrapup) {
+            if (!introduction?.trim()) introduction = wrapup.introduction || '';
+            if (!conclusion?.trim()) conclusion = wrapup.conclusion || '';
+            if (ethicalMissing) {
+              for (const p of prioritizedEthicalPerspectives) {
+                const key = toFieldKey(p.name);
+                if (wrapup[key]) {
+                  ethicalConsiderations.push({ id: p.id, name: p.name, content: wrapup[key] });
+                  legacyFields[key] = wrapup[key];
                 }
               }
             }
           }
+          // Local framing fallback so a failed wrap-up never blocks publication.
+          const leadHeadlines = allThemes.slice(0, 3).map((t: any) => String(t?.headline || '')).filter(Boolean);
+          if (!introduction?.trim()) {
+            introduction = lang.code === 'de'
+              ? `Das heutige Briefing untersucht wichtige Entwicklungen, darunter ${leadHeadlines.join('; ')}. Es vergleicht die Berichterstattung einer breiten internationalen Auswahl von Publikationen.`
+              : `Today's briefing examines major developments including ${leadHeadlines.join('; ')}. It compares reporting across a broad international range of publications.`;
+          }
+          if (!conclusion?.trim()) {
+            conclusion = lang.code === 'de'
+              ? 'Diese Geschichten entwickeln sich weiter. Der Vergleich unabhängiger Berichterstattung und die erneute Prüfung der Belege im weiteren Verlauf bieten die beste Grundlage für ein fundiertes Urteil.'
+              : 'These stories remain developing. Comparing independent reporting and revisiting the evidence as events unfold offers the clearest basis for informed judgment.';
+          }
         }
+
 
 
         const seenHeadlines = new Set<string>();
