@@ -338,6 +338,8 @@ Deno.serve(async (req) => {
         try {
           hostname = new URL(sourceUrl).hostname;
         } catch {
+          console.warn(`Fetch ${task.source.name}: invalid source URL "${task.source.url}" — skipped`);
+          fetchFailures++;
           return [];
         }
 
