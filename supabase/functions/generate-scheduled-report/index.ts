@@ -338,6 +338,8 @@ Deno.serve(async (req) => {
         try {
           hostname = new URL(sourceUrl).hostname;
         } catch {
+          console.warn(`Fetch ${task.source.name}: invalid source URL "${task.source.url}" — skipped`);
+          fetchFailures++;
           return [];
         }
 
@@ -406,8 +408,18 @@ Deno.serve(async (req) => {
           return null;
         };
 
+        // Only keep results that actually belong to the selected publication's
+        // domain — search engines sometimes ignore the site: operator.
+        const baseHost = hostname.replace(/^www\./, '').toLowerCase();
+        const belongsToSource = (u: string): boolean => {
+          try {
+            const h = new URL(u).hostname.replace(/^www\./, '').toLowerCase();
+            return h === baseHost || h.endsWith(`.${baseHost}`);
+          } catch { return false; }
+        };
+
         return data.data
-          .filter((item: any) => item.url && !isOldUrl(item.url))
+          .filter((item: any) => item.url && !isOldUrl(item.url) && belongsToSource(item.url))
           .map((item: any) => {
             const publishedAt = extractDate(item);
             return {
@@ -864,11 +876,27 @@ Respond via tool calling.`;
 
         // Article exclusivity: ensure no article URL is cited in more than one theme.
         // Keep the first occurrence; strip duplicates from later themes.
+        // Source enforcement: only keep citations of articles actually fetched
+        // from the admin-selected sources, and force the publication name to
+        // match that source (the AI otherwise invents e.g. "BBC" or "Reuters").
+        const normUrl = (u: string) => String(u || '').trim().replace(/[?#].*$/, '').replace(/\/+$/, '').toLowerCase();
+        const articleByUrl = new Map<string, any>();
+        for (const a of dedupedArticles) articleByUrl.set(normUrl(a.url), a);
+        const allowedNames = new Set(sourceNames);
         const seenArticleUrls = new Set<string>();
+        let droppedForeign = 0;
         allThemes = allThemes.map((theme: any) => {
           const sa = Array.isArray(theme?.sourceAnalysis) ? theme.sourceAnalysis : [];
           const filtered = sa.filter((s: any) => {
-            const url = String(s?.articleUrl || '').trim();
+            const url = normUrl(s?.articleUrl);
+            const art = url ? articleByUrl.get(url) : null;
+            if (art) {
+              s.sourceName = art.sourceName;
+              s.articleUrl = art.url;
+            } else if (!allowedNames.has(String(s?.sourceName || ''))) {
+              droppedForeign++;
+              return false;
+            }
             if (!url) return true;
             if (seenArticleUrls.has(url)) return false;
             seenArticleUrls.add(url);
@@ -876,6 +904,7 @@ Respond via tool calling.`;
           });
           return { ...theme, sourceAnalysis: filtered };
         }).filter((theme: any) => Array.isArray(theme?.sourceAnalysis) && theme.sourceAnalysis.length > 0);
+        if (droppedForeign) console.warn(`Schedule ${schedule.id}: dropped ${droppedForeign} citations from non-selected publications`);
 
         // Accept partial results: at least 4 themes or half the target
         const minAcceptable = Math.max(4, Math.ceil(themeCount / 2));

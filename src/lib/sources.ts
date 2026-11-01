@@ -55,11 +55,31 @@ export async function fetchSources(): Promise<NewsSource[]> {
 }
 
 /** Add a new source to the shared DB */
+export function normalizeSourceUrl(raw: string): string | null {
+  // Pick the first token that looks like a real web address (users sometimes
+  // paste "Site Title https://share.google/..." which can't be searched).
+  const tokens = String(raw || '').trim().split(/\s+/).filter(Boolean);
+  for (const t of tokens) {
+    const candidate = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+    try {
+      const u = new URL(candidate);
+      if (!u.hostname.includes('.') || /(^|\.)share\.google$|(^|\.)goo\.gl$/i.test(u.hostname)) continue;
+      return `${u.protocol}//${u.hostname}`;
+    } catch { /* try next token */ }
+  }
+  return null;
+}
+
 export async function addSource(name: string, url: string): Promise<{ id: string } | null> {
   const id = `custom-${Date.now()}`;
+  const cleanUrl = normalizeSourceUrl(url);
+  if (!cleanUrl) {
+    console.error('Invalid source URL:', url);
+    return null;
+  }
   const { error } = await supabase
     .from('news_sources')
-    .insert({ id, name, url });
+    .insert({ id, name, url: cleanUrl });
 
   if (error) {
     console.error('Failed to add source:', error);
